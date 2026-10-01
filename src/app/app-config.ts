@@ -21,7 +21,7 @@ export const appConfig: ApplicationConfig = {
         withHashLocation()
       ),
       provideHttpClient(),     
-      provideAnimations(),
+      provideAnimations(),      
       provideClientHydration(),
       {
         provide: HTTP_INTERCEPTORS,
