@@ -1,6 +1,7 @@
+import { Usuario } from "./usuario";
 export class Cliente {
     clienteId?: number;
-    usuarioId?: number;
+    usuario?: number;
     tipoDocumento?: string;
     numeroDocumento?: string;
     nombres?: string;
