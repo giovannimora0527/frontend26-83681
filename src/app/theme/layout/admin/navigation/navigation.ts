@@ -38,6 +38,14 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-user',
         classes: 'nav-item'
       },
+      {
+        id: 'cliente',
+        title: 'Gestión de Clientes',
+        type: 'item',
+        url: '/inicio/clientes',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
     ]
   },  
 ];

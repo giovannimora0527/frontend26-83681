@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 
 import { MascotaServiceService } from './service/mascota-service.service';
 import { Mascota } from 'src/app/models/mascota';
@@ -19,7 +19,7 @@ export class MascotaComponent {
   modalInstance: Modal | null = null;
   titleModal: string = "";
   modoFormulario: string = "";
-  titleBoton: string = ""
+  titleBoton: string = "";
 
   // Variables para la paginación y búsqueda en la datatable.
   listMascotas: Mascota[] = [];
@@ -69,7 +69,9 @@ export class MascotaComponent {
         mascota.raza?.nombre,
         mascota.edad,
         `${mascota.cliente?.nombres ?? ''} ${mascota.cliente?.apellidos ?? ''}`,
-        mascota.fechaRegistro ? new Date(mascota.fechaRegistro).toLocaleString() : ''
+        mascota.fechaRegistro
+          ? formatDate(mascota.fechaRegistro, 'yyyy-MM-dd HH:mm', 'en-US')
+          : ''
       ];
 
       return valores.some((valor) =>

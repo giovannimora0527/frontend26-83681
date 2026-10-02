@@ -3,13 +3,13 @@
         <div class="card-header">
             <div class="row">
                 <div class="col col-md-9">
-                    <input class="form-control" placeholder="Buscar mascota" type="text"
+                    <input class="form-control" placeholder="Buscar cliente" type="text"
                         (input)="actualizarBusqueda($event)" />
                 </div>
                 <div class="col col-md-3 text-end">
                     <button
                         class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
-                        (click)="nuevaMascota('C')" title="Agregar mascota">
+                        (click)="nuevoCliente('C')" title="Agregar cliente">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                         &nbsp; Nuevo
                     </button>
@@ -22,37 +22,36 @@
                     <table class="table table-stripped table-condensed table-responsive">
                         <thead>
                             <tr>
-                                <th class="text-center">Nombre</th>
-                                <th class="text-center">Especie</th>
-                                <th class="text-center">Raza</th>
-                                <th class="text-center">Edad</th>
-                                <th class="text-center">Cliente</th>
-                                <th class="text-center">Fecha de Registro</th>
+                                <th class="text-center">Tipo de doc.</th>
+                                <th class="text-center">Número de doc.</th>
+                                <th class="text-center">Nombres</th>
+                                <th class="text-center">Apellidos</th>
+                                <th class="text-center">Teléfono</th>
+                                <th class="text-center">Dirección</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody *ngIf="listMascotas.length === 0">
+                        <tbody *ngIf="listClientes.length === 0">
                             <tr>
-                                <td colspan="7" class="text-center">No hay mascotas registradas</td>
+                                <td colspan="7" class="text-center">No hay clientes registrados</td>
                             </tr>
                         </tbody>
-                        <tbody *ngIf="listMascotas.length > 0 && mascotasFiltradas.length === 0">
+                        <tbody *ngIf="listClientes.length > 0 && clientesFiltrados.length === 0">
                             <tr>
-                                <td colspan="7" class="text-center">No se encontraron mascotas</td>
+                                <td colspan="7" class="text-center">No se encontraron clientes</td>
                             </tr>
                         </tbody>
-                        <tbody *ngIf="mascotasFiltradas.length > 0">
-                            <tr *ngFor="let mascota of mascotasPaginadas">
-                                <td class="text-center">{{ mascota.nombreMascota }}</td>
-                                <td class="text-center">{{ mascota.raza.especie }}</td>
-                                <td class="text-center">{{ mascota.raza.nombre }}</td>
-                                <td class="text-center">{{ mascota.edad }}</td>
-                                <td class="text-center">{{ mascota.cliente.nombres }} {{ mascota.cliente.apellidos }}
-                                </td>
-                                <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
+                        <tbody *ngIf="clientesFiltrados.length > 0">
+                            <tr *ngFor="let cliente of clientesPaginados">
+                                <td class="text-center">{{ cliente.tipoDocumento }}</td>
+                                <td class="text-center">{{ cliente.numeroDocumento }}</td>
+                                <td class="text-center">{{ cliente.nombres }}</td>
+                                <td class="text-center">{{ cliente.apellidos }}</td>
+                                <td class="text-center">{{ cliente.telefono }}</td>
+                                <td class="text-center">{{ cliente.direccion }}</td>
                                 <td class="text-center">
                                     <button class="btn btn-outline-info d-inline-flex 
-                                    align-items-center justify-content-center" (click)="abrirEdicion(mascota)">
+                                    align-items-center justify-content-center" (click)="abrirEdicion(cliente)">
                                         <i class="fa fa-edit"></i>&nbsp;Editar</button>
                                 </td>
                             </tr>
@@ -60,7 +59,7 @@
                     </table>
                 </div>
             </div>
-            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de mascotas">
+            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de clientes">
                 <ul class="pagination justify-content-end mb-0">
                     <li class="page-item" [class.disabled]="paginaActual === 1">
                         <button class="page-link" type="button" [disabled]="paginaActual === 1"
@@ -82,19 +81,19 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="modalCrearMascota" tabindex="-1" aria-labelledby="modalCrearMascotaLabel"
+<div class="modal fade" id="modalCrearCliente" tabindex="-1" aria-labelledby="modalCrearClienteLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="modalCrearMascotaLabel">{{ titleModal }}</h1>
+                <h1 class="modal-title fs-5" id="modalCrearClienteLabel">{{ titleModal }}</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
                 (click)="closeModal()"></button>
             </div>
             <div class="modal-body">
                 <div class="card">
                     <div class="card-body">
-                      
+                        
                     </div>
                 </div>
             </div>

@@ -10,7 +10,7 @@ import { environment } from 'src/environments/environment';
 export class MascotaServiceService {
   private api = `mascota`;
 
-  constructor(private backendService: BackendService) {
+  constructor(private readonly backendService: BackendService) {
 
   }
 
