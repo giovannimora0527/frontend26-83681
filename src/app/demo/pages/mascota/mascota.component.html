@@ -1,10 +1,11 @@
 <div class="container-fluid">
     <div class="row">
-        <div class="col col-md-9">
-            <input class="form-control" placeholder="Buscar mascota" type="text" />
+        <div class="col col-md-7">
+            <input class="form-control" placeholder="Buscar mascota por nombre" type="text"
+                [(ngModel)]="nombreBusqueda" (keyup.enter)="buscar()" />
         </div>
-        <div class="col col-md-3">
-            <button class="btn btn-outline-primary">Agregar</button>
+        <div class="col col-md-5">
+            <button class="btn btn-outline-primary" (click)="abrirModalNuevo()"><i class="feather icon-plus"></i> Nuevo</button>
         </div>
     </div>
     <br>
@@ -27,11 +28,11 @@
                 </thead>
                 <tbody *ngIf="listMascotas.length === 0">
                     <tr>
-                        <td colspan="7" class="text-center">No hay mascotas registradas</td>
+                        <td colspan="7" class="text-center">{{ mensajeBusqueda || 'No hay mascotas registradas' }}</td>
                     </tr>
                 </tbody>
                 <tbody *ngIf="listMascotas.length > 0">
-                    <tr *ngFor="let mascota of listMascotas">
+                    <tr *ngFor="let mascota of mascotasPaginadas">
                         <td class="text-center">{{ mascota.nombreMascota }}</td>
                         <td class="text-center">{{ mascota.raza.especie }}</td>
                         <td class="text-center">{{ mascota.raza.nombre }}</td>
@@ -39,12 +40,74 @@
                         <td class="text-center">{{ mascota.cliente.nombres }} {{ mascota.cliente.apellidos }}</td>
                         <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
                         <td class="text-center">
-                            <button class="btn btn-outline-info">Editar</button>
-                            <button class="btn btn-outline-danger">Eliminar</button>
+                            <button class="btn btn-outline-info" (click)="abrirModalEditar(mascota)"><i class="feather icon-edit"></i> Editar</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+    <div class="row align-items-center" *ngIf="listMascotas.length > 0">
+        <div class="col col-md-4">
+            Mostrando {{ primerRegistro }} a {{ ultimoRegistro }} de {{ listMascotas.length }} mascotas
+        </div>
+        <div class="col col-md-3">
+            <select class="form-select" [(ngModel)]="registrosPorPagina" (ngModelChange)="cambiarRegistrosPorPagina()">
+                <option *ngFor="let opcion of opcionesRegistros" [ngValue]="opcion">{{ opcion }} por página</option>
+            </select>
+        </div>
+        <div class="col col-md-5 d-flex justify-content-end">
+            <ngb-pagination
+                [collectionSize]="listMascotas.length"
+                [(page)]="paginaActual"
+                [pageSize]="registrosPorPagina"
+                [maxSize]="5"
+                [boundaryLinks]="true">
+            </ngb-pagination>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear / editar mascota -->
+<div class="modal fade" id="modalMascota" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form #formMascota="ngForm" (ngSubmit)="guardar()">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ modoEdicion ? 'Editar mascota' : 'Nueva mascota' }}</h5>
+                    <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input class="form-control" type="text" name="nombreMascota"
+                            [(ngModel)]="mascotaForm.nombreMascota" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Edad</label>
+                        <input class="form-control" type="number" min="0" name="edad"
+                            [(ngModel)]="mascotaForm.edad" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Raza</label>
+                        <select class="form-select" name="razaId" [(ngModel)]="mascotaForm.razaId" required>
+                            <option [ngValue]="undefined" disabled>Seleccione una raza</option>
+                            <option *ngFor="let raza of listRazas" [ngValue]="raza.razaId">{{ raza.especie }} - {{ raza.nombre }}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cliente</label>
+                        <select class="form-select" name="clienteId" [(ngModel)]="mascotaForm.clienteId" required>
+                            <option [ngValue]="undefined" disabled>Seleccione un cliente</option>
+                            <option *ngFor="let cliente of listClientes" [ngValue]="cliente.id">{{ cliente.nombres }} {{ cliente.apellidos }} ({{ cliente.numeroDocumento }})</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" (click)="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-outline-primary" [disabled]="formMascota.invalid">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

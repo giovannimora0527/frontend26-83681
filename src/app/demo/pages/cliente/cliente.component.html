@@ -1,0 +1,145 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col col-md-7">
+            <input class="form-control" placeholder="Buscar cliente por número de documento" type="text"
+                [(ngModel)]="documentoBusqueda" (keyup.enter)="buscar()" />
+        </div>
+        <div class="col col-md-5">
+            <button class="btn btn-outline-primary" (click)="abrirModalNuevo()"><i class="feather icon-plus"></i> Nuevo</button>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="table table-responsive table-condensed col col-md-12">
+            <table class="table
+            table-stripped
+            table-condensed
+            table-responsive">
+                <thead>
+                    <tr>
+                        <th class="text-center">Tipo Documento</th>
+                        <th class="text-center">Número Documento</th>
+                        <th class="text-center">Nombres</th>
+                        <th class="text-center">Apellidos</th>
+                        <th class="text-center">Teléfono</th>
+                        <th class="text-center">Dirección</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody *ngIf="listClientes.length === 0">
+                    <tr>
+                        <td colspan="7" class="text-center">{{ mensajeBusqueda || 'No hay clientes registrados' }}</td>
+                    </tr>
+                </tbody>
+                <tbody *ngIf="listClientes.length > 0">
+                    <tr *ngFor="let cliente of clientesPaginados">
+                        <td class="text-center">{{ cliente.tipoDocumento }}</td>
+                        <td class="text-center">{{ cliente.numeroDocumento }}</td>
+                        <td class="text-center">{{ cliente.nombres }}</td>
+                        <td class="text-center">{{ cliente.apellidos }}</td>
+                        <td class="text-center">{{ cliente.telefono }}</td>
+                        <td class="text-center">{{ cliente.direccion }}</td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-info" (click)="abrirModalEditar(cliente)"><i class="feather icon-edit"></i> Editar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row align-items-center" *ngIf="listClientes.length > 0">
+        <div class="col col-md-4">
+            Mostrando {{ primerRegistro }} a {{ ultimoRegistro }} de {{ listClientes.length }} clientes
+        </div>
+        <div class="col col-md-3">
+            <select class="form-select" [(ngModel)]="registrosPorPagina" (ngModelChange)="cambiarRegistrosPorPagina()">
+                <option *ngFor="let opcion of opcionesRegistros" [ngValue]="opcion">{{ opcion }} por página</option>
+            </select>
+        </div>
+        <div class="col col-md-5 d-flex justify-content-end">
+            <ngb-pagination
+                [collectionSize]="listClientes.length"
+                [(page)]="paginaActual"
+                [pageSize]="registrosPorPagina"
+                [maxSize]="5"
+                [boundaryLinks]="true">
+            </ngb-pagination>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear / editar cliente -->
+<div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form #formCliente="ngForm" (ngSubmit)="guardar()">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ modoEdicion ? 'Editar cliente' : 'Nuevo cliente' }}</h5>
+                    <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col col-md-6 mb-3">
+                            <label class="form-label">Tipo de documento</label>
+                            <select class="form-select" name="tipoDocumento" [(ngModel)]="clienteForm.tipoDocumento" required>
+                                <option *ngFor="let tipo of tiposDocumento" [ngValue]="tipo">{{ tipo }}</option>
+                            </select>
+                        </div>
+                        <div class="col col-md-6 mb-3">
+                            <label class="form-label">Número de documento</label>
+                            <input class="form-control" type="text" name="numeroDocumento"
+                                [(ngModel)]="clienteForm.numeroDocumento" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-md-6 mb-3">
+                            <label class="form-label">Nombres</label>
+                            <input class="form-control" type="text" name="nombres"
+                                [(ngModel)]="clienteForm.nombres" required />
+                        </div>
+                        <div class="col col-md-6 mb-3">
+                            <label class="form-label">Apellidos</label>
+                            <input class="form-control" type="text" name="apellidos"
+                                [(ngModel)]="clienteForm.apellidos" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-md-6 mb-3">
+                            <label class="form-label">Fecha de nacimiento</label>
+                            <input class="form-control" type="date" name="fechaNacimiento"
+                                [(ngModel)]="clienteForm.fechaNacimiento" />
+                        </div>
+                        <div class="col col-md-6 mb-3">
+                            <label class="form-label">Género</label>
+                            <select class="form-select" name="genero" [(ngModel)]="clienteForm.genero">
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-md-6 mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input class="form-control" type="text" name="telefono"
+                                [(ngModel)]="clienteForm.telefono" />
+                        </div>
+                        <div class="col col-md-6 mb-3">
+                            <label class="form-label">Dirección</label>
+                            <input class="form-control" type="text" name="direccion"
+                                [(ngModel)]="clienteForm.direccion" />
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="clienteActivo" name="activo"
+                            [(ngModel)]="clienteForm.activo" />
+                        <label class="form-check-label" for="clienteActivo">Activo</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" (click)="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-outline-primary" [disabled]="formCliente.invalid">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
