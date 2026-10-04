@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Cliente } from 'src/app/models/cliente';
 import { ClienteService } from './service/cliente.service';
 
@@ -7,7 +8,7 @@ import { Modal } from 'bootstrap';
 
 @Component({
   selector: 'app-cliente',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './cliente.component.html',
   styleUrl: './cliente.component.scss'
 })
@@ -21,7 +22,7 @@ export class ClienteComponent {
 
   terminoBusqueda = '';
   paginaActual = 1;
-  readonly registrosPorPagina = 4;
+  readonly registrosPorPagina = 10;
 
   constructor(private readonly clienteService: ClienteService) {
     this.getClientes();
@@ -110,27 +111,25 @@ export class ClienteComponent {
   }
 
   abrirEdicion(cliente: Cliente) {      
-      this.modoFormulario = 'E';      
-      this.openModal(this.modoFormulario);
-    }
-  
-    closeModal() {
-      if (this.modalInstance) {
-        this.modalInstance.hide();
-      }      
-    }
-  
-    openModal(modo: string) {
-      this.titleModal = modo === 'C' ? 'Crear Cliente' : 'Editar Cliente';
-      this.titleBoton = modo === 'C' ? 'Guardar Cliente' : 'Actualizar Cliente';
-      this.modoFormulario = modo;
-      const modalElement = document.getElementById('modalCrearCliente');
-      if (modalElement) {
-        // Verificar si ya existe una instancia del modal
-        this.modalInstance ??= new Modal(modalElement);
-        this.modalInstance.show();
-      }
-    }
+    this.modoFormulario = 'E';      
+    this.openModal(this.modoFormulario);
+  }
 
+  closeModal() {
+    if (this.modalInstance) {
+      this.modalInstance.hide();
+    }      
+  }
 
+  openModal(modo: string) {
+    this.titleModal = modo === 'C' ? 'Crear Cliente' : 'Editar Cliente';
+    this.titleBoton = modo === 'C' ? 'Guardar Cliente' : 'Actualizar Cliente';
+    this.modoFormulario = modo;
+    const modalElement = document.getElementById('modalCrearCliente');
+    if (modalElement) {
+      // Verificar si ya existe una instancia del modal
+      this.modalInstance ??= new Modal(modalElement);
+      this.modalInstance.show();
+    }
+  }
 }

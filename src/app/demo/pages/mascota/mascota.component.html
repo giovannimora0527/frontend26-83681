@@ -44,10 +44,10 @@
                         <tbody *ngIf="mascotasFiltradas.length > 0">
                             <tr *ngFor="let mascota of mascotasPaginadas">
                                 <td class="text-center">{{ mascota.nombreMascota }}</td>
-                                <td class="text-center">{{ mascota.raza.especie }}</td>
-                                <td class="text-center">{{ mascota.raza.nombre }}</td>
+                                <td class="text-center">{{ mascota.raza?.especie }}</td>
+                                <td class="text-center">{{ mascota.raza?.nombre }}</td>
                                 <td class="text-center">{{ mascota.edad }}</td>
-                                <td class="text-center">{{ mascota.cliente.nombres }} {{ mascota.cliente.apellidos }}
+                                <td class="text-center">{{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}
                                 </td>
                                 <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
                                 <td class="text-center">
@@ -81,7 +81,7 @@
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal Crear / Editar Mascota -->
 <div class="modal fade" id="modalCrearMascota" tabindex="-1" aria-labelledby="modalCrearMascotaLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -89,19 +89,57 @@
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="modalCrearMascotaLabel">{{ titleModal }}</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                (click)="closeModal()"></button>
+                    (click)="closeModal()"></button>
             </div>
             <div class="modal-body">
-                <div class="card">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                      
+                        <form [formGroup]="form">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="nombreMascota" class="form-label font-weight-bold">Nombre de la Mascota</label>
+                                    <input type="text" class="form-control" id="nombreMascota" formControlName="nombreMascota"
+                                        placeholder="Ej: Firulais" [class.is-invalid]="f['nombreMascota'].touched && f['nombreMascota'].invalid">
+                                    <div class="invalid-feedback" *ngIf="f['nombreMascota'].touched && f['nombreMascota'].invalid">
+                                        El nombre es requerido.
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="raza" class="form-label font-weight-bold">Raza / Especie</label>
+                                    <input type="text" class="form-control" id="raza" formControlName="raza"
+                                        placeholder="Ej: Labrador / Canino" [class.is-invalid]="f['raza'].touched && f['raza'].invalid">
+                                    <div class="invalid-feedback" *ngIf="f['raza'].touched && f['raza'].invalid">
+                                        La raza es requerida.
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="edad" class="form-label font-weight-bold">Edad (Años)</label>
+                                    <input type="number" class="form-control" id="edad" formControlName="edad"
+                                        placeholder="Ej: 3" [class.is-invalid]="f['edad'].touched && f['edad'].invalid">
+                                    <div class="invalid-feedback" *ngIf="f['edad'].touched && f['edad'].invalid">
+                                        Ingrese una edad válida.
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="cliente" class="form-label font-weight-bold">Propietario / Cliente</label>
+                                    <input type="text" class="form-control" id="cliente" formControlName="cliente"
+                                        placeholder="Ej: Juan Pérez" [class.is-invalid]="f['cliente'].touched && f['cliente'].invalid">
+                                    <div class="invalid-feedback" *ngIf="f['cliente'].touched && f['cliente'].invalid">
+                                        El cliente es requerido.
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary">{{ titleBoton}}</button>
+                    (click)="closeModal()">Cerrar</button>
+                <button type="button" class="btn btn-primary" (click)="guardarMascota()">{{ titleBoton }}</button>
             </div>
         </div>
     </div>

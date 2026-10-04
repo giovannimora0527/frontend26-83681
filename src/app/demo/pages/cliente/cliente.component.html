@@ -80,7 +80,7 @@
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal Crear / Editar Cliente -->
 <div class="modal fade" id="modalCrearCliente" tabindex="-1" aria-labelledby="modalCrearClienteLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -88,19 +88,50 @@
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="modalCrearClienteLabel">{{ titleModal }}</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                (click)="closeModal()"></button>
+                    (click)="closeModal()"></button>
             </div>
             <div class="modal-body">
-                <div class="card">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        
+                        <form>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="tipoDocumento" class="form-label font-weight-bold">Tipo de Documento</label>
+                                    <select class="form-select" id="tipoDocumento">
+                                        <option value="CC">Cédula de Ciudadanía (CC)</option>
+                                        <option value="CE">Cédula de Extranjería (CE)</option>
+                                        <option value="PASAPORTE">Pasaporte</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="numeroDocumento" class="form-label font-weight-bold">Número de Documento</label>
+                                    <input type="text" class="form-control" id="numeroDocumento" placeholder="Ej: 1012345678">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="nombres" class="form-label font-weight-bold">Nombres</label>
+                                    <input type="text" class="form-control" id="nombres" placeholder="Ej: Juan Carlos">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="apellidos" class="form-label font-weight-bold">Apellidos</label>
+                                    <input type="text" class="form-control" id="apellidos" placeholder="Ej: Pérez Gómez">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="telefono" class="form-label font-weight-bold">Teléfono</label>
+                                    <input type="text" class="form-control" id="telefono" placeholder="Ej: 3001234567">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="direccion" class="form-label font-weight-bold">Dirección</label>
+                                    <input type="text" class="form-control" id="direccion" placeholder="Ej: Calle 123 # 45-67">
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary">{{ titleBoton}}</button>
+                    (click)="closeModal()">Cerrar</button>
+                <button type="button" class="btn btn-primary">{{ titleBoton }}</button>
             </div>
         </div>
     </div>

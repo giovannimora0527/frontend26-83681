@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 
 import { MascotaServiceService } from './service/mascota-service.service';
@@ -14,7 +14,7 @@ import { Modal } from 'bootstrap';
   templateUrl: './mascota.component.html',
   styleUrl: './mascota.component.scss'
 })
-export class MascotaComponent {
+export class MascotaComponent implements OnInit {
   // Variables para el modal.
   modalInstance: Modal | null = null;
   titleModal: string = "";
@@ -31,18 +31,33 @@ export class MascotaComponent {
   form!: FormGroup;
   mascotaSelected: Mascota | null = null;
 
-  constructor(private readonly mascotaService: MascotaServiceService,
-    private readonly formBuilder: FormBuilder) {
-    this.listar();
+  // Listados auxiliares para desplegar en selects del modal
+  listClientes: any[] = [];
+  listRazas: any[] = [];
+
+  constructor(
+    private readonly mascotaService: MascotaServiceService,
+    private readonly formBuilder: FormBuilder
+  ) {
     this.inicializarFormulario();
   }
 
-  // Metodo ue permite inicializar el formulario con sus controles y validaciones.
+  ngOnInit(): void {
+    this.listar();
+    this.cargarSelects();
+  }
+
+  // Carga clientes y razas necesarios para el formulario del modal
+  cargarSelects() {
+    // Si tu servicio cuenta con endpoints para obtener razas/clientes, invócalos aquí.
+  }
+
+  // Método que permite inicializar el formulario con sus controles y validaciones.
   inicializarFormulario() {
     this.form = this.formBuilder.group({
       nombreMascota: ['', Validators.required],
       raza: ['', Validators.required],
-      edad: ['', Validators.required],
+      edad: ['', [Validators.required, Validators.min(0)]],
       cliente: ['', Validators.required]
     });
   }
@@ -94,38 +109,36 @@ export class MascotaComponent {
   }
 
   /**
-   * Metodo que permite listar las mascotas registradas en la base de datos y mostrarlas en la tabla.
+   * Método que permite listar las mascotas registradas en la base de datos y mostrarlas en la tabla.
    */
   listar() {
     this.mascotaService.getMascotas()
-      .subscribe(
-        {
-          next: (data) => {
-            console.log(data);
-            this.listMascotas = data;
-            this.paginaActual = 1;
-          },
-          error: (error) => {
-            console.error('Error al obtener las mascotas:', error);
-          }
+      .subscribe({
+        next: (data) => {
+          console.log(data);
+          this.listMascotas = data;
+          this.paginaActual = 1;
+        },
+        error: (error) => {
+          console.error('Error al obtener las mascotas:', error);
         }
-      );
+      });
   }
 
-  // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
+  // Método que actualiza el término de búsqueda y reinicia la página actual a 1.
   actualizarBusqueda(event: Event) {
     this.terminoBusqueda = (event.target as HTMLInputElement).value;
     this.paginaActual = 1;
   }
 
-  // Cambia paginacion.
+  // Cambia paginación.
   cambiarPagina(pagina: number) {
     if (pagina >= 1 && pagina <= this.totalPaginas) {
       this.paginaActual = pagina;
     }
   }
 
-  // Metodo privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
+  // Método privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
   private normalizarTexto(texto: string): string {
     return texto
       .toLocaleLowerCase()
@@ -153,9 +166,9 @@ export class MascotaComponent {
     this.modoFormulario = 'E';
     this.form.patchValue({
       nombreMascota: mascota.nombreMascota,
-      raza: mascota.raza,
+      raza: mascota.raza?.nombre ?? mascota.raza ?? '',
       edad: mascota.edad,
-      cliente: mascota.cliente
+      cliente: mascota.cliente ? `${mascota.cliente.nombres} ${mascota.cliente.apellidos}` : ''
     });
     this.openModal(this.modoFormulario);
   }
@@ -173,11 +186,18 @@ export class MascotaComponent {
     this.modoFormulario = modo;
     const modalElement = document.getElementById('modalCrearMascota');
     if (modalElement) {
-      // Verificar si ya existe una instancia del modal
       this.modalInstance ??= new Modal(modalElement);
       this.modalInstance.show();
     }
   }
 
+  guardarMascota() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
+    const datos = this.form.value;
+    console.log('Datos de la mascota a guardar:', datos);
+  }
 }
