@@ -1,0 +1,45 @@
+.main-search {
+  position: relative;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  margin: 4px 0 0;
+  padding: 6px 0;
+  background: #fff;
+  border: 1px solid #f1f1f1;
+  border-radius: 8px;
+  box-shadow: 0 6px 12px -5px rgba(65, 76, 78, 0.2);
+  z-index: 1030;
+
+  li {
+    padding: 0;
+    line-height: normal;
+
+    &.text-muted {
+      padding: 8px 16px;
+    }
+  }
+
+  a {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 16px;
+    color: inherit;
+
+    i {
+      margin-top: 3px;
+    }
+
+    &:hover,
+    &.active {
+      background: #f3f5f7;
+    }
+  }
+}

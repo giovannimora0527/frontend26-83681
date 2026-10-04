@@ -1,0 +1,114 @@
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col col-md-9">
+                    <input class="form-control" placeholder="Buscar especialización" type="text"
+                        (input)="actualizarBusqueda($event)" />
+                </div>
+                <div class="col col-md-3 text-end">
+                    <button
+                        class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevaEspecializacion()" title="Agregar especialización">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
+                        &nbsp; Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="table table-responsive table-condensed col col-md-12">
+                    <table class="table table-stripped table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Código</th>
+                                <th class="text-center">Nombre</th>
+                                <th class="text-center">Descripción</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody *ngIf="listEspecializaciones.length === 0">
+                            <tr>
+                                <td colspan="4" class="text-center">No hay especializaciones registradas</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="listEspecializaciones.length > 0 && especializacionesFiltradas.length === 0">
+                            <tr>
+                                <td colspan="4" class="text-center">No se encontraron especializaciones</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="especializacionesFiltradas.length > 0">
+                            <tr *ngFor="let especializacion of especializacionesPaginadas">
+                                <td class="text-center">{{ especializacion.codigoEspecializacion }}</td>
+                                <td class="text-center">{{ especializacion.nombre }}</td>
+                                <td class="text-center">{{ especializacion.descripcion }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center justify-content-center me-2"
+                                        (click)="abrirEdicion(especializacion)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                    <button class="btn btn-outline-danger d-inline-flex align-items-center justify-content-center"
+                                        (click)="eliminar(especializacion)">
+                                        <i class="fa fa-trash"></i>&nbsp;Eliminar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de especializaciones">
+                <ul class="pagination justify-content-end mb-0">
+                    <li class="page-item" [class.disabled]="paginaActual === 1">
+                        <button class="page-link" type="button" [disabled]="paginaActual === 1"
+                            (click)="cambiarPagina(paginaActual - 1)">Anterior</button>
+                    </li>
+                    <li class="page-item" *ngFor="let pagina of paginas" [class.active]="pagina === paginaActual">
+                        <button class="page-link" type="button" (click)="cambiarPagina(pagina)">{{ pagina }}</button>
+                    </li>
+                    <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                        <button class="page-link" type="button" [disabled]="paginaActual === totalPaginas"
+                            (click)="cambiarPagina(paginaActual + 1)">Siguiente</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalEspecializacion" tabindex="-1" aria-labelledby="modalEspecializacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalEspecializacionLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+            </div>
+            <form [formGroup]="form" (ngSubmit)="guardar()">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="espCodigo">Código</label>
+                            <input id="espCodigo" class="form-control" formControlName="codigoEspecializacion" maxlength="10"
+                                [class.is-invalid]="f['codigoEspecializacion'].touched && f['codigoEspecializacion'].invalid" />
+                            <div class="invalid-feedback">El código es obligatorio (máximo 10 caracteres).</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="espNombre">Nombre</label>
+                            <input id="espNombre" class="form-control" formControlName="nombre"
+                                [class.is-invalid]="f['nombre'].touched && f['nombre'].invalid" />
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label" for="espDescripcion">Descripción</label>
+                            <textarea id="espDescripcion" class="form-control" rows="3" formControlName="descripcion"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">{{ titleBoton }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
