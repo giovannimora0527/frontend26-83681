@@ -1,0 +1,44 @@
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Nueva anotación clínica</h5>
+            <small class="text-muted">Si la mascota aún no tiene historia médica, se crea automáticamente al guardar.</small>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="guardar()">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="anotacionMascota">Mascota</label>
+                        <select id="anotacionMascota" class="form-select" formControlName="mascota"
+                            [class.is-invalid]="f['mascota'].touched && f['mascota'].invalid">
+                            <option [ngValue]="null">Seleccione...</option>
+                            <option *ngFor="let mascota of listMascotas" [ngValue]="mascota">
+                                {{ mascota.nombreMascota }} ({{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }})</option>
+                        </select>
+                        <div class="invalid-feedback">La mascota es obligatoria.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="anotacionMedico">Médico</label>
+                        <select id="anotacionMedico" class="form-select" formControlName="medico"
+                            [class.is-invalid]="f['medico'].touched && f['medico'].invalid">
+                            <option [ngValue]="null">Seleccione...</option>
+                            <option *ngFor="let medico of listMedicos" [ngValue]="medico">
+                                {{ medico.nombres }} {{ medico.apellidos }} - {{ medico.especializacion?.nombre }}</option>
+                        </select>
+                        <div class="invalid-feedback">El médico es obligatorio.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="anotacionDescripcion">Descripción</label>
+                        <textarea id="anotacionDescripcion" class="form-control" rows="5" formControlName="descripcion"
+                            [class.is-invalid]="f['descripcion'].touched && f['descripcion'].invalid"></textarea>
+                        <div class="invalid-feedback">La descripción es obligatoria (máximo 2000 caracteres).</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="button" class="btn btn-secondary me-2" (click)="limpiar()">Limpiar</button>
+                <button type="submit" class="btn btn-primary">Guardar Anotación</button>
+            </div>
+        </form>
+    </div>
+</div>

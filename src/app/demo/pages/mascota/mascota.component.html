@@ -3,13 +3,13 @@
         <div class="card-header">
             <div class="row">
                 <div class="col col-md-9">
-                    <input class="form-control" placeholder="Buscar mascota" type="text"
-                        (input)="actualizarBusqueda($event)" />
+                    <input class="form-control" placeholder="Buscar por mascota, raza, dueño, cédula o fecha (aaaa-mm-dd)" type="text"
+                        [value]="terminoBusqueda" (input)="actualizarBusqueda($event)" />
                 </div>
                 <div class="col col-md-3 text-end">
                     <button
                         class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
-                        (click)="nuevaMascota('C')" title="Agregar mascota">
+                        (click)="nuevaMascota()" title="Agregar mascota">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                         &nbsp; Nuevo
                     </button>
@@ -51,9 +51,12 @@
                                 </td>
                                 <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-info d-inline-flex 
-                                    align-items-center justify-content-center" (click)="abrirEdicion(mascota)">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center justify-content-center me-2"
+                                        (click)="abrirEdicion(mascota)">
                                         <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                    <button class="btn btn-outline-danger d-inline-flex align-items-center justify-content-center"
+                                        (click)="eliminar(mascota)">
+                                        <i class="fa fa-trash"></i>&nbsp;Eliminar</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -79,68 +82,59 @@
             </nav>
         </div>
     </div>
+
 </div>
 
-<!-- Modal Crear / Editar Mascota -->
+<!-- Modal -->
 <div class="modal fade" id="modalCrearMascota" tabindex="-1" aria-labelledby="modalCrearMascotaLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="modalCrearMascotaLabel">{{ titleModal }}</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                    (click)="closeModal()"></button>
+                <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
             </div>
-            <div class="modal-body">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <form [formGroup]="form">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="nombreMascota" class="form-label font-weight-bold">Nombre de la Mascota</label>
-                                    <input type="text" class="form-control" id="nombreMascota" formControlName="nombreMascota"
-                                        placeholder="Ej: Firulais" [class.is-invalid]="f['nombreMascota'].touched && f['nombreMascota'].invalid">
-                                    <div class="invalid-feedback" *ngIf="f['nombreMascota'].touched && f['nombreMascota'].invalid">
-                                        El nombre es requerido.
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="raza" class="form-label font-weight-bold">Raza / Especie</label>
-                                    <input type="text" class="form-control" id="raza" formControlName="raza"
-                                        placeholder="Ej: Labrador / Canino" [class.is-invalid]="f['raza'].touched && f['raza'].invalid">
-                                    <div class="invalid-feedback" *ngIf="f['raza'].touched && f['raza'].invalid">
-                                        La raza es requerida.
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="edad" class="form-label font-weight-bold">Edad (Años)</label>
-                                    <input type="number" class="form-control" id="edad" formControlName="edad"
-                                        placeholder="Ej: 3" [class.is-invalid]="f['edad'].touched && f['edad'].invalid">
-                                    <div class="invalid-feedback" *ngIf="f['edad'].touched && f['edad'].invalid">
-                                        Ingrese una edad válida.
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="cliente" class="form-label font-weight-bold">Propietario / Cliente</label>
-                                    <input type="text" class="form-control" id="cliente" formControlName="cliente"
-                                        placeholder="Ej: Juan Pérez" [class.is-invalid]="f['cliente'].touched && f['cliente'].invalid">
-                                    <div class="invalid-feedback" *ngIf="f['cliente'].touched && f['cliente'].invalid">
-                                        El cliente es requerido.
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
+            <form [formGroup]="form" (ngSubmit)="guardar()">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label" for="mascotaNombre">Nombre</label>
+                            <input id="mascotaNombre" class="form-control" formControlName="nombreMascota"
+                                [class.is-invalid]="f['nombreMascota'].touched && f['nombreMascota'].invalid" />
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="mascotaEdad">Edad</label>
+                            <input id="mascotaEdad" type="number" min="0" class="form-control" formControlName="edad"
+                                [class.is-invalid]="f['edad'].touched && f['edad'].invalid" />
+                            <div class="invalid-feedback">Ingrese una edad válida (0 a 50).</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="mascotaRaza">Raza</label>
+                            <select id="mascotaRaza" class="form-select" formControlName="raza" [compareWith]="compararRaza"
+                                [class.is-invalid]="f['raza'].touched && f['raza'].invalid">
+                                <option [ngValue]="null">Seleccione...</option>
+                                <option *ngFor="let raza of listRazas" [ngValue]="raza">{{ raza.especie }} - {{ raza.nombre }}</option>
+                            </select>
+                            <div class="invalid-feedback">La raza es obligatoria.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="mascotaCliente">Cliente</label>
+                            <select id="mascotaCliente" class="form-select" formControlName="cliente" [compareWith]="compararCliente"
+                                [class.is-invalid]="f['cliente'].touched && f['cliente'].invalid">
+                                <option [ngValue]="null">Seleccione...</option>
+                                <option *ngFor="let cliente of listClientes" [ngValue]="cliente">
+                                    {{ cliente.nombres }} {{ cliente.apellidos }} ({{ cliente.numeroDocumento }})</option>
+                            </select>
+                            <div class="invalid-feedback">El cliente es obligatorio.</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                    (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary" (click)="guardarMascota()">{{ titleBoton }}</button>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">{{ titleBoton }}</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -1,0 +1,85 @@
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label" for="citaFechaInicio">Desde</label>
+                    <input id="citaFechaInicio" class="form-control" type="date" [(ngModel)]="fechaInicio" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="citaFechaFinal">Hasta</label>
+                    <input id="citaFechaFinal" class="form-control" type="date" [(ngModel)]="fechaFinal" />
+                </div>
+                <div class="col-md-2">
+                    <button
+                        class="btn btn-md btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center"
+                        (click)="filtrar()" title="Filtrar citas por fecha">
+                        <i class="fa fa-filter" aria-hidden="true"></i>
+                        &nbsp; Filtrar
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control" placeholder="Buscar por mascota, dueño, médico, estado o fecha" type="text"
+                        [value]="terminoBusqueda" (input)="actualizarBusqueda($event)" />
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="table table-responsive table-condensed col col-md-12">
+                    <table class="table table-stripped table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Fecha y Hora</th>
+                                <th class="text-center">Mascota</th>
+                                <th class="text-center">Dueño</th>
+                                <th class="text-center">Médico</th>
+                                <th class="text-center">Motivo</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody *ngIf="listCitas.length === 0">
+                            <tr>
+                                <td colspan="6" class="text-center">No hay citas en el rango de fechas seleccionado</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="listCitas.length > 0 && citasFiltradas.length === 0">
+                            <tr>
+                                <td colspan="6" class="text-center">No se encontraron citas</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="citasFiltradas.length > 0">
+                            <tr *ngFor="let cita of citasPaginadas">
+                                <td class="text-center">{{ cita.fechaHora | date:'yyyy-MM-dd HH:mm' }}</td>
+                                <td class="text-center">{{ cita.mascota?.nombreMascota }}</td>
+                                <td class="text-center">{{ cita.mascota?.cliente?.nombres }} {{ cita.mascota?.cliente?.apellidos }}</td>
+                                <td class="text-center">{{ cita.medico?.nombres }} {{ cita.medico?.apellidos }}</td>
+                                <td class="text-center">{{ cita.motivo }}</td>
+                                <td class="text-center">
+                                    <span class="badge" [ngClass]="claseEstado(cita.estado)">{{ cita.estado }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de citas">
+                <ul class="pagination justify-content-end mb-0">
+                    <li class="page-item" [class.disabled]="paginaActual === 1">
+                        <button class="page-link" type="button" [disabled]="paginaActual === 1"
+                            (click)="cambiarPagina(paginaActual - 1)">Anterior</button>
+                    </li>
+                    <li class="page-item" *ngFor="let pagina of paginas" [class.active]="pagina === paginaActual">
+                        <button class="page-link" type="button"
+                            [attr.aria-current]="pagina === paginaActual ? 'page' : null"
+                            (click)="cambiarPagina(pagina)">{{ pagina }}</button>
+                    </li>
+                    <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                        <button class="page-link" type="button" [disabled]="paginaActual === totalPaginas"
+                            (click)="cambiarPagina(paginaActual + 1)">Siguiente</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
