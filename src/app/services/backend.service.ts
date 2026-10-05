@@ -84,6 +84,22 @@ export class BackendService {
     });
   }
 
+  // Servicio generico para realizar peticiones DELETE al backend.
+  delete<T>(
+    urlApi: string,
+    endpoint: string,
+    service: string
+  ): Observable<T> {
+    const tokenRecuperado = localStorage.getItem('token') || ''; // Evita `null`
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: tokenRecuperado ? `Bearer ${tokenRecuperado}` : '',
+    });
+    return this.http.delete<T>(`${urlApi}/${endpoint}/${service}`, {
+      headers: headers,
+    });
+  }
+
   // Servicio generico para realizar peticiones POST al backend con archivos.
   postFile<T>(
     urlApi: string,

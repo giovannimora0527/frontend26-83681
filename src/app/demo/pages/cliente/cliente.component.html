@@ -3,13 +3,13 @@
         <div class="card-header">
             <div class="row">
                 <div class="col col-md-9">
-                    <input class="form-control" placeholder="Buscar cliente" type="text"
-                        (input)="actualizarBusqueda($event)" />
+                    <input class="form-control" placeholder="Buscar por cédula, nombre, teléfono o dirección" type="text"
+                        [value]="terminoBusqueda" (input)="actualizarBusqueda($event)" />
                 </div>
                 <div class="col col-md-3 text-end">
                     <button
                         class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
-                        (click)="nuevoCliente('C')" title="Agregar cliente">
+                        (click)="nuevoCliente()" title="Agregar cliente">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                         &nbsp; Nuevo
                     </button>
@@ -22,12 +22,12 @@
                     <table class="table table-stripped table-condensed table-responsive">
                         <thead>
                             <tr>
-                                <th class="text-center">Tipo de doc.</th>
-                                <th class="text-center">Número de doc.</th>
+                                <th class="text-center">Documento</th>
                                 <th class="text-center">Nombres</th>
                                 <th class="text-center">Apellidos</th>
                                 <th class="text-center">Teléfono</th>
                                 <th class="text-center">Dirección</th>
+                                <th class="text-center">Estado</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
@@ -43,16 +43,19 @@
                         </tbody>
                         <tbody *ngIf="clientesFiltrados.length > 0">
                             <tr *ngFor="let cliente of clientesPaginados">
-                                <td class="text-center">{{ cliente.tipoDocumento }}</td>
-                                <td class="text-center">{{ cliente.numeroDocumento }}</td>
+                                <td class="text-center">{{ cliente.tipoDocumento }} {{ cliente.numeroDocumento }}</td>
                                 <td class="text-center">{{ cliente.nombres }}</td>
                                 <td class="text-center">{{ cliente.apellidos }}</td>
                                 <td class="text-center">{{ cliente.telefono }}</td>
                                 <td class="text-center">{{ cliente.direccion }}</td>
+                                <td class="text-center">{{ cliente.activo ? 'Activo' : 'Inactivo' }}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-info d-inline-flex 
-                                    align-items-center justify-content-center" (click)="abrirEdicion(cliente)">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center justify-content-center me-2"
+                                        (click)="abrirEdicion(cliente)">
                                         <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                    <button class="btn btn-outline-danger d-inline-flex align-items-center justify-content-center"
+                                        (click)="eliminar(cliente)">
+                                        <i class="fa fa-trash"></i>&nbsp;Eliminar</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -66,9 +69,7 @@
                             (click)="cambiarPagina(paginaActual - 1)">Anterior</button>
                     </li>
                     <li class="page-item" *ngFor="let pagina of paginas" [class.active]="pagina === paginaActual">
-                        <button class="page-link" type="button"
-                            [attr.aria-current]="pagina === paginaActual ? 'page' : null"
-                            (click)="cambiarPagina(pagina)">{{ pagina }}</button>
+                        <button class="page-link" type="button" (click)="cambiarPagina(pagina)">{{ pagina }}</button>
                     </li>
                     <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
                         <button class="page-link" type="button" [disabled]="paginaActual === totalPaginas"
@@ -80,59 +81,78 @@
     </div>
 </div>
 
-<!-- Modal Crear / Editar Cliente -->
-<div class="modal fade" id="modalCrearCliente" tabindex="-1" aria-labelledby="modalCrearClienteLabel"
-    aria-hidden="true">
+<!-- Modal -->
+<div class="modal fade" id="modalCliente" tabindex="-1" aria-labelledby="modalClienteLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="modalCrearClienteLabel">{{ titleModal }}</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                    (click)="closeModal()"></button>
+                <h1 class="modal-title fs-5" id="modalClienteLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
             </div>
-            <div class="modal-body">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <form>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="tipoDocumento" class="form-label font-weight-bold">Tipo de Documento</label>
-                                    <select class="form-select" id="tipoDocumento">
-                                        <option value="CC">Cédula de Ciudadanía (CC)</option>
-                                        <option value="CE">Cédula de Extranjería (CE)</option>
-                                        <option value="PASAPORTE">Pasaporte</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="numeroDocumento" class="form-label font-weight-bold">Número de Documento</label>
-                                    <input type="text" class="form-control" id="numeroDocumento" placeholder="Ej: 1012345678">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="nombres" class="form-label font-weight-bold">Nombres</label>
-                                    <input type="text" class="form-control" id="nombres" placeholder="Ej: Juan Carlos">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="apellidos" class="form-label font-weight-bold">Apellidos</label>
-                                    <input type="text" class="form-control" id="apellidos" placeholder="Ej: Pérez Gómez">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="telefono" class="form-label font-weight-bold">Teléfono</label>
-                                    <input type="text" class="form-control" id="telefono" placeholder="Ej: 3001234567">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="direccion" class="form-label font-weight-bold">Dirección</label>
-                                    <input type="text" class="form-control" id="direccion" placeholder="Ej: Calle 123 # 45-67">
-                                </div>
+            <form [formGroup]="form" (ngSubmit)="guardar()">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="clienteTipoDoc">Tipo de documento</label>
+                            <select id="clienteTipoDoc" class="form-select" formControlName="tipoDocumento"
+                                [class.is-invalid]="f['tipoDocumento'].touched && f['tipoDocumento'].invalid">
+                                <option value="">Seleccione...</option>
+                                <option *ngFor="let tipo of tiposDocumento" [value]="tipo">{{ tipo }}</option>
+                            </select>
+                            <div class="invalid-feedback">El tipo de documento es obligatorio.</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="clienteNumDoc">Número de documento</label>
+                            <input id="clienteNumDoc" class="form-control" formControlName="numeroDocumento"
+                                [class.is-invalid]="f['numeroDocumento'].touched && f['numeroDocumento'].invalid" />
+                            <div class="invalid-feedback">Ingrese un número de documento válido (solo letras y números).</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="clienteNombres">Nombres</label>
+                            <input id="clienteNombres" class="form-control" formControlName="nombres"
+                                [class.is-invalid]="f['nombres'].touched && f['nombres'].invalid" />
+                            <div class="invalid-feedback">Los nombres son obligatorios.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="clienteApellidos">Apellidos</label>
+                            <input id="clienteApellidos" class="form-control" formControlName="apellidos"
+                                [class.is-invalid]="f['apellidos'].touched && f['apellidos'].invalid" />
+                            <div class="invalid-feedback">Los apellidos son obligatorios.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="clienteFechaNac">Fecha de nacimiento</label>
+                            <input id="clienteFechaNac" type="date" class="form-control" formControlName="fechaNacimiento" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="clienteGenero">Género</label>
+                            <select id="clienteGenero" class="form-select" formControlName="genero">
+                                <option value="">Seleccione...</option>
+                                <option *ngFor="let genero of generos" [value]="genero.valor">{{ genero.texto }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="clienteTelefono">Teléfono</label>
+                            <input id="clienteTelefono" class="form-control" formControlName="telefono"
+                                [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid" />
+                            <div class="invalid-feedback">Ingrese un teléfono válido (7 a 15 dígitos).</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="clienteDireccion">Dirección</label>
+                            <input id="clienteDireccion" class="form-control" formControlName="direccion" />
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input id="clienteActivo" type="checkbox" class="form-check-input" formControlName="activo" />
+                                <label class="form-check-label" for="clienteActivo">Activo</label>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                    (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary">{{ titleBoton }}</button>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">{{ titleBoton }}</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

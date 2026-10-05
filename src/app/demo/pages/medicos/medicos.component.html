@@ -1,1 +1,154 @@
-<p>medicos works!</p>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col col-md-9">
+                    <input class="form-control" placeholder="Buscar médico" type="text"
+                        (input)="actualizarBusqueda($event)" />
+                </div>
+                <div class="col col-md-3 text-end">
+                    <button
+                        class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevoMedico()" title="Agregar médico">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
+                        &nbsp; Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="table table-responsive table-condensed col col-md-12">
+                    <table class="table table-stripped table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Documento</th>
+                                <th class="text-center">Nombres</th>
+                                <th class="text-center">Apellidos</th>
+                                <th class="text-center">Especialización</th>
+                                <th class="text-center">Registro Profesional</th>
+                                <th class="text-center">Teléfono</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody *ngIf="listMedicos.length === 0">
+                            <tr>
+                                <td colspan="7" class="text-center">No hay médicos registrados</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="listMedicos.length > 0 && medicosFiltrados.length === 0">
+                            <tr>
+                                <td colspan="7" class="text-center">No se encontraron médicos</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="medicosFiltrados.length > 0">
+                            <tr *ngFor="let medico of medicosPaginados">
+                                <td class="text-center">{{ medico.tipoDocumento }} {{ medico.numeroDocumento }}</td>
+                                <td class="text-center">{{ medico.nombres }}</td>
+                                <td class="text-center">{{ medico.apellidos }}</td>
+                                <td class="text-center">{{ medico.especializacion?.nombre }}</td>
+                                <td class="text-center">{{ medico.registroProfesional }}</td>
+                                <td class="text-center">{{ medico.telefono }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center justify-content-center me-2"
+                                        (click)="abrirEdicion(medico)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                    <button class="btn btn-outline-danger d-inline-flex align-items-center justify-content-center"
+                                        (click)="eliminar(medico)">
+                                        <i class="fa fa-trash"></i>&nbsp;Eliminar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de médicos">
+                <ul class="pagination justify-content-end mb-0">
+                    <li class="page-item" [class.disabled]="paginaActual === 1">
+                        <button class="page-link" type="button" [disabled]="paginaActual === 1"
+                            (click)="cambiarPagina(paginaActual - 1)">Anterior</button>
+                    </li>
+                    <li class="page-item" *ngFor="let pagina of paginas" [class.active]="pagina === paginaActual">
+                        <button class="page-link" type="button" (click)="cambiarPagina(pagina)">{{ pagina }}</button>
+                    </li>
+                    <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                        <button class="page-link" type="button" [disabled]="paginaActual === totalPaginas"
+                            (click)="cambiarPagina(paginaActual + 1)">Siguiente</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalMedico" tabindex="-1" aria-labelledby="modalMedicoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalMedicoLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+            </div>
+            <form [formGroup]="form" (ngSubmit)="guardar()">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="medicoTipoDoc">Tipo de documento</label>
+                            <select id="medicoTipoDoc" class="form-select" formControlName="tipoDocumento"
+                                [class.is-invalid]="f['tipoDocumento'].touched && f['tipoDocumento'].invalid">
+                                <option value="">Seleccione...</option>
+                                <option *ngFor="let tipo of tiposDocumento" [value]="tipo">{{ tipo }}</option>
+                            </select>
+                            <div class="invalid-feedback">El tipo de documento es obligatorio.</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="medicoNumDoc">Número de documento</label>
+                            <input id="medicoNumDoc" class="form-control" formControlName="numeroDocumento"
+                                [class.is-invalid]="f['numeroDocumento'].touched && f['numeroDocumento'].invalid" />
+                            <div class="invalid-feedback">Ingrese un número de documento válido (solo letras y números).</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medicoNombres">Nombres</label>
+                            <input id="medicoNombres" class="form-control" formControlName="nombres"
+                                [class.is-invalid]="f['nombres'].touched && f['nombres'].invalid" />
+                            <div class="invalid-feedback">Los nombres son obligatorios.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medicoApellidos">Apellidos</label>
+                            <input id="medicoApellidos" class="form-control" formControlName="apellidos"
+                                [class.is-invalid]="f['apellidos'].touched && f['apellidos'].invalid" />
+                            <div class="invalid-feedback">Los apellidos son obligatorios.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medicoEspecializacion">Especialización</label>
+                            <select id="medicoEspecializacion" class="form-select" formControlName="especializacion"
+                                [compareWith]="compararEspecializacion"
+                                [class.is-invalid]="f['especializacion'].touched && f['especializacion'].invalid">
+                                <option [ngValue]="null">Seleccione...</option>
+                                <option *ngFor="let especializacion of listEspecializaciones" [ngValue]="especializacion">
+                                    {{ especializacion.nombre }}</option>
+                            </select>
+                            <div class="invalid-feedback">La especialización es obligatoria.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medicoRegistro">Registro profesional</label>
+                            <input id="medicoRegistro" class="form-control" formControlName="registroProfesional"
+                                [class.is-invalid]="f['registroProfesional'].touched && f['registroProfesional'].invalid" />
+                            <div class="invalid-feedback">El registro profesional es obligatorio.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medicoTelefono">Teléfono</label>
+                            <input id="medicoTelefono" class="form-control" formControlName="telefono"
+                                [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid" />
+                            <div class="invalid-feedback">Ingrese un teléfono válido (7 a 15 dígitos).</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">{{ titleBoton }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
