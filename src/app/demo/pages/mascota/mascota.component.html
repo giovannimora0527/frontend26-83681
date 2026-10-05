@@ -1,0 +1,23 @@
+<div class="container">
+    <h3>Modulo de gestión de mascotas</h3>
+    <label>Bienvenido</label>
+    <br><br><br><br>
+    <h2>{{ title }}</h2>
+    <div class="form-floating mb-3">
+        <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
+        <label for="floatingInput">Email address</label>
+    </div>
+    <div class="form-floating">
+        <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
+        <label for="floatingPassword">Password</label>
+    </div>
+    <div class="form-floating">
+        <input type="date" class="form-control" id="floatingPassword" placeholder="Fecha">
+        <label for="floatingPassword">Fecha</label>
+    </div>
+    <br><br>
+    <div>
+        <button type="button" class="btn btn-outline-primary" (click)="saludar()">Primary</button>
+        <button type="button" class="btn btn-secondary">Secondary</button>
+    </div>
+</div>
