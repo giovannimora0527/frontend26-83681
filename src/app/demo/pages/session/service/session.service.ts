@@ -1,23 +1,23 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Medico } from 'src/app/models/medico';
+import { Session } from 'src/app/models/session';
 import { BackendService } from 'src/app/services/backend.service';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
-export class MedicosService {
+export class SessionService {
 
-  // Backend: GET {apiUrlAuth}/tablas/medico  ->  SELECT * FROM clinica.medico
+  // Backend: GET {apiUrlAuth}/tablas/session  ->  SELECT * FROM clinica.session
   private api = `tablas`;
-  private tabla = `medico`;
+  private tabla = `session`;
 
   constructor(private readonly backendService: BackendService) {
   }
 
-  getMedicos(): Observable<Medico[]> {
-    return this.backendService.get<Medico[]>(environment.apiUrlAuth, this.api, this.tabla);
+  getSesiones(): Observable<Session[]> {
+    return this.backendService.get<Session[]>(environment.apiUrlAuth, this.api, this.tabla);
   }
 
 }
