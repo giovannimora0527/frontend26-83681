@@ -1,30 +1,27 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Medico } from 'src/app/models/medico';
-import { MedicosService } from './service/medicos-service.service';
+import { Raza } from 'src/app/models/raza';
+import { RazaService } from './service/raza.service';
 
-// Módulo de gestión de la tabla `medico` (base de datos clinica).
+// Módulo de gestión de la tabla `raza` (base de datos clinica).
 @Component({
-  selector: 'app-medicos',
+  selector: 'app-raza',
   imports: [CommonModule],
-  templateUrl: './medicos.component.html',
-  styleUrl: './medicos.component.scss'
+  templateUrl: './raza.component.html',
+  styleUrl: './raza.component.scss'
 })
-export class MedicosComponent implements OnDestroy {
-  titulo = 'Gestión de Médicos';
-  lista: Medico[] = [];
+export class RazaComponent implements OnDestroy {
+  titulo = 'Gestión de Razas';
+  lista: Raza[] = [];
 
-  // Columnas = campos de la tabla `medico`.
+  // Columnas = campos de la tabla `raza`.
   // tipo: 'f' fecha, 'fh' fecha y hora, 't' texto largo recortado.
   columnas = [
-    { campo: 'id', etiqueta: 'ID', tipo: '' },
-    { campo: 'tipoDocumento', etiqueta: 'Tipo doc.', tipo: '' },
-    { campo: 'numeroDocumento', etiqueta: 'Documento', tipo: '' },
-    { campo: 'nombres', etiqueta: 'Nombres', tipo: '' },
-    { campo: 'apellidos', etiqueta: 'Apellidos', tipo: '' },
-    { campo: 'telefono', etiqueta: 'Teléfono', tipo: '' },
-    { campo: 'registroProfesional', etiqueta: 'Registro profesional', tipo: '' },
-    { campo: 'especializacionId', etiqueta: 'Especialización', tipo: '' }
+    { campo: 'razaId', etiqueta: 'ID', tipo: '' },
+    { campo: 'nombre', etiqueta: 'Nombre', tipo: '' },
+    { campo: 'especie', etiqueta: 'Especie', tipo: '' },
+    { campo: 'fechaCreacion', etiqueta: 'Fecha creación', tipo: 'f' },
+    { campo: 'fechaModificacion', etiqueta: 'Fecha modificación', tipo: 'f' }
   ];
 
   terminoBusqueda = '';
@@ -37,13 +34,13 @@ export class MedicosComponent implements OnDestroy {
   ultimaActualizacion: Date | null = null;
   errorConexion = false;
 
-  constructor(private readonly medicosService: MedicosService) {
+  constructor(private readonly razaService: RazaService) {
     this.listar();
     this.temporizador = setInterval(() => this.listar(), this.segundosRecarga * 1000);
   }
 
   listar() {
-    this.medicosService.getMedicos().subscribe({
+    this.razaService.getRazas().subscribe({
       next: (data) => {
         this.lista = data ?? [];
         if (this.paginaActual > this.totalPaginas) this.paginaActual = Math.max(this.totalPaginas, 1);
@@ -52,7 +49,7 @@ export class MedicosComponent implements OnDestroy {
       },
       error: (error) => {
         this.errorConexion = true;
-        console.error('Error al consultar la tabla medico:', error);
+        console.error('Error al consultar la tabla raza:', error);
       }
     });
   }
@@ -72,7 +69,7 @@ export class MedicosComponent implements OnDestroy {
     return v;
   }
 
-  get filtrados(): Medico[] {
+  get filtrados(): Raza[] {
     const termino = this.normalizar(this.terminoBusqueda.trim());
     if (!termino) return this.lista;
     return this.lista.filter((r) =>
@@ -80,7 +77,7 @@ export class MedicosComponent implements OnDestroy {
     );
   }
 
-  get paginados(): Medico[] {
+  get paginados(): Raza[] {
     const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
     return this.filtrados.slice(inicio, inicio + this.registrosPorPagina);
   }

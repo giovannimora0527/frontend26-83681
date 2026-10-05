@@ -1,30 +1,25 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Medico } from 'src/app/models/medico';
-import { MedicosService } from './service/medicos-service.service';
+import { HistoriaMedica } from 'src/app/models/historia-medica';
+import { HistoriaMedicaService } from './service/historia-medica.service';
 
-// Módulo de gestión de la tabla `medico` (base de datos clinica).
+// Módulo de gestión de la tabla `historia_medica` (base de datos clinica).
 @Component({
-  selector: 'app-medicos',
+  selector: 'app-historia-medica',
   imports: [CommonModule],
-  templateUrl: './medicos.component.html',
-  styleUrl: './medicos.component.scss'
+  templateUrl: './historia-medica.component.html',
+  styleUrl: './historia-medica.component.scss'
 })
-export class MedicosComponent implements OnDestroy {
-  titulo = 'Gestión de Médicos';
-  lista: Medico[] = [];
+export class HistoriaMedicaComponent implements OnDestroy {
+  titulo = 'Gestión de Historias Médicas';
+  lista: HistoriaMedica[] = [];
 
-  // Columnas = campos de la tabla `medico`.
+  // Columnas = campos de la tabla `historia_medica`.
   // tipo: 'f' fecha, 'fh' fecha y hora, 't' texto largo recortado.
   columnas = [
     { campo: 'id', etiqueta: 'ID', tipo: '' },
-    { campo: 'tipoDocumento', etiqueta: 'Tipo doc.', tipo: '' },
-    { campo: 'numeroDocumento', etiqueta: 'Documento', tipo: '' },
-    { campo: 'nombres', etiqueta: 'Nombres', tipo: '' },
-    { campo: 'apellidos', etiqueta: 'Apellidos', tipo: '' },
-    { campo: 'telefono', etiqueta: 'Teléfono', tipo: '' },
-    { campo: 'registroProfesional', etiqueta: 'Registro profesional', tipo: '' },
-    { campo: 'especializacionId', etiqueta: 'Especialización', tipo: '' }
+    { campo: 'pacienteId', etiqueta: 'Paciente', tipo: '' },
+    { campo: 'fechaCreacion', etiqueta: 'Fecha creación', tipo: 'fh' }
   ];
 
   terminoBusqueda = '';
@@ -37,13 +32,13 @@ export class MedicosComponent implements OnDestroy {
   ultimaActualizacion: Date | null = null;
   errorConexion = false;
 
-  constructor(private readonly medicosService: MedicosService) {
+  constructor(private readonly historiaMedicaService: HistoriaMedicaService) {
     this.listar();
     this.temporizador = setInterval(() => this.listar(), this.segundosRecarga * 1000);
   }
 
   listar() {
-    this.medicosService.getMedicos().subscribe({
+    this.historiaMedicaService.getHistoriasMedicas().subscribe({
       next: (data) => {
         this.lista = data ?? [];
         if (this.paginaActual > this.totalPaginas) this.paginaActual = Math.max(this.totalPaginas, 1);
@@ -52,7 +47,7 @@ export class MedicosComponent implements OnDestroy {
       },
       error: (error) => {
         this.errorConexion = true;
-        console.error('Error al consultar la tabla medico:', error);
+        console.error('Error al consultar la tabla historia_medica:', error);
       }
     });
   }
@@ -72,7 +67,7 @@ export class MedicosComponent implements OnDestroy {
     return v;
   }
 
-  get filtrados(): Medico[] {
+  get filtrados(): HistoriaMedica[] {
     const termino = this.normalizar(this.terminoBusqueda.trim());
     if (!termino) return this.lista;
     return this.lista.filter((r) =>
@@ -80,7 +75,7 @@ export class MedicosComponent implements OnDestroy {
     );
   }
 
-  get paginados(): Medico[] {
+  get paginados(): HistoriaMedica[] {
     const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
     return this.filtrados.slice(inicio, inicio + this.registrosPorPagina);
   }
