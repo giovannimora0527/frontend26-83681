@@ -46,6 +46,70 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-user',
         classes: 'nav-item'
       },
+      {
+        id: 'cita',
+        title: 'Gestión de Citas',
+        type: 'item',
+        url: '/inicio/citas',
+        icon: 'feather icon-calendar',
+        classes: 'nav-item'
+      },
+      {
+        id: 'historia-medica',
+        title: 'Historias Médicas',
+        type: 'item',
+        url: '/inicio/historias-medicas',
+        icon: 'feather icon-file-text',
+        classes: 'nav-item'
+      },
+      {
+        id: 'anotacion-historia',
+        title: 'Anotaciones de Historia',
+        type: 'item',
+        url: '/inicio/anotaciones-historia',
+        icon: 'feather icon-edit',
+        classes: 'nav-item'
+      },
+      {
+        id: 'formula-medica',
+        title: 'Fórmulas Médicas',
+        type: 'item',
+        url: '/inicio/formulas-medicas',
+        icon: 'feather icon-file',
+        classes: 'nav-item'
+      },
+      {
+        id: 'medico',
+        title: 'Gestión de Médicos',
+        type: 'item',
+        url: '/inicio/medicos',
+        icon: 'feather icon-user-check',
+        classes: 'nav-item'
+      },
+      {
+        id: 'especializacion',
+        title: 'Especializaciones',
+        type: 'item',
+        url: '/inicio/especializaciones',
+        icon: 'feather icon-award',
+        classes: 'nav-item'
+      },
+      {
+        id: 'raza',
+        title: 'Gestión de Razas',
+        type: 'item',
+        url: '/inicio/razas',
+        icon: 'feather icon-tag',
+        classes: 'nav-item'
+      },
+      {
+        id: 'medicamento',
+        title: 'Gestión de Medicamentos',
+        type: 'item',
+        url: '/inicio/medicamentos',
+        icon: 'feather icon-plus-square',
+        classes: 'nav-item'
+      },
     ]
   },  
 ];
