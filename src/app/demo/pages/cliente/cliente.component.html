@@ -93,14 +93,69 @@
             <div class="modal-body">
                 <div class="card">
                     <div class="card-body">
-                        
+                        <form [formGroup]="form" (ngSubmit)="guardar()" id="formCliente" novalidate>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label" for="tipoDocumento">Tipo de documento</label>
+                                    <select id="tipoDocumento" class="form-select" formControlName="tipoDocumento">
+                                        <option *ngFor="let tipo of tiposDocumento" [value]="tipo.valor">{{ tipo.texto }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label" for="numeroDocumento">Número de documento</label>
+                                    <input id="numeroDocumento" class="form-control" type="text" formControlName="numeroDocumento"
+                                        [class.is-invalid]="f['numeroDocumento'].touched && f['numeroDocumento'].invalid" />
+                                    <div class="invalid-feedback">Entre 5 y 15 caracteres, solo letras y números.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="nombres">Nombres</label>
+                                    <input id="nombres" class="form-control" type="text" formControlName="nombres"
+                                        [class.is-invalid]="f['nombres'].touched && f['nombres'].invalid" />
+                                    <div class="invalid-feedback">Los nombres son obligatorios.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="apellidos">Apellidos</label>
+                                    <input id="apellidos" class="form-control" type="text" formControlName="apellidos"
+                                        [class.is-invalid]="f['apellidos'].touched && f['apellidos'].invalid" />
+                                    <div class="invalid-feedback">Los apellidos son obligatorios.</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="fechaNacimiento">Fecha de nacimiento</label>
+                                    <input id="fechaNacimiento" class="form-control" type="date" formControlName="fechaNacimiento" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="genero">Género</label>
+                                    <select id="genero" class="form-select" formControlName="genero">
+                                        <option value="">Sin especificar</option>
+                                        <option *ngFor="let genero of generos" [value]="genero">{{ genero }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="telefono">Teléfono</label>
+                                    <input id="telefono" class="form-control" type="tel" formControlName="telefono"
+                                        [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid" />
+                                    <div class="invalid-feedback">Ingresa un teléfono válido.</div>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label" for="direccion">Dirección</label>
+                                    <input id="direccion" class="form-control" type="text" formControlName="direccion" />
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch">
+                                        <input id="activo" class="form-check-input" type="checkbox" formControlName="activo" />
+                                        <label class="form-check-label" for="activo">Cliente activo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                 (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary">{{ titleBoton}}</button>
+                <button type="submit" form="formCliente" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : titleBoton }}</button>
             </div>
         </div>
     </div>

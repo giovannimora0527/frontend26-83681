@@ -1,0 +1,96 @@
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col col-md-9">
+                    <input class="form-control" placeholder="Buscar medicamento" type="text" (input)="tabla.buscar($event)" />
+                </div>
+                <div class="col col-md-3 text-end">
+                    <button class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevoMedicamento()" title="Agregar medicamento">
+                        <i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Nombre</th>
+                            <th class="text-center">Presentación</th>
+                            <th>Descripción</th>
+                            <th class="text-center">Fecha de creación</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (medicamento of tabla.paginados; track medicamento.id) {
+                            <tr>
+                                <td class="text-center">{{ medicamento.nombre }}</td>
+                                <td class="text-center">{{ medicamento.presentacion }}</td>
+                                <td class="text-wrap">{{ medicamento.descripcion }}</td>
+                                <td class="text-center">{{ medicamento.fechaCreacion | date:'yyyy-MM-dd' }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center" (click)="abrirEdicion(medicamento)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    {{ tabla.datos.length === 0 ? 'No hay medicamentos registrados' : 'No se encontraron medicamentos' }}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <app-paginacion [tabla]="tabla" etiqueta="Paginación de medicamentos" />
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalMedicamento" tabindex="-1" aria-labelledby="modalMedicamentoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalMedicamentoLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Cerrar" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="form" (ngSubmit)="guardar()" id="formMedicamento" novalidate>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="medNombre">Nombre</label>
+                            <input id="medNombre" class="form-control" type="text" formControlName="nombre" placeholder="Ej. Amoxicilina 250 mg"
+                                [class.is-invalid]="f['nombre'].touched && f['nombre'].invalid" />
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="medPresentacion">Presentación</label>
+                            <select id="medPresentacion" class="form-select" formControlName="presentacion"
+                                [class.is-invalid]="f['presentacion'].touched && f['presentacion'].invalid">
+                                <option value="" disabled>Selecciona la presentación</option>
+                                @for (presentacion of presentaciones; track presentacion) {
+                                    <option [value]="presentacion">{{ presentacion }}</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">Selecciona la presentación.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="medDescripcion">Descripción</label>
+                            <textarea id="medDescripcion" class="form-control" rows="3" formControlName="descripcion"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                <button type="submit" form="formMedicamento" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : titleBoton }}</button>
+            </div>
+        </div>
+    </div>
+</div>

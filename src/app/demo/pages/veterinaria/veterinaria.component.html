@@ -1,0 +1,219 @@
+<div class="vet">
+  <!-- Encabezado -->
+  <header class="vet-header">
+    <div class="vet-container vet-header__inner">
+      <button type="button" class="vet-brand" (click)="irA('inicio')">
+        <img src="assets/images/logo_mascotas.png" alt="" />
+        <span>Clínica Veterinaria <strong>Uniminuto</strong></span>
+      </button>
+
+      <button type="button" class="vet-header__toggle" (click)="menuAbierto = !menuAbierto"
+        [attr.aria-expanded]="menuAbierto" aria-controls="vet-menu" aria-label="Abrir menú">
+        <i class="feather" [ngClass]="menuAbierto ? 'icon-x' : 'icon-menu'" aria-hidden="true"></i>
+      </button>
+
+      <nav id="vet-menu" class="vet-nav" [class.vet-nav--open]="menuAbierto" aria-label="Secciones">
+        <button type="button" (click)="irA('servicios')">Servicios</button>
+        @if (medicos.length > 0) {
+          <button type="button" (click)="irA('equipo')">Equipo</button>
+        }
+        <button type="button" (click)="irA('contacto')">Contacto</button>
+        <a class="vet-btn vet-btn--ghost" routerLink="/inicio">
+          <i class="feather icon-lock" aria-hidden="true"></i> Panel administrativo
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section id="inicio" class="vet-hero">
+      <div class="vet-container vet-hero__inner">
+        <div class="vet-hero__text">
+          <span class="vet-eyebrow">Salud y bienestar animal</span>
+          <h1>Cuidamos a quienes más quieres</h1>
+          <p>
+            Médicos veterinarios, atención cercana y seguimiento a cada paciente.
+            Agenda tu cita y recibe a tu mascota como en casa.
+          </p>
+          <div class="vet-hero__actions">
+            <button type="button" class="vet-btn" (click)="irA('cita')">
+              <i class="feather icon-calendar" aria-hidden="true"></i> Agendar cita
+            </button>
+            <button type="button" class="vet-btn vet-btn--outline" (click)="irA('servicios')">Ver servicios</button>
+          </div>
+        </div>
+        <div class="vet-hero__art">
+          <img src="assets/images/logo_mascotas.png" alt="Ilustración de un perro y un gato" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Cifras desde el backend -->
+    @if (totalMascotas !== null || totalClientes !== null || medicos.length > 0) {
+      <section class="vet-stats" aria-label="La clínica en cifras">
+        <div class="vet-container vet-stats__grid">
+          @if (totalMascotas !== null) {
+            <div class="vet-stat">
+              <strong>{{ totalMascotas }}</strong>
+              <span>Mascotas atendidas</span>
+            </div>
+          }
+          @if (totalClientes !== null) {
+            <div class="vet-stat">
+              <strong>{{ totalClientes }}</strong>
+              <span>Familias que confían en nosotros</span>
+            </div>
+          }
+          @if (especies.length > 0) {
+            <div class="vet-stat">
+              <strong>{{ especies.length }}</strong>
+              <span>{{ especies.length === 1 ? 'Especie' : 'Especies' }} en atención</span>
+            </div>
+          }
+          @if (medicos.length > 0) {
+            <div class="vet-stat">
+              <strong>{{ medicos.length }}</strong>
+              <span>{{ medicos.length === 1 ? 'Médico veterinario' : 'Médicos veterinarios' }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Servicios -->
+    <section id="servicios" class="vet-section">
+      <div class="vet-container">
+        <div class="vet-section__head">
+          <span class="vet-eyebrow">Servicios</span>
+          <h2>Todo lo que tu mascota necesita</h2>
+        </div>
+        <div class="vet-services">
+          @for (servicio of servicios; track servicio.titulo) {
+            <article class="vet-card">
+              <span class="vet-card__icon"><i class="feather" [ngClass]="servicio.icono" aria-hidden="true"></i></span>
+              <h3>{{ servicio.titulo }}</h3>
+              <p>{{ servicio.descripcion }}</p>
+              <button type="button" class="vet-link" (click)="irA('cita', servicio.titulo)">
+                Solicitar <i class="feather icon-arrow-right" aria-hidden="true"></i>
+              </button>
+            </article>
+          }
+        </div>
+
+        @if (especies.length > 0) {
+          <div class="vet-species">
+            <span>Atendemos:</span>
+            @for (especie of especies; track especie.nombre) {
+              <span class="vet-chip">{{ especie.nombre }}</span>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Equipo médico -->
+    @if (medicos.length > 0) {
+      <section id="equipo" class="vet-section vet-section--tint">
+        <div class="vet-container">
+          <div class="vet-section__head">
+            <span class="vet-eyebrow">Nuestro equipo</span>
+            <h2>Profesionales que aman lo que hacen</h2>
+          </div>
+          <div class="vet-team">
+            @for (medico of medicos; track medico.id) {
+              <article class="vet-doctor">
+                <span class="vet-doctor__avatar" aria-hidden="true">{{ iniciales(medico) }}</span>
+                <div>
+                  <h3>Dr(a). {{ medico.nombres }} {{ medico.apellidos }}</h3>
+                  <span>{{ medico.especializacion?.nombre }}</span>
+                </div>
+              </article>
+            }
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- Cita y contacto -->
+    <section id="contacto" class="vet-section">
+      <div class="vet-container vet-contact">
+        <div class="vet-contact__info">
+          <span class="vet-eyebrow">Contacto</span>
+          <h2>Visítanos o agenda tu cita</h2>
+          <ul class="vet-info-list">
+            <li><i class="feather icon-map-pin" aria-hidden="true"></i> Calle 81B # 72B-70, Bogotá</li>
+            <li><i class="feather icon-phone" aria-hidden="true"></i> (601) 123 4567</li>
+            <li><i class="feather icon-mail" aria-hidden="true"></i> clinica.veterinaria&#64;uniminuto.edu</li>
+          </ul>
+          <h3>Horarios</h3>
+          <dl class="vet-hours">
+            @for (horario of horarios; track horario.dias) {
+              <div>
+                <dt>{{ horario.dias }}</dt>
+                <dd>{{ horario.horas }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+
+        <form id="cita" class="vet-form" [formGroup]="form" (ngSubmit)="solicitarCita()" novalidate>
+          <h3>Solicitar cita</h3>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="citaNombre">Tu nombre</label>
+              <input id="citaNombre" class="form-control" type="text" formControlName="nombre" autocomplete="name"
+                [class.is-invalid]="f['nombre'].touched && f['nombre'].invalid" />
+              <div class="invalid-feedback">Escribe tu nombre.</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="citaTelefono">Teléfono</label>
+              <input id="citaTelefono" class="form-control" type="tel" formControlName="telefono" autocomplete="tel"
+                [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid" />
+              <div class="invalid-feedback">Ingresa un teléfono válido.</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="citaMascota">Nombre de la mascota</label>
+              <input id="citaMascota" class="form-control" type="text" formControlName="mascota"
+                [class.is-invalid]="f['mascota'].touched && f['mascota'].invalid" />
+              <div class="invalid-feedback">¿Cómo se llama tu mascota?</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="citaFecha">Fecha</label>
+              <input id="citaFecha" class="form-control" type="date" [min]="hoy" formControlName="fecha"
+                [class.is-invalid]="f['fecha'].touched && f['fecha'].invalid" />
+              <div class="invalid-feedback">Elige una fecha.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="citaServicio">Servicio</label>
+              <select id="citaServicio" class="form-select" formControlName="servicio"
+                [class.is-invalid]="f['servicio'].touched && f['servicio'].invalid">
+                <option value="" disabled>Selecciona un servicio</option>
+                @for (servicio of servicios; track servicio.titulo) {
+                  <option [value]="servicio.titulo">{{ servicio.titulo }}</option>
+                }
+              </select>
+              <div class="invalid-feedback">Selecciona un servicio.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="citaMensaje">Comentarios (opcional)</label>
+              <textarea id="citaMensaje" class="form-control" rows="3" formControlName="mensaje"></textarea>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="vet-btn vet-btn--block">
+                <i class="feather icon-check-circle" aria-hidden="true"></i> Enviar solicitud
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div class="vet-bottom">
+    <div class="vet-container">
+      <span>© {{ anioActual }} Clínica Veterinaria Uniminuto</span>
+      <a routerLink="/inicio">Acceso administrativo</a>
+    </div>
+  </div>
+</div>

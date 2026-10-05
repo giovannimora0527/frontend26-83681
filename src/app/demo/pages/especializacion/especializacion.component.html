@@ -1,0 +1,89 @@
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col col-md-9">
+                    <input class="form-control" placeholder="Buscar especialización" type="text" (input)="tabla.buscar($event)" />
+                </div>
+                <div class="col col-md-3 text-end">
+                    <button class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevaEspecializacion()" title="Agregar especialización">
+                        <i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Código</th>
+                            <th class="text-center">Nombre</th>
+                            <th>Descripción</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (especializacion of tabla.paginados; track especializacion.id) {
+                            <tr>
+                                <td class="text-center"><span class="badge bg-light text-dark">{{ especializacion.codigoEspecializacion }}</span></td>
+                                <td class="text-center">{{ especializacion.nombre }}</td>
+                                <td class="text-wrap">{{ especializacion.descripcion }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center" (click)="abrirEdicion(especializacion)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    {{ tabla.datos.length === 0 ? 'No hay especializaciones registradas' : 'No se encontraron especializaciones' }}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <app-paginacion [tabla]="tabla" etiqueta="Paginación de especializaciones" />
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEspecializacion" tabindex="-1" aria-labelledby="modalEspecializacionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalEspecializacionLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Cerrar" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="form" (ngSubmit)="guardar()" id="formEspecializacion" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="espCodigo">Código</label>
+                            <input id="espCodigo" class="form-control" type="text" formControlName="codigoEspecializacion" placeholder="MG-01"
+                                [class.is-invalid]="f['codigoEspecializacion'].touched && f['codigoEspecializacion'].invalid" />
+                            <div class="invalid-feedback">Máximo 10 caracteres.</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="espNombre">Nombre</label>
+                            <input id="espNombre" class="form-control" type="text" formControlName="nombre"
+                                [class.is-invalid]="f['nombre'].touched && f['nombre'].invalid" />
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="espDescripcion">Descripción</label>
+                            <textarea id="espDescripcion" class="form-control" rows="3" formControlName="descripcion"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                <button type="submit" form="formEspecializacion" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : titleBoton }}</button>
+            </div>
+        </div>
+    </div>
+</div>

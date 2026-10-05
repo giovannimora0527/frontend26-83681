@@ -2,7 +2,11 @@ import { Component } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 
 import { MascotaServiceService } from './service/mascota-service.service';
+import { ClienteService } from '../cliente/service/cliente.service';
+import { RazaService } from '../raza/service/raza.service';
 import { Mascota } from 'src/app/models/mascota';
+import { Raza } from 'src/app/models/raza';
+import { Cliente } from 'src/app/models/cliente';
 import { FormBuilder, FormGroup, Validators, AbstractControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import Swal from 'sweetalert2';
@@ -30,20 +34,44 @@ export class MascotaComponent {
   // Formulario para crear o editar mascota.
   form!: FormGroup;
   mascotaSelected: Mascota | null = null;
+  guardando = false;
+
+  // Listas para los selects del formulario.
+  listRazas: Raza[] = [];
+  listClientes: Cliente[] = [];
 
   constructor(private readonly mascotaService: MascotaServiceService,
+    private readonly razaService: RazaService,
+    private readonly clienteService: ClienteService,
     private readonly formBuilder: FormBuilder) {
     this.listar();
+    this.cargarCatalogos();
     this.inicializarFormulario();
   }
+
+  // Carga las razas y los clientes que se muestran en los selects del formulario.
+  cargarCatalogos() {
+    this.razaService.getRazas().subscribe({
+      next: (data) => this.listRazas = data,
+      error: (error) => console.error('Error al obtener las razas:', error)
+    });
+    this.clienteService.getClientes().subscribe({
+      next: (data) => this.listClientes = data.filter((cliente) => cliente.activo !== false),
+      error: (error) => console.error('Error al obtener los clientes:', error)
+    });
+  }
+
+  // Compara razas y clientes por id para que los selects marquen el valor al editar.
+  compararRaza = (a: Raza | null, b: Raza | null) => a?.razaId === b?.razaId;
+  compararCliente = (a: Cliente | null, b: Cliente | null) => a?.clienteId === b?.clienteId;
 
   // Metodo ue permite inicializar el formulario con sus controles y validaciones.
   inicializarFormulario() {
     this.form = this.formBuilder.group({
-      nombreMascota: ['', Validators.required],
-      raza: ['', Validators.required],
-      edad: ['', Validators.required],
-      cliente: ['', Validators.required]
+      nombreMascota: ['', [Validators.required, Validators.maxLength(60)]],
+      raza: [null, Validators.required],
+      edad: [null, [Validators.required, Validators.min(0), Validators.max(40)]],
+      cliente: [null, Validators.required]
     });
   }
 
@@ -179,5 +207,45 @@ export class MascotaComponent {
     }
   }
 
+  // Guarda o actualiza la mascota segun el modo del formulario.
+  guardar() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const valores = this.form.value;
+    const mascota: Mascota = {
+      ...this.mascotaSelected,
+      nombreMascota: valores.nombreMascota.trim(),
+      edad: Number(valores.edad),
+      raza: valores.raza,
+      cliente: valores.cliente
+    };
+
+    const peticion = this.modoFormulario === 'C'
+      ? this.mascotaService.guardarMascota(mascota)
+      : this.mascotaService.actualizarMascota(mascota);
+
+    this.guardando = true;
+    peticion.subscribe({
+      next: () => {
+        this.guardando = false;
+        this.closeModal();
+        this.listar();
+        Swal.fire({
+          icon: 'success',
+          title: this.modoFormulario === 'C' ? 'Mascota registrada' : 'Mascota actualizada',
+          timer: 1800,
+          showConfirmButton: false
+        });
+      },
+      error: (error) => {
+        this.guardando = false;
+        console.error('Error al guardar la mascota:', error);
+        Swal.fire({ icon: 'error', title: 'No se pudo guardar', text: 'Intenta de nuevo más tarde.' });
+      }
+    });
+  }
 
 }

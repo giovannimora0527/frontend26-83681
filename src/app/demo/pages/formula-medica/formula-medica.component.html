@@ -1,0 +1,126 @@
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row g-2">
+                <div class="col-md-7">
+                    <input class="form-control" placeholder="Buscar mascota, médico, medicamento o dosis" type="text" (input)="tabla.buscar($event)" />
+                </div>
+                <div class="col-md-5 text-end">
+                    <button class="btn btn-md btn-outline-secondary me-2" type="button" (click)="cambiarOrden()"
+                        [title]="ordenAsc ? 'Mostrando las más antiguas primero' : 'Mostrando las más recientes primero'">
+                        <i class="feather" [ngClass]="ordenAsc ? 'icon-arrow-up' : 'icon-arrow-down'" aria-hidden="true"></i>
+                        {{ ordenAsc ? 'Más antiguas' : 'Más recientes' }}
+                    </button>
+                    <button class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevaFormula()" title="Agregar fórmula">
+                        <i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Nueva
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Fecha</th>
+                            <th class="text-center">Cita</th>
+                            <th class="text-center">Medicamento</th>
+                            <th class="text-center">Dosis</th>
+                            <th>Indicaciones</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (formula of tabla.paginados; track formula.id) {
+                            <tr>
+                                <td class="text-center">{{ formula.fechaCreacionRegistro | date:'yyyy-MM-dd' }}</td>
+                                <td class="text-center">
+                                    @if (cita(formula); as cita) {
+                                        {{ cita.mascota?.nombreMascota }} · {{ cita.fechaHora | date:'yyyy-MM-dd' }}
+                                        <small class="d-block text-muted">{{ cita.medico?.nombres }} {{ cita.medico?.apellidos }}</small>
+                                    } @else {
+                                        <span class="text-muted">Cita #{{ formula.citaId }}</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    {{ medicamento(formula)?.nombre ?? 'Medicamento #' + formula.medicamentoId }}
+                                    <small class="d-block text-muted">{{ medicamento(formula)?.presentacion }}</small>
+                                </td>
+                                <td class="text-center">{{ formula.dosis }}</td>
+                                <td class="text-wrap">{{ formula.indicaciones }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center" (click)="abrirEdicion(formula)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    {{ tabla.datos.length === 0 ? 'No hay fórmulas registradas' : 'No se encontraron fórmulas' }}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <app-paginacion [tabla]="tabla" etiqueta="Paginación de fórmulas" />
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalFormula" tabindex="-1" aria-labelledby="modalFormulaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalFormulaLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Cerrar" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="form" (ngSubmit)="guardar()" id="formFormula" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="formCita">Cita</label>
+                            <select id="formCita" class="form-select" formControlName="citaId"
+                                [class.is-invalid]="f['citaId'].touched && f['citaId'].invalid">
+                                <option [ngValue]="null" disabled>Selecciona la cita</option>
+                                @for (cita of listCitas; track cita.id) {
+                                    <option [ngValue]="cita.id">
+                                        {{ cita.fechaHora | date:'yyyy-MM-dd HH:mm' }} · {{ cita.mascota?.nombreMascota }} · {{ cita.medico?.nombres }} {{ cita.medico?.apellidos }}
+                                    </option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">Selecciona la cita.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="formMedicamento">Medicamento</label>
+                            <select id="formMedicamento" class="form-select" formControlName="medicamentoId"
+                                [class.is-invalid]="f['medicamentoId'].touched && f['medicamentoId'].invalid">
+                                <option [ngValue]="null" disabled>Selecciona el medicamento</option>
+                                @for (medicamento of listMedicamentos; track medicamento.id) {
+                                    <option [ngValue]="medicamento.id">{{ medicamento.nombre }} ({{ medicamento.presentacion }})</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">Selecciona el medicamento.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="formDosis">Dosis</label>
+                            <input id="formDosis" class="form-control" type="text" formControlName="dosis" placeholder="Ej. 1 tableta cada 12 h"
+                                [class.is-invalid]="f['dosis'].touched && f['dosis'].invalid" />
+                            <div class="invalid-feedback">La dosis es obligatoria.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="formIndicaciones">Indicaciones</label>
+                            <textarea id="formIndicaciones" class="form-control" rows="3" formControlName="indicaciones"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                <button type="submit" form="formFormula" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : titleBoton }}</button>
+            </div>
+        </div>
+    </div>
+</div>

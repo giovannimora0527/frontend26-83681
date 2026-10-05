@@ -1,0 +1,159 @@
+<div class="container-fluid">
+    <div class="row g-3 mb-3">
+        @for (estado of estados; track estado) {
+            <div class="col-6 col-lg-3">
+                <button type="button" class="card h-100 w-100 text-start border-0 mb-0"
+                    [class.shadow]="estadoFiltro === estado"
+                    (click)="estadoFiltro = estadoFiltro === estado ? '' : estado; aplicarEstado()"
+                    [attr.aria-pressed]="estadoFiltro === estado">
+                    <div class="card-body py-3">
+                        <span class="badge mb-2" [ngClass]="coloresEstado[estado]">{{ estado }}</span>
+                        <h3 class="mb-0">{{ contarEstado(estado) }}</h3>
+                    </div>
+                </button>
+            </div>
+        }
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="row g-2 align-items-end">
+                <div class="col-sm-6 col-lg-2">
+                    <label class="form-label mb-1" for="citaDesde">Desde</label>
+                    <input id="citaDesde" class="form-control" type="date" [(ngModel)]="fechaInicio" (change)="listar()" />
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label class="form-label mb-1" for="citaHasta">Hasta</label>
+                    <input id="citaHasta" class="form-control" type="date" [min]="fechaInicio" [(ngModel)]="fechaFinal" (change)="listar()" />
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label class="form-label mb-1" for="citaEstado">Estado</label>
+                    <select id="citaEstado" class="form-select" [(ngModel)]="estadoFiltro" (change)="aplicarEstado()">
+                        <option value="">Todos</option>
+                        @for (estado of estados; track estado) {
+                            <option [value]="estado">{{ estado }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-6 col-lg-4">
+                    <input class="form-control" placeholder="Buscar mascota, dueño, médico o motivo" type="text" (input)="tabla.buscar($event)" />
+                </div>
+                <div class="col-lg-2 text-end">
+                    <button class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevaCita()" title="Agendar cita">
+                        <i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Nueva cita
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Fecha y hora</th>
+                            <th class="text-center">Mascota</th>
+                            <th class="text-center">Dueño</th>
+                            <th class="text-center">Médico</th>
+                            <th>Motivo</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (cita of tabla.paginados; track cita.id) {
+                            <tr>
+                                <td class="text-center">{{ cita.fechaHora | date:'yyyy-MM-dd HH:mm' }}</td>
+                                <td class="text-center">
+                                    {{ cita.mascota?.nombreMascota }}
+                                    <small class="d-block text-muted">{{ cita.mascota?.raza?.especie }}</small>
+                                </td>
+                                <td class="text-center">{{ cita.mascota?.cliente?.nombres }} {{ cita.mascota?.cliente?.apellidos }}</td>
+                                <td class="text-center">{{ cita.medico?.nombres }} {{ cita.medico?.apellidos }}</td>
+                                <td class="text-wrap">{{ cita.motivo }}</td>
+                                <td class="text-center">
+                                    <span class="badge" [ngClass]="coloresEstado[cita.estado ?? ''] ?? 'bg-light text-dark'">{{ cita.estado }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center" (click)="abrirEdicion(cita)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="7" class="text-center">No hay citas en este rango de fechas</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <app-paginacion [tabla]="tabla" etiqueta="Paginación de citas" />
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCita" tabindex="-1" aria-labelledby="modalCitaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalCitaLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Cerrar" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="form" (ngSubmit)="guardar()" id="formCita" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="citaMascota">Mascota</label>
+                            <select id="citaMascota" class="form-select" formControlName="mascota" [compareWith]="compararMascota"
+                                [class.is-invalid]="f['mascota'].touched && f['mascota'].invalid">
+                                <option [ngValue]="null" disabled>Selecciona la mascota</option>
+                                @for (mascota of listMascotas; track mascota.mascotaId) {
+                                    <option [ngValue]="mascota">
+                                        {{ mascota.nombreMascota }} ({{ mascota.raza?.especie }}) · {{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}
+                                    </option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">Selecciona la mascota.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="citaMedico">Médico</label>
+                            <select id="citaMedico" class="form-select" formControlName="medico" [compareWith]="compararMedico"
+                                [class.is-invalid]="f['medico'].touched && f['medico'].invalid">
+                                <option [ngValue]="null" disabled>Selecciona el médico</option>
+                                @for (medico of listMedicos; track medico.id) {
+                                    <option [ngValue]="medico">{{ medico.nombres }} {{ medico.apellidos }} · {{ medico.especializacion?.nombre }}</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">Selecciona el médico.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="citaFechaHora">Fecha y hora</label>
+                            <input id="citaFechaHora" class="form-control" type="datetime-local" formControlName="fechaHora"
+                                [class.is-invalid]="f['fechaHora'].touched && f['fechaHora'].invalid" />
+                            <div class="invalid-feedback">Elige la fecha y hora.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="citaEstadoForm">Estado</label>
+                            <select id="citaEstadoForm" class="form-select" formControlName="estado">
+                                @for (estado of estados; track estado) {
+                                    <option [value]="estado">{{ estado }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="citaMotivo">Motivo</label>
+                            <textarea id="citaMotivo" class="form-control" rows="2" formControlName="motivo"
+                                [class.is-invalid]="f['motivo'].touched && f['motivo'].invalid"></textarea>
+                            <div class="invalid-feedback">Describe el motivo de la cita.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                <button type="submit" form="formCita" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : titleBoton }}</button>
+            </div>
+        </div>
+    </div>
+</div>

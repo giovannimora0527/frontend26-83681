@@ -1,0 +1,166 @@
+<div class="container-fluid">
+    <div class="row g-3">
+        <!-- Lista de historias -->
+        <div class="col-lg-4">
+            <div class="card h-100 mb-0">
+                <div class="card-header">
+                    <div class="d-flex gap-2">
+                        <input class="form-control" placeholder="Buscar mascota o dueño" type="text"
+                            (input)="terminoBusqueda = $any($event.target).value" />
+                        <button class="btn btn-outline-primary text-nowrap" (click)="abrirModalHistoria()" title="Abrir nueva historia">
+                            <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;Nueva
+                        </button>
+                    </div>
+                </div>
+                <div class="list-group list-group-flush historias-lista">
+                    @for (historia of historiasFiltradas; track historia.id) {
+                        <button type="button" class="list-group-item list-group-item-action"
+                            [class.active]="historia.id === historiaSelected?.id" (click)="seleccionar(historia)">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ historia.mascota?.nombreMascota }}</strong>
+                                <small>HC-{{ historia.id }}</small>
+                            </div>
+                            <small>
+                                {{ historia.mascota?.raza?.especie }} · {{ historia.mascota?.cliente?.nombres }} {{ historia.mascota?.cliente?.apellidos }}
+                            </small>
+                        </button>
+                    } @empty {
+                        <div class="list-group-item text-center text-muted py-4">
+                            {{ historias.length === 0 ? 'No hay historias registradas' : 'No se encontraron historias' }}
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalle de la historia -->
+        <div class="col-lg-8">
+            <div class="card h-100 mb-0">
+                @if (historiaSelected; as historia) {
+                    <div class="card-header">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <div>
+                                <h4 class="mb-1">{{ historia.mascota?.nombreMascota }}</h4>
+                                <span class="text-muted">
+                                    {{ historia.mascota?.raza?.especie }} · {{ historia.mascota?.raza?.nombre }} · {{ historia.mascota?.edad }} años
+                                </span>
+                            </div>
+                            <div class="text-sm-end">
+                                <span class="badge bg-light text-dark">Historia HC-{{ historia.id }}</span>
+                                <small class="d-block text-muted mt-1">Abierta el {{ historia.fechaCreacion | date:'yyyy-MM-dd' }}</small>
+                            </div>
+                        </div>
+                        <div class="mt-2 small">
+                            <i class="feather icon-user" aria-hidden="true"></i>
+                            Dueño: {{ historia.mascota?.cliente?.nombres }} {{ historia.mascota?.cliente?.apellidos }}
+                            · {{ historia.mascota?.cliente?.telefono }}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form [formGroup]="formAnotacion" (ngSubmit)="agregarAnotacion()" class="anotacion-form mb-4" novalidate>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label" for="anotMedico">Médico</label>
+                                    <select id="anotMedico" class="form-select" formControlName="medico"
+                                        [class.is-invalid]="fa['medico'].touched && fa['medico'].invalid">
+                                        <option [ngValue]="null" disabled>Selecciona</option>
+                                        @for (medico of listMedicos; track medico.id) {
+                                            <option [ngValue]="medico">{{ medico.nombres }} {{ medico.apellidos }}</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label" for="anotDescripcion">Nueva anotación</label>
+                                    <textarea id="anotDescripcion" class="form-control" rows="2" formControlName="descripcion"
+                                        placeholder="Hallazgos, diagnóstico, tratamiento..."
+                                        [class.is-invalid]="fa['descripcion'].touched && fa['descripcion'].invalid"></textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary" [disabled]="guardando">
+                                        <i class="feather icon-plus" aria-hidden="true"></i> {{ guardando ? 'Guardando...' : 'Agregar anotación' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <h5 class="mb-3">Evolución ({{ anotaciones.length }})</h5>
+                        @if (cargandoAnotaciones) {
+                            <p class="text-muted">Cargando anotaciones...</p>
+                        } @else {
+                            <ol class="timeline">
+                                @for (anotacion of anotaciones; track anotacion.id) {
+                                    <li>
+                                        <div class="d-flex flex-wrap justify-content-between gap-1">
+                                            <strong>{{ anotacion.medico?.nombres }} {{ anotacion.medico?.apellidos }}</strong>
+                                            <small class="text-muted">{{ anotacion.fecha | date:'yyyy-MM-dd HH:mm' }}</small>
+                                        </div>
+                                        <p class="mb-0">{{ anotacion.descripcion }}</p>
+                                    </li>
+                                } @empty {
+                                    <li class="text-muted">Esta historia aún no tiene anotaciones.</li>
+                                }
+                            </ol>
+                        }
+                    </div>
+                } @else {
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center text-muted py-5">
+                        <i class="feather icon-file-text mb-2 fs-2" aria-hidden="true"></i>
+                        <p class="mb-0">Selecciona una historia para ver su evolución.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalHistoria" tabindex="-1" aria-labelledby="modalHistoriaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalHistoriaLabel">Abrir historia médica</h1>
+                <button type="button" class="btn-close" aria-label="Cerrar" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="formHistoria" (ngSubmit)="crearHistoria()" id="formHistoria" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="histMascota">Mascota</label>
+                            <select id="histMascota" class="form-select" formControlName="mascota"
+                                [class.is-invalid]="fh['mascota'].touched && fh['mascota'].invalid">
+                                <option [ngValue]="null" disabled>Selecciona la mascota</option>
+                                @for (mascota of mascotasSinHistoria; track mascota.mascotaId) {
+                                    <option [ngValue]="mascota">{{ mascota.nombreMascota }} · {{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">
+                                {{ mascotasSinHistoria.length === 0 ? 'Todas las mascotas ya tienen historia.' : 'Selecciona la mascota.' }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="histMedico">Médico</label>
+                            <select id="histMedico" class="form-select" formControlName="medico"
+                                [class.is-invalid]="fh['medico'].touched && fh['medico'].invalid">
+                                <option [ngValue]="null" disabled>Selecciona el médico</option>
+                                @for (medico of listMedicos; track medico.id) {
+                                    <option [ngValue]="medico">{{ medico.nombres }} {{ medico.apellidos }}</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">Selecciona el médico.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="histDescripcion">Anotación de ingreso</label>
+                            <textarea id="histDescripcion" class="form-control" rows="3" formControlName="descripcion"
+                                [class.is-invalid]="fh['descripcion'].touched && fh['descripcion'].invalid"></textarea>
+                            <div class="invalid-feedback">Escribe la anotación de ingreso.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                <button type="submit" form="formHistoria" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : 'Abrir historia' }}</button>
+            </div>
+        </div>
+    </div>
+</div>

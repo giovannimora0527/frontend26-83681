@@ -94,14 +94,52 @@
             <div class="modal-body">
                 <div class="card">
                     <div class="card-body">
-                      
+                        <form [formGroup]="form" (ngSubmit)="guardar()" id="formMascota" novalidate>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="nombreMascota">Nombre</label>
+                                    <input id="nombreMascota" class="form-control" type="text" formControlName="nombreMascota"
+                                        [class.is-invalid]="f['nombreMascota'].touched && f['nombreMascota'].invalid" />
+                                    <div class="invalid-feedback">El nombre es obligatorio.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="edad">Edad (años)</label>
+                                    <input id="edad" class="form-control" type="number" min="0" max="40" formControlName="edad"
+                                        [class.is-invalid]="f['edad'].touched && f['edad'].invalid" />
+                                    <div class="invalid-feedback">Ingresa una edad entre 0 y 40.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="raza">Raza</label>
+                                    <select id="raza" class="form-select" formControlName="raza" [compareWith]="compararRaza"
+                                        [class.is-invalid]="f['raza'].touched && f['raza'].invalid">
+                                        <option [ngValue]="null" disabled>Selecciona una raza</option>
+                                        <option *ngFor="let raza of listRazas" [ngValue]="raza">
+                                            {{ raza.especie }} - {{ raza.nombre }}
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback">Selecciona la raza.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="cliente">Dueño</label>
+                                    <select id="cliente" class="form-select" formControlName="cliente" [compareWith]="compararCliente"
+                                        [class.is-invalid]="f['cliente'].touched && f['cliente'].invalid">
+                                        <option [ngValue]="null" disabled>Selecciona el cliente</option>
+                                        <option *ngFor="let cliente of listClientes" [ngValue]="cliente">
+                                            {{ cliente.nombres }} {{ cliente.apellidos }} ({{ cliente.numeroDocumento }})
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback">Selecciona el dueño de la mascota.</div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                 (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary">{{ titleBoton}}</button>
+                <button type="submit" form="formMascota" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : titleBoton }}</button>
             </div>
         </div>
     </div>

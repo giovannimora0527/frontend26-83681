@@ -1,1 +1,130 @@
-<p>medicos works!</p>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col col-md-9">
+                    <input class="form-control" placeholder="Buscar médico" type="text" (input)="tabla.buscar($event)" />
+                </div>
+                <div class="col col-md-3 text-end">
+                    <button class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevoMedico()" title="Agregar médico">
+                        <i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Documento</th>
+                            <th class="text-center">Nombres</th>
+                            <th class="text-center">Apellidos</th>
+                            <th class="text-center">Especialización</th>
+                            <th class="text-center">Registro profesional</th>
+                            <th class="text-center">Teléfono</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (medico of tabla.paginados; track medico.id) {
+                            <tr>
+                                <td class="text-center">{{ medico.tipoDocumento }} {{ medico.numeroDocumento }}</td>
+                                <td class="text-center">{{ medico.nombres }}</td>
+                                <td class="text-center">{{ medico.apellidos }}</td>
+                                <td class="text-center">{{ medico.especializacion?.nombre }}</td>
+                                <td class="text-center">{{ medico.registroProfesional }}</td>
+                                <td class="text-center">{{ medico.telefono }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center" (click)="abrirEdicion(medico)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    {{ tabla.datos.length === 0 ? 'No hay médicos registrados' : 'No se encontraron médicos' }}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <app-paginacion [tabla]="tabla" etiqueta="Paginación de médicos" />
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalCrearMedico" tabindex="-1" aria-labelledby="modalCrearMedicoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalCrearMedicoLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Cerrar" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="form" (ngSubmit)="guardar()" id="formMedico" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="medTipoDoc">Tipo de documento</label>
+                            <select id="medTipoDoc" class="form-select" formControlName="tipoDocumento">
+                                @for (tipo of tiposDocumento; track tipo.valor) {
+                                    <option [value]="tipo.valor">{{ tipo.texto }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="medNumeroDoc">Número de documento</label>
+                            <input id="medNumeroDoc" class="form-control" type="text" formControlName="numeroDocumento"
+                                [class.is-invalid]="f['numeroDocumento'].touched && f['numeroDocumento'].invalid" />
+                            <div class="invalid-feedback">Entre 5 y 15 caracteres, solo letras y números.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medNombres">Nombres</label>
+                            <input id="medNombres" class="form-control" type="text" formControlName="nombres"
+                                [class.is-invalid]="f['nombres'].touched && f['nombres'].invalid" />
+                            <div class="invalid-feedback">Los nombres son obligatorios.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medApellidos">Apellidos</label>
+                            <input id="medApellidos" class="form-control" type="text" formControlName="apellidos"
+                                [class.is-invalid]="f['apellidos'].touched && f['apellidos'].invalid" />
+                            <div class="invalid-feedback">Los apellidos son obligatorios.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medEspecializacion">Especialización</label>
+                            <select id="medEspecializacion" class="form-select" formControlName="especializacion"
+                                [compareWith]="compararEspecializacion"
+                                [class.is-invalid]="f['especializacion'].touched && f['especializacion'].invalid">
+                                <option [ngValue]="null" disabled>Selecciona la especialización</option>
+                                @for (especializacion of listEspecializaciones; track especializacion.id) {
+                                    <option [ngValue]="especializacion">{{ especializacion.nombre }}</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">Selecciona la especialización.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medRegistro">Registro profesional</label>
+                            <input id="medRegistro" class="form-control" type="text" formControlName="registroProfesional" placeholder="MV-00000"
+                                [class.is-invalid]="f['registroProfesional'].touched && f['registroProfesional'].invalid" />
+                            <div class="invalid-feedback">El registro profesional es obligatorio.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="medTelefono">Teléfono</label>
+                            <input id="medTelefono" class="form-control" type="tel" formControlName="telefono"
+                                [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid" />
+                            <div class="invalid-feedback">Ingresa un teléfono válido.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                <button type="submit" form="formMedico" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : titleBoton }}</button>
+            </div>
+        </div>
+    </div>
+</div>

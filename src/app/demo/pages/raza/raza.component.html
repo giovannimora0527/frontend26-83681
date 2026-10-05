@@ -1,0 +1,90 @@
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col col-md-9">
+                    <input class="form-control" placeholder="Buscar por especie o raza" type="text" (input)="tabla.buscar($event)" />
+                </div>
+                <div class="col col-md-3 text-end">
+                    <button class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevaRaza()" title="Agregar raza">
+                        <i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Especie</th>
+                            <th class="text-center">Raza</th>
+                            <th class="text-center">Fecha de creación</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (raza of tabla.paginados; track raza.razaId) {
+                            <tr>
+                                <td class="text-center">{{ raza.especie }}</td>
+                                <td class="text-center">{{ raza.nombre }}</td>
+                                <td class="text-center">{{ raza.fechaCreacion | date:'yyyy-MM-dd' }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center" (click)="abrirEdicion(raza)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    {{ tabla.datos.length === 0 ? 'No hay razas registradas' : 'No se encontraron razas' }}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <app-paginacion [tabla]="tabla" etiqueta="Paginación de razas" />
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalRaza" tabindex="-1" aria-labelledby="modalRazaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalRazaLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Cerrar" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="form" (ngSubmit)="guardar()" id="formRaza" novalidate>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="razaEspecie">Especie</label>
+                            <input id="razaEspecie" class="form-control" type="text" list="listaEspecies" formControlName="especie"
+                                [class.is-invalid]="f['especie'].touched && f['especie'].invalid" />
+                            <datalist id="listaEspecies">
+                                @for (especie of especies; track especie) {
+                                    <option [value]="especie"></option>
+                                }
+                            </datalist>
+                            <div class="invalid-feedback">La especie es obligatoria.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="razaNombre">Nombre de la raza</label>
+                            <input id="razaNombre" class="form-control" type="text" formControlName="nombre"
+                                [class.is-invalid]="f['nombre'].touched && f['nombre'].invalid" />
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                <button type="submit" form="formRaza" class="btn btn-primary" [disabled]="guardando">
+                    {{ guardando ? 'Guardando...' : titleBoton }}</button>
+            </div>
+        </div>
+    </div>
+</div>

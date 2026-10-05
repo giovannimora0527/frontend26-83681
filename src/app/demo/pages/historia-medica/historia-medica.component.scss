@@ -1,0 +1,39 @@
+.historias-lista {
+	max-height: 600px;
+	overflow-y: auto;
+}
+
+.anotacion-form {
+	padding: 1rem;
+	border: 1px solid #e3eaef;
+	border-radius: 8px;
+	background: #f8fbfb;
+}
+
+// Linea de tiempo de la evolucion del paciente.
+.timeline {
+	margin: 0;
+	padding: 0 0 0 1.5rem;
+	border-left: 2px solid #d9e5e6;
+	list-style: none;
+
+	li {
+		position: relative;
+		padding: 0 0 1.25rem;
+
+		&::before {
+			content: '';
+			position: absolute;
+			top: 0.35rem;
+			left: calc(-1.5rem - 6px);
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: #087e8b;
+		}
+
+		p {
+			white-space: pre-line;
+		}
+	}
+}
