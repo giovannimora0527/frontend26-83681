@@ -1,7 +1,7 @@
 <div class="container-fluid">
-    <div class="row g-3 mb-3">
+    <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 mb-3">
         @for (estado of estados; track estado) {
-            <div class="col-6 col-lg-3">
+            <div class="col">
                 <button type="button" class="card h-100 w-100 text-start border-0 mb-0"
                     [class.shadow]="estadoFiltro === estado"
                     (click)="estadoFiltro = estadoFiltro === estado ? '' : estado; aplicarEstado()"
@@ -39,7 +39,7 @@
                     <input class="form-control" placeholder="Buscar mascota, dueño, médico o motivo" type="text" (input)="tabla.buscar($event)" />
                 </div>
                 <div class="col-lg-2 text-end">
-                    <button class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                    <button class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center text-nowrap"
                         (click)="nuevaCita()" title="Agendar cita">
                         <i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Nueva cita
                     </button>
@@ -68,8 +68,17 @@
                                     {{ cita.mascota?.nombreMascota }}
                                     <small class="d-block text-muted">{{ cita.mascota?.raza?.especie }}</small>
                                 </td>
-                                <td class="text-center">{{ cita.mascota?.cliente?.nombres }} {{ cita.mascota?.cliente?.apellidos }}</td>
-                                <td class="text-center">{{ cita.medico?.nombres }} {{ cita.medico?.apellidos }}</td>
+                                <td class="text-center">
+                                    {{ cita.mascota?.cliente?.nombres }} {{ cita.mascota?.cliente?.apellidos }}
+                                    <small class="d-block text-muted">{{ cita.mascota?.cliente?.telefono }}</small>
+                                </td>
+                                <td class="text-center">
+                                    @if (cita.medico) {
+                                        {{ cita.medico.nombres }} {{ cita.medico.apellidos }}
+                                    } @else {
+                                        <span class="text-muted fst-italic">Sin asignar</span>
+                                    }
+                                </td>
                                 <td class="text-wrap">{{ cita.motivo }}</td>
                                 <td class="text-center">
                                     <span class="badge" [ngClass]="coloresEstado[cita.estado ?? ''] ?? 'bg-light text-dark'">{{ cita.estado }}</span>
@@ -101,12 +110,23 @@
             </div>
             <div class="modal-body">
                 <form [formGroup]="form" (ngSubmit)="guardar()" id="formCita" novalidate>
+                    @if (citaSelected && !citaSelected.mascota?.mascotaId) {
+                        <div class="alert alert-warning">
+                            <strong>Solicitud desde la página web.</strong>
+                            {{ citaSelected.mascota?.cliente?.nombres }} ({{ citaSelected.mascota?.cliente?.telefono }})
+                            pidió cita para <strong>{{ citaSelected.mascota?.nombreMascota }}</strong>.
+                            Asigna el médico y cambia el estado a Programada o Confirmada. Si la mascota ya está registrada, selecciónala de la lista.
+                        </div>
+                    }
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="citaMascota">Mascota</label>
                             <select id="citaMascota" class="form-select" formControlName="mascota" [compareWith]="compararMascota"
                                 [class.is-invalid]="f['mascota'].touched && f['mascota'].invalid">
                                 <option [ngValue]="null" disabled>Selecciona la mascota</option>
+                                @if (citaSelected?.mascota && !citaSelected?.mascota?.mascotaId) {
+                                    <option [ngValue]="citaSelected?.mascota">{{ citaSelected?.mascota?.nombreMascota }} (sin registrar)</option>
+                                }
                                 @for (mascota of listMascotas; track mascota.mascotaId) {
                                     <option [ngValue]="mascota">
                                         {{ mascota.nombreMascota }} ({{ mascota.raza?.especie }}) · {{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}

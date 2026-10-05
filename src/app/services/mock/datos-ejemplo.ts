@@ -9,6 +9,7 @@ import { Mascota } from 'src/app/models/mascota';
 import { Medicamento } from 'src/app/models/medicamento';
 import { Medico } from 'src/app/models/medico';
 import { Raza } from 'src/app/models/raza';
+import { Usuario } from 'src/app/models/usuario';
 
 const especializaciones: Especializacion[] = [
   { id: 1, codigoEspecializacion: 'MG-01', nombre: 'Medicina general', descripcion: 'Consulta, diagnóstico y control preventivo.' },
@@ -84,6 +85,14 @@ const formulas: FormulaMedica[] = [
   { id: 3, citaId: 3, medicamentoId: 1, dosis: '1 tableta cada 12 h', indicaciones: 'Durante 5 días. No suspender antes.', fechaCreacionRegistro: '2026-10-02T10:42:00' }
 ];
 
+const usuarios: Usuario[] = [
+  { id: 1, username: 'admin', email: 'admin@veterinaria.edu.co', rol: 'ADMIN', activo: true, fechaCreacion: new Date('2026-01-05T08:00:00') },
+  { id: 2, username: 'lmartinez', email: 'laura.martinez@veterinaria.edu.co', rol: 'MEDICO', activo: true, fechaCreacion: new Date('2026-01-12T09:30:00') },
+  { id: 3, username: 'agomez', email: 'andres.gomez@veterinaria.edu.co', rol: 'MEDICO', activo: true, fechaCreacion: new Date('2026-02-01T10:00:00') },
+  { id: 4, username: 'recepcion', email: 'recepcion@veterinaria.edu.co', rol: 'RECEPCIONISTA', activo: true, fechaCreacion: new Date('2026-02-15T14:20:00') },
+  { id: 5, username: 'practicante01', email: 'practicante01@veterinaria.edu.co', rol: 'RECEPCIONISTA', activo: false, fechaCreacion: new Date('2026-03-03T11:45:00') }
+];
+
 export const DATOS_EJEMPLO = {
   especializaciones,
   medicos,
@@ -94,7 +103,8 @@ export const DATOS_EJEMPLO = {
   citas,
   historias,
   anotaciones,
-  formulas
+  formulas,
+  usuarios
 };
 
 export type TablaEjemplo = keyof typeof DATOS_EJEMPLO;

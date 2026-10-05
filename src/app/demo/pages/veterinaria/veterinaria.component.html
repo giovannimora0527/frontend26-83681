@@ -184,7 +184,18 @@
                 [class.is-invalid]="f['fecha'].touched && f['fecha'].invalid" />
               <div class="invalid-feedback">Elige una fecha.</div>
             </div>
-            <div class="col-12">
+            <div class="col-sm-6">
+              <label class="form-label" for="citaHora">Hora</label>
+              <select id="citaHora" class="form-select" formControlName="hora"
+                [class.is-invalid]="f['hora'].touched && f['hora'].invalid">
+                <option value="" disabled>Selecciona la hora</option>
+                @for (hora of horas; track hora) {
+                  <option [value]="hora">{{ hora }}</option>
+                }
+              </select>
+              <div class="invalid-feedback">Elige una hora.</div>
+            </div>
+            <div class="col-sm-6">
               <label class="form-label" for="citaServicio">Servicio</label>
               <select id="citaServicio" class="form-select" formControlName="servicio"
                 [class.is-invalid]="f['servicio'].touched && f['servicio'].invalid">
@@ -200,8 +211,8 @@
               <textarea id="citaMensaje" class="form-control" rows="3" formControlName="mensaje"></textarea>
             </div>
             <div class="col-12">
-              <button type="submit" class="vet-btn vet-btn--block">
-                <i class="feather icon-check-circle" aria-hidden="true"></i> Enviar solicitud
+              <button type="submit" class="vet-btn vet-btn--block" [disabled]="enviando">
+                <i class="feather icon-check-circle" aria-hidden="true"></i> {{ enviando ? 'Enviando...' : 'Enviar solicitud' }}
               </button>
             </div>
           </div>

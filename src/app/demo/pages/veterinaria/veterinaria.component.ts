@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -6,6 +6,8 @@ import { RouterModule } from '@angular/router';
 import { MascotaServiceService } from '../mascota/service/mascota-service.service';
 import { ClienteService } from '../cliente/service/cliente.service';
 import { MedicosServiceService } from '../medicos/service/medicos-service.service';
+import { CitaService } from '../cita/service/cita.service';
+import { Cita } from 'src/app/models/cita';
 import { Mascota } from 'src/app/models/mascota';
 import { Medico } from 'src/app/models/medico';
 
@@ -23,7 +25,7 @@ interface Servicio {
   templateUrl: './veterinaria.component.html',
   styleUrl: './veterinaria.component.scss'
 })
-export class VeterinariaComponent {
+export class VeterinariaComponent implements OnDestroy {
   readonly anioActual = new Date().getFullYear();
   readonly hoy = new Date().toISOString().substring(0, 10);
   menuAbierto = false;
@@ -52,9 +54,17 @@ export class VeterinariaComponent {
   // Formulario de solicitud de cita.
   form!: FormGroup;
 
+  // Horas disponibles para solicitar cita (cada 30 minutos, 8:00 a.m. a 5:30 p.m.).
+  readonly horas = Array.from({ length: 20 }, (_, i) => {
+    const minutos = 8 * 60 + i * 30;
+    return `${String(Math.floor(minutos / 60)).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`;
+  });
+  enviando = false;
+
   constructor(private readonly mascotaService: MascotaServiceService,
     private readonly clienteService: ClienteService,
     private readonly medicosService: MedicosServiceService,
+    private readonly citaService: CitaService,
     private readonly formBuilder: FormBuilder) {
     this.inicializarFormulario();
     this.cargarDatos();
@@ -67,6 +77,7 @@ export class VeterinariaComponent {
       mascota: ['', Validators.required],
       servicio: ['', Validators.required],
       fecha: ['', Validators.required],
+      hora: ['', Validators.required],
       mensaje: ['', Validators.maxLength(400)]
     });
   }
@@ -127,14 +138,46 @@ export class VeterinariaComponent {
       return;
     }
 
-    // TODO: conectar con el endpoint de citas cuando exista en el backend.
-    const { nombre, mascota, fecha } = this.form.value;
-    Swal.fire({
-      icon: 'success',
-      title: '¡Solicitud enviada!',
-      text: `Gracias ${nombre}. Te contactaremos para confirmar la cita de ${mascota} el ${fecha}.`,
-      confirmButtonColor: '#087e8b'
+    // La cita llega al panel como "Solicitada". El visitante aun no es cliente registrado,
+    // por eso sus datos van dentro de la mascota; en el panel se le asigna mascota y médico.
+    const { nombre, telefono, mascota, servicio, fecha, hora, mensaje } = this.form.value;
+    const cita: Cita = {
+      estado: 'Solicitada',
+      fechaHora: `${fecha}T${hora}:00`,
+      motivo: mensaje?.trim() ? `${servicio}: ${mensaje.trim()}` : servicio,
+      mascota: {
+        nombreMascota: mascota.trim(),
+        cliente: { nombres: nombre.trim(), telefono: telefono.trim(), activo: true }
+      }
+    };
+
+    this.enviando = true;
+    this.citaService.guardarCita(cita).subscribe({
+      next: () => {
+        this.enviando = false;
+        Swal.fire({
+          icon: 'success',
+          title: '¡Solicitud enviada!',
+          text: `Gracias ${nombre}. Te llamaremos al ${telefono} para confirmar la cita de ${mascota} el ${fecha} a las ${hora}.`,
+          confirmButtonColor: '#087e8b'
+        });
+        this.form.reset({ servicio: '', hora: '' });
+      },
+      error: (error) => {
+        this.enviando = false;
+        console.error('Error al solicitar la cita:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'No pudimos enviar tu solicitud',
+          text: 'Intenta de nuevo o llámanos al (601) 123 4567.',
+          confirmButtonColor: '#087e8b'
+        });
+      }
     });
-    this.form.reset({ servicio: '' });
+  }
+
+  // Si se sale de la pagina con la alerta abierta, no debe quedar encima del panel.
+  ngOnDestroy() {
+    Swal.close();
   }
 }

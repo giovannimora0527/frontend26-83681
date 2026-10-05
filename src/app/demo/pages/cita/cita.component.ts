@@ -24,8 +24,9 @@ export class CitaComponent {
   titleBoton = '';
   modoFormulario = '';
 
-  readonly estados = ['Programada', 'Confirmada', 'Atendida', 'Cancelada'];
+  readonly estados = ['Solicitada', 'Programada', 'Confirmada', 'Atendida', 'Cancelada'];
   readonly coloresEstado: Record<string, string> = {
+    Solicitada: 'bg-warning text-dark',
     Programada: 'bg-info',
     Confirmada: 'bg-primary',
     Atendida: 'bg-success',
@@ -34,7 +35,7 @@ export class CitaComponent {
 
   // Filtros: rango de fechas (va al backend) y estado (se filtra en pantalla).
   fechaInicio = this.sumarDias(-30);
-  fechaFinal = this.sumarDias(30);
+  fechaFinal = this.sumarDias(60);
   estadoFiltro = '';
   citas: Cita[] = [];
   readonly tabla = new TablaPaginada<Cita>((cita) => [
@@ -77,7 +78,8 @@ export class CitaComponent {
     return this.form.controls;
   }
 
-  compararMascota = (a: Mascota | null, b: Mascota | null) => a?.mascotaId === b?.mascotaId;
+  // Las mascotas de solicitudes web no tienen id: se comparan por referencia.
+  compararMascota = (a: Mascota | null, b: Mascota | null) => a === b || (!!a?.mascotaId && a.mascotaId === b?.mascotaId);
   compararMedico = (a: Medico | null, b: Medico | null) => a?.id === b?.id;
 
   listar() {
