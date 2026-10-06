@@ -9,7 +9,8 @@
                 <div class="col col-md-3 text-end">
                     <button
                         class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
-                        (click)="nuevaMascota('C')" title="Agregar mascota">
+                        (click)="nuevaMascota('C')" 
+                        ngbTooltip="Agregar nueva mascota" tooltipClass="tooltip-info" triggers="hover focus" placement="top" container="body">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                         &nbsp; Nuevo
                     </button>
@@ -22,12 +23,60 @@
                     <table class="table table-stripped table-condensed table-responsive">
                         <thead>
                             <tr>
-                                <th class="text-center">Nombre</th>
-                                <th class="text-center">Especie</th>
-                                <th class="text-center">Raza</th>
-                                <th class="text-center">Edad</th>
-                                <th class="text-center">Cliente</th>
-                                <th class="text-center">Fecha de Registro</th>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'nombre' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('nombre')">
+                                        Nombre <i class="fa"
+                                            [ngClass]="columnaOrden === 'nombre' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'especie' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('especie')">
+                                        Especie <i class="fa"
+                                            [ngClass]="columnaOrden === 'especie' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'raza' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('raza')">
+                                        Raza <i class="fa"
+                                            [ngClass]="columnaOrden === 'raza' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'edad' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('edad')">
+                                        Edad <i class="fa"
+                                            [ngClass]="columnaOrden === 'edad' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'cliente' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('cliente')">
+                                        Cliente <i class="fa"
+                                            [ngClass]="columnaOrden === 'cliente' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'fechaRegistro' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('fechaRegistro')">
+                                        Fecha de Registro <i class="fa"
+                                            [ngClass]="columnaOrden === 'fechaRegistro' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
@@ -44,15 +93,16 @@
                         <tbody *ngIf="mascotasFiltradas.length > 0">
                             <tr *ngFor="let mascota of mascotasPaginadas">
                                 <td class="text-center">{{ mascota.nombreMascota }}</td>
-                                <td class="text-center">{{ mascota.raza?.especie }}</td>
-                                <td class="text-center">{{ mascota.raza?.nombre }}</td>
+                                <td class="text-center">{{ mascota.raza.especie }}</td>
+                                <td class="text-center">{{ mascota.raza.nombre }}</td>
                                 <td class="text-center">{{ mascota.edad }}</td>
-                                <td class="text-center">{{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}
+                                <td class="text-center">{{ mascota.cliente.nombres }} {{ mascota.cliente.apellidos }}
                                 </td>
                                 <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
                                 <td class="text-center">
                                     <button class="btn btn-outline-info d-inline-flex 
-                                    align-items-center justify-content-center" (click)="abrirEdicion(mascota)">
+                                    align-items-center justify-content-center" (click)="abrirEdicion(mascota)"
+                                    ngbTooltip="Editar" tooltipClass="tooltip-info" triggers="hover focus" placement="top" container="body">
                                         <i class="fa fa-edit"></i>&nbsp;Editar</button>
                                 </td>
                             </tr>
@@ -81,7 +131,7 @@
     </div>
 </div>
 
-<!-- Modal Crear / Editar Mascota -->
+<!-- Modal -->
 <div class="modal fade" id="modalCrearMascota" tabindex="-1" aria-labelledby="modalCrearMascotaLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -91,56 +141,57 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
                     (click)="closeModal()"></button>
             </div>
-            <div class="modal-body">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <form [formGroup]="form">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="nombreMascota" class="form-label font-weight-bold">Nombre de la Mascota</label>
-                                    <input type="text" class="form-control" id="nombreMascota" formControlName="nombreMascota"
-                                        placeholder="Ej: Firulais" [class.is-invalid]="f['nombreMascota'].touched && f['nombreMascota'].invalid">
-                                    <div class="invalid-feedback" *ngIf="f['nombreMascota'].touched && f['nombreMascota'].invalid">
-                                        El nombre es requerido.
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="raza" class="form-label font-weight-bold">Raza / Especie</label>
-                                    <input type="text" class="form-control" id="raza" formControlName="raza"
-                                        placeholder="Ej: Labrador / Canino" [class.is-invalid]="f['raza'].touched && f['raza'].invalid">
-                                    <div class="invalid-feedback" *ngIf="f['raza'].touched && f['raza'].invalid">
-                                        La raza es requerida.
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="edad" class="form-label font-weight-bold">Edad (Años)</label>
-                                    <input type="number" class="form-control" id="edad" formControlName="edad"
-                                        placeholder="Ej: 3" [class.is-invalid]="f['edad'].touched && f['edad'].invalid">
-                                    <div class="invalid-feedback" *ngIf="f['edad'].touched && f['edad'].invalid">
-                                        Ingrese una edad válida.
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="cliente" class="form-label font-weight-bold">Propietario / Cliente</label>
-                                    <input type="text" class="form-control" id="cliente" formControlName="cliente"
-                                        placeholder="Ej: Juan Pérez" [class.is-invalid]="f['cliente'].touched && f['cliente'].invalid">
-                                    <div class="invalid-feedback" *ngIf="f['cliente'].touched && f['cliente'].invalid">
-                                        El cliente es requerido.
-                                    </div>
-                                </div>
+            <form [formGroup]="form" (ngSubmit)="guardarMascota()">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nombreMascota" class="form-label">Nombre de la mascota</label>
+                            <input id="nombreMascota" class="form-control" formControlName="nombreMascota">
+                            <div class="text-danger" *ngIf="f['nombreMascota'].touched && f['nombreMascota'].invalid">
+                                Ingresa el nombre de la mascota.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edad" class="form-label">Edad</label>
+                            <input id="edad" class="form-control" type="number" min="1" formControlName="edad">
+                            <div class="text-danger" *ngIf="f['edad'].touched && f['edad'].invalid">Ingresa una edad
+                                válida.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="raza" class="form-label">Raza</label>
+                            <select id="raza" class="form-select" formControlName="raza" [compareWith]="compararRazas">
+                                <option [ngValue]="null" disabled>Selecciona una raza</option>
+                                <option *ngFor="let raza of listRazas" [ngValue]="raza">{{ raza.nombre }}</option>
+                            </select>
+                            <div class="text-danger" *ngIf="f['raza'].touched && f['raza'].invalid">Ingresa la raza.
                             </div>
-                        </form>
+                        </div>
+                        <div class="col-12">
+                            <hr>
+                            <h2 class="h6">Datos del cliente</h2>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cliente" class="form-label">Cliente</label>
+                            <select id="cliente" class="form-select" formControlName="cliente"
+                                [compareWith]="compararClientes">
+                                <option [ngValue]="null" disabled>Selecciona un cliente</option>
+                                <option *ngFor="let cliente of listClientes" [ngValue]="cliente">{{ cliente.nombres }}
+                                    {{ cliente.apellidos }}</option>
+                            </select>
+                            <div class="text-danger" *ngIf="f['cliente'].touched && f['cliente'].invalid">Ingresa el
+                                cliente.</div>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger mt-3 mb-0" *ngIf="respuestaError" role="alert">{{ respuestaError }}
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                    (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary" (click)="guardarMascota()">{{ titleBoton }}</button>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                        (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="enviando">
+                        {{ enviando ? 'Enviando...' : titleBoton }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
