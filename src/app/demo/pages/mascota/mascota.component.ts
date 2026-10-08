@@ -1,14 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 
+<<<<<<< Updated upstream
 import { MascotaService } from './service/mascota.service';
+=======
+import { MascotaRequest, MascotaServiceService } from './service/mascota-service.service';
+>>>>>>> Stashed changes
 import { Mascota } from 'src/app/models/mascota';
-import { FormBuilder, FormGroup, Validators, AbstractControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Cliente } from 'src/app/models/cliente';
+import { Raza } from 'src/app/models/raza';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ReactiveFormsModule } from '@angular/forms';
 
 import Swal from 'sweetalert2';
 
 import { Modal } from 'bootstrap';
+<<<<<<< Updated upstream
 import { Raza } from 'src/app/models/raza';
 import { RazaService } from './service/raza.service';
 import { ClienteService } from '../cliente/service/cliente.service';
@@ -19,10 +26,17 @@ type ColumnaOrden = 'nombre' | 'especie' | 'raza' | 'edad' | 'cliente' | 'fechaR
 @Component({
   selector: 'app-mascota',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, NgbTooltipModule],
+=======
+import { forkJoin } from 'rxjs';
+
+@Component({
+  selector: 'app-mascota',
+  imports: [CommonModule, ReactiveFormsModule],
+>>>>>>> Stashed changes
   templateUrl: './mascota.component.html',
   styleUrl: './mascota.component.scss'
 })
-export class MascotaComponent {
+export class MascotaComponent implements OnInit {
   // Variables para el modal.
   modalInstance: Modal | null = null;
   titleModal: string = "";
@@ -31,6 +45,8 @@ export class MascotaComponent {
 
   // Variables para la paginación, ordenamiento y búsqueda en la datatable.
   listMascotas: Mascota[] = [];
+  listRazas: Raza[] = [];
+  listClientes: Cliente[] = [];
   terminoBusqueda = '';
   paginaActual = 1;
   readonly registrosPorPagina = 5;
@@ -43,6 +59,7 @@ export class MascotaComponent {
   // Formulario para crear o editar mascota.
   form!: FormGroup;
   mascotaSelected: Mascota | null = null;
+<<<<<<< Updated upstream
   enviando = false;
   respuestaError = '';
 
@@ -81,15 +98,34 @@ export class MascotaComponent {
           console.error('Error al obtener las razas:', error);
         }
       });
+=======
+  cargandoCatalogos = false;
+  guardando = false;
+  mensajeError = '';
+
+  constructor(private readonly mascotaService: MascotaServiceService,
+    private readonly formBuilder: FormBuilder) {}
+
+  ngOnInit(): void {
+    this.inicializarFormulario();
+    this.listar();
+    this.cargarCatalogos();
+>>>>>>> Stashed changes
   }
 
   // Metodo ue permite inicializar el formulario con sus controles y validaciones.
   inicializarFormulario() {
     this.form = this.formBuilder.group({
       nombreMascota: ['', Validators.required],
+<<<<<<< Updated upstream
       raza: [null, Validators.required],
       edad: ['', [Validators.required, Validators.min(1)]],
       cliente: ['', Validators.required]      
+=======
+      razaId: ['', Validators.required],
+      edad: ['', [Validators.required, Validators.min(0)]],
+      clienteId: ['', Validators.required]
+>>>>>>> Stashed changes
     });
   }
 
@@ -184,7 +220,6 @@ export class MascotaComponent {
       .subscribe(
         {
           next: (data) => {
-            console.log(data);
             this.listMascotas = data;
             this.paginaActual = 1;
           },
@@ -193,6 +228,24 @@ export class MascotaComponent {
           }
         }
       );
+  }
+
+  cargarCatalogos(): void {
+    this.cargandoCatalogos = true;
+    forkJoin({
+      razas: this.mascotaService.getRazas(),
+      clientes: this.mascotaService.getClientes()
+    }).subscribe({
+      next: ({ razas, clientes }) => {
+        this.listRazas = razas;
+        this.listClientes = clientes;
+        this.cargandoCatalogos = false;
+      },
+      error: (error: unknown) => {
+        this.cargandoCatalogos = false;
+        this.mensajeError = this.obtenerMensajeError(error, 'No fue posible cargar las razas y los clientes.');
+      }
+    });
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
@@ -237,6 +290,7 @@ export class MascotaComponent {
     this.titleModal = modo === 'C' ? 'Crear Mascota' : 'Editar Mascota';
     this.modoFormulario = modo;
     this.mascotaSelected = null;
+    this.mensajeError = '';
     this.resetFormulario();
     this.openModal(modo);
   }
@@ -251,25 +305,38 @@ export class MascotaComponent {
   abrirEdicion(mascota: Mascota) {
     this.mascotaSelected = mascota;
     this.modoFormulario = 'E';
+    this.mensajeError = '';
     this.form.patchValue({
       nombreMascota: mascota.nombreMascota,
+<<<<<<< Updated upstream
       raza: mascota.raza ?? null,
       edad: mascota.edad,
       cliente: mascota.cliente ?? null
+=======
+      razaId: mascota.raza?.razaId,
+      edad: mascota.edad,
+      clienteId: mascota.cliente?.clienteId ?? mascota.cliente?.id
+>>>>>>> Stashed changes
     });
     this.openModal(this.modoFormulario);
   }
 
+<<<<<<< Updated upstream
   /**
    * 
    * @returns Acción realizada sobre la mascota (crear o actualizar).
    */
   guardarMascota() {
     if (this.form.invalid || this.enviando) {
+=======
+  guardar(): void {
+    if (this.form.invalid || this.cargandoCatalogos || this.guardando) {
+>>>>>>> Stashed changes
       this.form.markAllAsTouched();
       return;
     }
 
+<<<<<<< Updated upstream
     const valores = this.form.getRawValue();    
     const mascota: Mascota = {
       mascotaId: this.mascotaSelected?.mascotaId,
@@ -300,10 +367,40 @@ export class MascotaComponent {
         this.enviando = false;
         console.error('Error al guardar la mascota:', error);
         Swal.fire('Error', error.message, 'error');
+=======
+    const request: MascotaRequest = {
+      nombreMascota: this.form.value.nombreMascota.trim(),
+      edad: Number(this.form.value.edad),
+      razaId: Number(this.form.value.razaId),
+      clienteId: Number(this.form.value.clienteId)
+    };
+
+    if (this.mascotaSelected?.mascotaId !== undefined) {
+      request.mascotaId = this.mascotaSelected.mascotaId;
+    }
+
+    this.guardando = true;
+    this.mensajeError = '';
+    const request$ = this.modoFormulario === 'C'
+      ? this.mascotaService.guardarMascota(request)
+      : this.mascotaService.actualizarMascota(request);
+
+    request$.subscribe({
+      next: (response) => {
+        this.guardando = false;
+        this.closeModal();
+        this.listar();
+        void Swal.fire('¡Listo!', response.message, 'success');
+      },
+      error: (error: unknown) => {
+        this.guardando = false;
+        this.mensajeError = this.obtenerMensajeError(error, 'No fue posible guardar la mascota.');
+>>>>>>> Stashed changes
       }
     });
   }
 
+<<<<<<< Updated upstream
   private obtenerMensajeRespuesta(respuesta: unknown, mensajePredeterminado: string): string {
     if (respuesta && typeof respuesta === 'object') {
       const cuerpo = respuesta as { mensaje?: unknown; message?: unknown };
@@ -315,6 +412,8 @@ export class MascotaComponent {
     return mensajePredeterminado;
   }
 
+=======
+>>>>>>> Stashed changes
   closeModal() {
     if (this.modalInstance) {
       this.modalInstance.hide();
@@ -329,10 +428,20 @@ export class MascotaComponent {
     const modalElement = document.getElementById('modalCrearMascota');
     if (modalElement) {
       // Verificar si ya existe una instancia del modal
-      this.modalInstance ??= new Modal(modalElement);
+      if (!this.modalInstance) {
+        this.modalInstance = new Modal(modalElement);
+        modalElement.addEventListener('hidden.bs.modal', () => this.resetFormulario());
+      }
       this.modalInstance.show();
     }
   }
 
+  private obtenerMensajeError(error: unknown, mensajePorDefecto: string): string {
+    if (error && typeof error === 'object') {
+      const respuesta = error as { error?: { message?: string; error?: string } };
+      return respuesta.error?.message ?? respuesta.error?.error ?? mensajePorDefecto;
+    }
+    return mensajePorDefecto;
+  }
 
 }
