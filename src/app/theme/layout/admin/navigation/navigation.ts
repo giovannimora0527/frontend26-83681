@@ -37,15 +37,7 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'bi bi-person-lines-fill',
         classes: 'nav-item'
       },
-      /* ---------- Nuevos menus aqui -------------  */ 
-      {
-        id: 'medicos',
-        title: 'Gestión de Medicos',
-        type: 'item',
-        url: '/inicio/medicos',
-        icon: 'feather icon-users',
-        classes: 'nav-item'
-      },
+      /* ---------- Nuevos menus aqui -------------  */       
       {
       id: 'medicos',
       title: 'Gestión de Médicos',
