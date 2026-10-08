@@ -29,21 +29,21 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-user',
         classes: 'nav-item'
       },
-      /* ---------- Nuevos menus aqui -------------  */  
-       {
-        id: 'mascota',
+      {
+        id: 'mascotas',
         title: 'Gestión de Mascotas',
         type: 'item',
         url: '/inicio/mascotas',
-        icon: 'feather icon-user',
+        icon: 'bi bi-person-lines-fill',
         classes: 'nav-item'
       },
+      /* ---------- Nuevos menus aqui -------------  */ 
       {
-        id: 'cliente',
-        title: 'Gestión de Clientes',
+        id: 'medicos',
+        title: 'Gestión de Medicos',
         type: 'item',
-        url: '/inicio/clientes',
-        icon: 'feather icon-user',
+        url: '/inicio/medicos',
+        icon: 'feather icon-users',
         classes: 'nav-item'
       },
       {

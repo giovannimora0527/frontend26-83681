@@ -13,8 +13,6 @@ import { MedicamentoComponent } from './demo/pages/medicamento/medicamento.compo
 import { RazaComponent } from './demo/pages/raza/raza.component';
 import { MedicosComponent } from './demo/pages/medicos/medicos.component';
 
-
-
 export const routes: Routes = [
   {
     path: '',
@@ -36,8 +34,8 @@ export const routes: Routes = [
       { path: 'historias-medicas', component: HistoriaMedicaComponent, data: { title: 'Historias Médicas' } },
       { path: 'anotaciones-historias', component: AnotacionHistoriaComponent, data: { title: 'Anotaciones Clínicas' } },
       { path: 'medicamentos', component: MedicamentoComponent, data: { title: 'Medicamentos' } },
-      { path: 'razas', component: RazaComponent, data: { title: 'Razas' } }
-
+      { path: 'razas', component: RazaComponent, data: { title: 'Razas' } }  
+      /* Inserte nuevos menus aqui */    
     ]
   },
   { path: '**', redirectTo: 'inicio' }
