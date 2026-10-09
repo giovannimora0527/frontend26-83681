@@ -1,4 +1,5 @@
 export class Cliente {
+    id?: number;
     clienteId?: number;
     usuarioId?: number;
     tipoDocumento?: string;
@@ -9,5 +10,5 @@ export class Cliente {
     genero?: string;
     telefono?: string;
     direccion?: string;
-    activo!: boolean;
+    activo?: boolean;
 }
