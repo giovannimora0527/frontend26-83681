@@ -1,6 +1,6 @@
 export class Raza {
-    id?: number;
-    razaId?: number;
+    id?: number | string;
+    razaId?: number | string;
     nombre?: string;
     especie?: string;
 }

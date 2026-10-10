@@ -8,7 +8,7 @@ export class Mascota {
     fechaRegistro?: Date;
     cliente?: Cliente;
     raza?: Raza;
-    razaId?: number;
-    clienteId?: number;
+    razaId?: number | string;
+    clienteId?: number | string;
     nombre?: string;
 }

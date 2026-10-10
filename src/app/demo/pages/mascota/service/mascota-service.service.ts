@@ -15,19 +15,17 @@ export interface MascotaRequest {
 }
 
 export interface MascotaResponse {
-  status: number;
-  message: string;
+  status?: number;
+  message?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class MascotaServiceService {
-  private api = `mascota`;
+  private readonly api = 'mascota';
 
-  constructor(private readonly backendService: BackendService) {
-
-  }
+  constructor(private readonly backendService: BackendService) {}
 
   getMascotas(): Observable<Mascota[]> {
     return this.backendService.get(environment.apiUrlAuth, this.api, "listar");

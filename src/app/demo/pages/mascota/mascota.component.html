@@ -18,6 +18,10 @@
             </div>
         </div>
         <div class="card-body">
+            <div class="alert alert-danger" role="alert" *ngIf="mensajeErrorListado && !modalAbierto">
+                {{ mensajeErrorListado }}
+                <button class="btn btn-sm btn-outline-danger ms-2" type="button" (click)="listar()">Reintentar</button>
+            </div>
             <div class="row">
                 <div class="table table-responsive table-condensed col col-md-12">
                     <table class="table table-stripped table-condensed table-responsive">
@@ -80,17 +84,22 @@
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody *ngIf="listMascotas.length === 0">
+                        <tbody *ngIf="cargandoMascotas">
+                            <tr>
+                                <td colspan="7" class="text-center">Cargando mascotas...</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="!cargandoMascotas && listMascotas.length === 0">
                             <tr>
                                 <td colspan="7" class="text-center">No hay mascotas registradas</td>
                             </tr>
                         </tbody>
-                        <tbody *ngIf="listMascotas.length > 0 && mascotasFiltradas.length === 0">
+                        <tbody *ngIf="!cargandoMascotas && listMascotas.length > 0 && mascotasFiltradas.length === 0">
                             <tr>
                                 <td colspan="7" class="text-center">No se encontraron mascotas</td>
                             </tr>
                         </tbody>
-                        <tbody *ngIf="mascotasFiltradas.length > 0">
+                        <tbody *ngIf="!cargandoMascotas && mascotasFiltradas.length > 0">
                             <tr *ngFor="let mascota of mascotasPaginadas">
                                 <td class="text-center">{{ mascota.nombreMascota }}</td>
                                 <td class="text-center">{{ mascota.raza?.especie }}</td>
@@ -146,6 +155,16 @@
                 <div class="alert alert-info" role="status" *ngIf="cargandoCatalogos">
                     Cargando razas y clientes...
                 </div>
+                <div class="alert alert-danger" role="alert" *ngIf="mensajeErrorCatalogos">
+                    {{ mensajeErrorCatalogos }}
+                    <button class="btn btn-sm btn-outline-danger ms-2" type="button" (click)="cargarCatalogos()">
+                        Volver a cargar
+                    </button>
+                </div>
+                <div class="alert alert-warning" role="status"
+                    *ngIf="!cargandoCatalogos && !mensajeErrorCatalogos && (razasDisponibles.length === 0 || clientesDisponibles.length === 0)">
+                    No hay razas o clientes disponibles para asociar. Registra esos datos antes de crear una mascota.
+                </div>
                 <form [formGroup]="form" (ngSubmit)="guardar()">
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -170,7 +189,7 @@
                             <label for="razaMascota" class="form-label">Raza y especie</label>
                             <select id="razaMascota" class="form-select" formControlName="razaId">
                                 <option value="">Selecciona una raza</option>
-                                <option *ngFor="let raza of listRazas" [value]="raza.razaId ?? raza.id">
+                                <option *ngFor="let raza of razasDisponibles" [value]="raza.razaId ?? raza.id">
                                     {{ raza.nombre }} — {{ raza.especie }}
                                 </option>
                             </select>
@@ -183,7 +202,7 @@
                             <label for="clienteMascota" class="form-label">Cliente responsable</label>
                             <select id="clienteMascota" class="form-select" formControlName="clienteId">
                                 <option value="">Selecciona un cliente</option>
-                                <option *ngFor="let cliente of listClientes"
+                                <option *ngFor="let cliente of clientesDisponibles"
                                     [value]="cliente.clienteId ?? cliente.id">
                                     {{ cliente.nombres }} {{ cliente.apellidos }}
                                     ({{ cliente.numeroDocumento }})
@@ -199,7 +218,7 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                             (click)="closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary"
-                            [disabled]="guardando || cargandoCatalogos || listRazas.length === 0 || listClientes.length === 0">
+                            [disabled]="guardando || cargandoCatalogos || razasDisponibles.length === 0 || clientesDisponibles.length === 0">
                             {{ guardando ? 'Guardando...' : titleBoton }}
                         </button>
                     </div>

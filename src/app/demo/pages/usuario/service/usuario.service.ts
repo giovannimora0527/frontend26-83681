@@ -8,15 +8,9 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class UsuarioService {
-  private api = `usuario`;
+  private readonly api = 'usuario';
 
-  constructor(private backendService: BackendService) { 
-    this.testService();
-  }
-
-  testService() {
-    this.backendService.get(environment.apiUrlAuth, this.api, "test");
-  }
+  constructor(private readonly backendService: BackendService) {}
 
   getUsuarios(): Observable<Usuario[]> {
     return this.backendService.get(environment.apiUrlAuth, this.api, "listar");

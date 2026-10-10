@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { of } from 'rxjs';
 import { MascotaComponent } from './mascota.component';
+import { MascotaServiceService } from './service/mascota-service.service';
 
 describe('MascotaComponent', () => {
   let component: MascotaComponent;
@@ -8,7 +9,17 @@ describe('MascotaComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MascotaComponent]
+      imports: [MascotaComponent],
+      providers: [{
+        provide: MascotaServiceService,
+        useValue: {
+          getMascotas: () => of([]),
+          getRazas: () => of([]),
+          getClientes: () => of([]),
+          guardarMascota: () => of({ message: 'ok' }),
+          actualizarMascota: () => of({ message: 'ok' })
+        }
+      }]
     })
     .compileComponents();
 

@@ -4,6 +4,6 @@ export class Usuario {
     password_hash?: string;
     rol?: string;
     email?: string;
-    fechaCreacion?: Date;
+    fechaCreacion?: Date | string;
     activo?: boolean;
 }

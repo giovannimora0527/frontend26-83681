@@ -33,6 +33,8 @@ export class MascotaComponent implements OnInit {
   readonly registrosPorPagina = 10;
   columnaOrden = 'nombre';
   direccionOrden: 'asc' | 'desc' = 'asc';
+  cargandoMascotas = false;
+  modalAbierto = false;
 
   // Formulario para crear o editar mascota.
   form!: FormGroup;
@@ -40,6 +42,8 @@ export class MascotaComponent implements OnInit {
   cargandoCatalogos = false;
   guardando = false;
   mensajeError = '';
+  mensajeErrorListado = '';
+  mensajeErrorCatalogos = '';
 
   constructor(private readonly mascotaService: MascotaServiceService,
     private readonly formBuilder: FormBuilder) {}
@@ -53,7 +57,7 @@ export class MascotaComponent implements OnInit {
   // Metodo ue permite inicializar el formulario con sus controles y validaciones.
   inicializarFormulario() {
     this.form = this.formBuilder.group({
-      nombreMascota: ['', Validators.required],
+      nombreMascota: ['', [Validators.required, Validators.pattern(/\S/)]],
       razaId: ['', Validators.required],
       edad: ['', [Validators.required, Validators.min(0)]],
       clienteId: ['', Validators.required]
@@ -106,6 +110,14 @@ export class MascotaComponent implements OnInit {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
 
+  get razasDisponibles(): Raza[] {
+    return this.listRazas.filter((raza) => this.obtenerIdRaza(raza) !== undefined);
+  }
+
+  get clientesDisponibles(): Cliente[] {
+    return this.listClientes.filter((cliente) => this.obtenerIdCliente(cliente) !== undefined);
+  }
+
   ordenarPor(columna: string): void {
     if (this.columnaOrden === columna) {
       this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
@@ -149,22 +161,25 @@ export class MascotaComponent implements OnInit {
    * Metodo que permite listar las mascotas registradas en la base de datos y mostrarlas en la tabla.
    */
   listar() {
+    this.cargandoMascotas = true;
+    this.mensajeErrorListado = '';
     this.mascotaService.getMascotas()
-      .subscribe(
-        {
-          next: (data) => {
-            this.listMascotas = data;
-            this.paginaActual = 1;
-          },
-          error: (error) => {
-            console.error('Error al obtener las mascotas:', error);
-          }
+      .subscribe({
+        next: (data) => {
+          this.listMascotas = data;
+          this.paginaActual = 1;
+          this.cargandoMascotas = false;
+        },
+        error: (error: unknown) => {
+          this.cargandoMascotas = false;
+          this.mensajeErrorListado = this.obtenerMensajeError(error, 'No fue posible cargar las mascotas.');
         }
-      );
+      });
   }
 
   cargarCatalogos(): void {
     this.cargandoCatalogos = true;
+    this.mensajeErrorCatalogos = '';
     forkJoin({
       razas: this.mascotaService.getRazas(),
       clientes: this.mascotaService.getClientes()
@@ -176,7 +191,7 @@ export class MascotaComponent implements OnInit {
       },
       error: (error: unknown) => {
         this.cargandoCatalogos = false;
-        this.mensajeError = this.obtenerMensajeError(error, 'No fue posible cargar las razas y los clientes.');
+        this.mensajeErrorCatalogos = this.obtenerMensajeError(error, 'No fue posible cargar las razas y los clientes.');
       }
     });
   }
@@ -224,9 +239,9 @@ export class MascotaComponent implements OnInit {
     this.mensajeError = '';
     this.form.patchValue({
       nombreMascota: mascota.nombreMascota,
-      razaId: mascota.raza?.razaId,
+      razaId: mascota.razaId ?? this.obtenerIdRaza(mascota.raza),
       edad: mascota.edad,
-      clienteId: mascota.cliente?.clienteId ?? mascota.cliente?.id
+      clienteId: mascota.clienteId ?? this.obtenerIdCliente(mascota.cliente)
     });
     this.openModal(this.modoFormulario);
   }
@@ -237,11 +252,17 @@ export class MascotaComponent implements OnInit {
       return;
     }
 
+    if (this.modoFormulario === 'E' && this.mascotaSelected?.mascotaId === undefined) {
+      this.mensajeError = 'No se encontró el identificador de la mascota que se desea actualizar.';
+      return;
+    }
+
+    const values = this.form.getRawValue();
     const request: MascotaRequest = {
-      nombreMascota: this.form.value.nombreMascota.trim(),
-      edad: Number(this.form.value.edad),
-      razaId: Number(this.form.value.razaId),
-      clienteId: Number(this.form.value.clienteId)
+      nombreMascota: String(values.nombreMascota).trim(),
+      edad: Number(values.edad),
+      razaId: Number(values.razaId),
+      clienteId: Number(values.clienteId)
     };
 
     if (this.mascotaSelected?.mascotaId !== undefined) {
@@ -259,7 +280,7 @@ export class MascotaComponent implements OnInit {
         this.guardando = false;
         this.closeModal();
         this.listar();
-        void Swal.fire('¡Listo!', response.message, 'success');
+        void Swal.fire('¡Listo!', response.message ?? 'La mascota se guardó correctamente.', 'success');
       },
       error: (error: unknown) => {
         this.guardando = false;
@@ -273,6 +294,25 @@ export class MascotaComponent implements OnInit {
       this.modalInstance.hide();
     }
     this.resetFormulario();
+    this.mascotaSelected = null;
+  }
+
+  private obtenerIdRaza(raza?: Raza): number | undefined {
+    const id = raza?.razaId ?? raza?.id;
+    if (id === undefined || id === null || id === '') {
+      return undefined;
+    }
+    const numericId = Number(id);
+    return Number.isFinite(numericId) ? numericId : undefined;
+  }
+
+  private obtenerIdCliente(cliente?: Cliente): number | undefined {
+    const id = cliente?.clienteId ?? cliente?.id;
+    if (id === undefined || id === null || id === '') {
+      return undefined;
+    }
+    const numericId = Number(id);
+    return Number.isFinite(numericId) ? numericId : undefined;
   }
 
   openModal(modo: string) {
@@ -284,8 +324,13 @@ export class MascotaComponent implements OnInit {
       // Verificar si ya existe una instancia del modal
       if (!this.modalInstance) {
         this.modalInstance = new Modal(modalElement);
-        modalElement.addEventListener('hidden.bs.modal', () => this.resetFormulario());
+        modalElement.addEventListener('hidden.bs.modal', () => {
+          this.modalAbierto = false;
+          this.resetFormulario();
+          this.mascotaSelected = null;
+        });
       }
+      this.modalAbierto = true;
       this.modalInstance.show();
     }
   }
