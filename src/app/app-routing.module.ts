@@ -11,7 +11,6 @@ import { HistoriaMedicaComponent } from './demo/pages/historia-medica/historia-m
 import { AnotacionHistoriaComponent } from './demo/pages/anotacion-historia/anotacion-historia.component';
 import { MedicamentoComponent } from './demo/pages/medicamento/medicamento.component';
 import { RazaComponent } from './demo/pages/raza/raza.component';
-import { MedicosComponent } from './demo/pages/medicos/medicos.component';
 import { MedicoComponent } from './demo/pages/medico/medico.component';
 
 export const routes: Routes = [
