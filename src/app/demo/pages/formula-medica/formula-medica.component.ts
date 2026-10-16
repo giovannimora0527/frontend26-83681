@@ -24,14 +24,7 @@ import { FormulaMedicaService } from './service/formula-medica.service';
 
 registerLocaleData(localeEsCo);
 
-type ColumnaOrden =
-  | 'fechaCreacionRegistro'
-  | 'fechaEmision'
-  | 'mascota'
-  | 'veterinario'
-  | 'medicamento'
-  | 'dosis'
-  | 'frecuencia';
+type ColumnaOrden =| 'fechaEmision'| 'medicamento'| 'dosis'| 'frecuencia' | 'duracion';
 
 @Component({
   selector: 'app-formula-medica',
@@ -48,8 +41,8 @@ export class FormulaMedicaComponent {
   paginaActual = 1;
   readonly registrosPorPagina = 5;
 
-  // El listado inicia ordenado por fecha de creación, de más reciente a más antigua.
-  columnaOrden: ColumnaOrden = 'fechaCreacionRegistro';
+  // Orden por defecto: fecha de emisión más reciente primero
+  columnaOrden: ColumnaOrden = 'fechaEmision';
   direccionOrden: 'asc' | 'desc' = 'desc';
 
   cargando = false;
@@ -110,6 +103,7 @@ export class FormulaMedicaComponent {
         formula.medicamento?.nombre,
         formula.dosis,
         formula.frecuencia,
+        formula.duracionTratamiento,
         formula.indicaciones
       ];
 
@@ -139,22 +133,16 @@ export class FormulaMedicaComponent {
     columna: ColumnaOrden
   ): string | number {
     switch (columna) {
-      case 'fechaCreacionRegistro':
-        return this.aTiempo(formula.fechaCreacionRegistro);
       case 'fechaEmision':
         return this.aTiempo(formula.fechaEmision);
-      case 'mascota':
-        return formula.cita?.mascota?.nombreMascota ?? '';
-      case 'veterinario':
-        return `${formula.cita?.medico?.nombres ?? ''} ${
-          formula.cita?.medico?.apellidos ?? ''
-        }`;
       case 'medicamento':
         return formula.medicamento?.nombre ?? '';
       case 'dosis':
         return formula.dosis ?? '';
       case 'frecuencia':
         return formula.frecuencia ?? '';
+      case 'duracion':
+        return formula.duracionTratamiento ?? '';
       default:
         return '';
     }
@@ -167,7 +155,7 @@ export class FormulaMedicaComponent {
     } else {
       this.columnaOrden = columna;
       this.direccionOrden =
-        columna === 'fechaCreacionRegistro' ? 'desc' : 'asc';
+        columna === 'fechaEmision' ? 'desc' : 'asc';
     }
 
     this.paginaActual = 1;
@@ -440,7 +428,6 @@ export class FormulaMedicaComponent {
   private fechaComoDate(fecha: Date | string): Date {
     if (fecha instanceof Date) return fecha;
 
-    // Convierte el formato DATETIME de MySQL a uno reconocido por JavaScript.
     return new Date(fecha.replace(' ', 'T'));
   }
 

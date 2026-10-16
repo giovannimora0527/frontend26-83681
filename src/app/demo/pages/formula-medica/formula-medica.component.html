@@ -29,24 +29,6 @@
           <thead>
             <tr>
               <th>
-                <button type="button" class="sort-button" (click)="ordenarPor('fechaEmision')">
-                  Fecha emisión
-                  <i class="fa" [ngClass]="columnaOrden === 'fechaEmision' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
-                </button>
-              </th>
-              <th>
-                <button type="button" class="sort-button" (click)="ordenarPor('mascota')">
-                  Mascota
-                  <i class="fa" [ngClass]="columnaOrden === 'mascota' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
-                </button>
-              </th>
-              <th>
-                <button type="button" class="sort-button" (click)="ordenarPor('veterinario')">
-                  Veterinario
-                  <i class="fa" [ngClass]="columnaOrden === 'veterinario' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
-                </button>
-              </th>
-              <th>
                 <button type="button" class="sort-button" (click)="ordenarPor('medicamento')">
                   Medicamento
                   <i class="fa" [ngClass]="columnaOrden === 'medicamento' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
@@ -64,26 +46,37 @@
                   <i class="fa" [ngClass]="columnaOrden === 'frecuencia' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
                 </button>
               </th>
+              <th>
+                <button type="button" class="sort-button" (click)="ordenarPor('duracion')">
+                  Duración
+                  <i class="fa" [ngClass]="columnaOrden === 'duracion' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" (click)="ordenarPor('fechaEmision')">
+                  Fecha emisión
+                  <i class="fa" [ngClass]="columnaOrden === 'fechaEmision' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"></i>
+                </button>
+              </th>
               <th>Acciones</th>
             </tr>
           </thead>
 
           <tbody *ngIf="formulas.length === 0">
-            <tr><td colspan="7" class="text-center">No hay fórmulas médicas registradas.</td></tr>
+            <tr><td colspan="6" class="text-center">No hay fórmulas médicas registradas.</td></tr>
           </tbody>
 
           <tbody *ngIf="formulas.length > 0 && formulasFiltradas.length === 0">
-            <tr><td colspan="7" class="text-center">No se encontraron fórmulas.</td></tr>
+            <tr><td colspan="6" class="text-center">No se encontraron fórmulas.</td></tr>
           </tbody>
 
           <tbody *ngIf="formulasFiltradas.length > 0">
             <tr *ngFor="let formula of formulasPaginadas">
-              <td>{{ formatearFecha(formula.fechaEmision) }}</td>
-              <td>{{ formula.cita?.mascota?.nombreMascota || '—' }}</td>
-              <td>{{ nombreVeterinario(formula) }}</td>
               <td>{{ formula.medicamento?.nombre || '—' }}</td>
               <td>{{ formula.dosis || '—' }}</td>
               <td>{{ formula.frecuencia || '—' }}</td>
+              <td>{{ formula.duracionTratamiento || '—' }}</td>
+              <td>{{ formatearFecha(formula.fechaEmision) }}</td>
               <td class="text-nowrap">
                 <button
                   type="button"
@@ -98,9 +91,9 @@
                   type="button"
                   class="btn btn-sm btn-outline-primary"
                   (click)="editarFormula(formula)"
-                  title="Actualizar"
+                  title="Editar"
                 >
-                  <i class="fa fa-edit" aria-hidden="true"></i> Actualizar
+                  <i class="fa fa-edit" aria-hidden="true"></i> Editar
                 </button>
               </td>
             </tr>
@@ -143,7 +136,7 @@
   </div>
 </div>
 
-<!-- Crear o actualizar -->
+<!-- Crear o actualizar (Mismo diseño que el modal de Cita) -->
 <div class="modal fade" id="modalFormulaMedica" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -155,6 +148,7 @@
       <form [formGroup]="formulario" (ngSubmit)="guardarFormula()" novalidate>
         <div class="modal-body">
           <div class="row g-3">
+            <!-- Cita asociada -->
             <div class="col-12">
               <label for="citaId" class="form-label">Cita</label>
               <select id="citaId" class="form-select" formControlName="citaId">
@@ -164,6 +158,7 @@
               <div class="text-danger" *ngIf="f['citaId'].touched && f['citaId'].invalid">Selecciona la cita.</div>
             </div>
 
+            <!-- Resumen de la cita seleccionada -->
             <div class="col-12" *ngIf="citaSeleccionada as cita">
               <div class="relationship-summary">
                 <div><span>Mascota</span><strong>{{ cita.mascota?.nombreMascota || '—' }}</strong></div>
@@ -173,7 +168,8 @@
               </div>
             </div>
 
-            <div class="col-md-6">
+            <!-- Medicamento (Elemento central) -->
+            <div class="col-12">
               <label for="medicamentoId" class="form-label">Medicamento</label>
               <select id="medicamentoId" class="form-select" formControlName="medicamentoId">
                 <option [ngValue]="null">Selecciona un medicamento</option>
@@ -185,30 +181,33 @@
               <div class="text-danger" *ngIf="f['medicamentoId'].touched && f['medicamentoId'].invalid">Selecciona el medicamento.</div>
             </div>
 
-            <div class="col-md-6">
-              <label for="fechaEmision" class="form-label">Fecha de emisión</label>
-              <input id="fechaEmision" class="form-control" type="datetime-local" formControlName="fechaEmision" [min]="fechaMinimaEmision" />
-              <div class="text-danger" *ngIf="f['fechaEmision'].touched && f['fechaEmision'].invalid">La fecha es obligatoria.</div>
-            </div>
-
+            <!-- Dosis y Frecuencia en la misma fila -->
             <div class="col-md-6">
               <label for="dosis" class="form-label">Dosis</label>
-              <input id="dosis" class="form-control" type="text" maxlength="500" formControlName="dosis" placeholder="Ej. 5 ml" />
+              <input id="dosis" class="form-control" type="text" maxlength="500" formControlName="dosis" placeholder="Ej. 800 mg" />
               <div class="text-danger" *ngIf="f['dosis'].touched && f['dosis'].invalid">Ingresa una dosis válida.</div>
             </div>
 
             <div class="col-md-6">
               <label for="frecuencia" class="form-label">Frecuencia</label>
-              <input id="frecuencia" class="form-control" type="text" maxlength="100" formControlName="frecuencia" placeholder="Ej. Cada 8 horas" />
+              <input id="frecuencia" class="form-control" type="text" maxlength="100" formControlName="frecuencia" placeholder="Ej. Cada 12 horas" />
               <div class="text-danger" *ngIf="f['frecuencia'].touched && f['frecuencia'].invalid">Ingresa una frecuencia válida.</div>
             </div>
 
+            <!-- Duración y Fecha de emisión en la misma fila -->
             <div class="col-md-6">
               <label for="duracionTratamiento" class="form-label">Duración del tratamiento</label>
               <input id="duracionTratamiento" class="form-control" type="text" maxlength="100" formControlName="duracionTratamiento" placeholder="Ej. 7 días" />
               <div class="text-danger" *ngIf="f['duracionTratamiento'].touched && f['duracionTratamiento'].invalid">Ingresa la duración.</div>
             </div>
 
+            <div class="col-md-6">
+              <label for="fechaEmision" class="form-label">Fecha de emisión</label>
+              <input id="fechaEmision" class="form-control" type="datetime-local" formControlName="fechaEmision" [min]="fechaMinimaEmision" />
+              <div class="text-danger" *ngIf="f['fechaEmision'].touched && f['fechaEmision'].invalid">La fecha es obligatoria.</div>
+            </div>
+
+            <!-- Indicaciones (ancho completo) -->
             <div class="col-12">
               <label for="indicaciones" class="form-label">Indicaciones</label>
               <textarea id="indicaciones" class="form-control" rows="3" maxlength="2000" formControlName="indicaciones" placeholder="Indicaciones adicionales (opcional)"></textarea>
@@ -216,7 +215,7 @@
             </div>
           </div>
 
-          <div *ngIf="errorFormulario" class="alert alert-danger mt-3">{{ errorFormulario }}</div>
+          <div *ngIf="errorFormulario" class="alert alert-danger mt-3 mb-0">{{ errorFormulario }}</div>
         </div>
 
         <div class="modal-footer">

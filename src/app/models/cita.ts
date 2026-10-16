@@ -7,7 +7,7 @@ export class Cita {
     clienteId?: number;
     mascotaId?: number;
     medicoId?: number;
-    fechaHora?: Date;
+    fechaHora?: Date | string;
     estado?: string;
     motivo?: string;
     cliente?: Cliente;
