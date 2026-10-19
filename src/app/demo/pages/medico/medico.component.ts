@@ -75,7 +75,7 @@ export class MedicoComponent {
    * Metodo que permite listar los medicos registradas en la base de datos y mostrarlas en la tabla.
    */
   listar() {
-    this.medicoService.listar()
+    this.medicoService.listarMedicos()
       .subscribe(
         {
           next: (data) => {

@@ -87,7 +87,7 @@ export class CitaComponent {
       next: (data) => this.clientes = data ?? [],
       error: () => this.errorFormulario = 'No fue posible cargar los clientes.'
     });
-    this.medicoService.listar().subscribe({
+    this.medicoService.listarMedicos().subscribe({
       next: (data) => this.medicos = data ?? [],
       error: () => this.errorFormulario = 'No fue posible cargar los veterinarios.'
     });

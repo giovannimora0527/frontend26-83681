@@ -14,7 +14,7 @@ export class MedicoService {
   constructor(private readonly backendService: BackendService) { }
 
 
-  listar(): Observable<Medico[]> {
-    return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
+  listarMedicos(): Observable<Medico[]> {
+  return this.backendService.get(environment.apiUrlAuth, 'medico', 'listar');
   }
 }

@@ -11,7 +11,7 @@ export class FormulaMedicaService {
   private api ='formula-medica';
 
 
-   constructor(private readonly backendService: BackendService) {}
+  constructor(private readonly backendService: BackendService) {}
     
     getFormulaMedica(): Observable<FormulaMedica[]> {
       return this.backendService.get(environment.apiUrlAuth, this.api, "listar");

@@ -1,9 +1,22 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs/internal/Observable';
+import { HistoriaMedica } from 'src/app/models/historia-medica'; 
+import { BackendService } from 'src/app/services/backend.service';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HistoriaMedicaService {
+  private api = 'historia-medica';
 
-  constructor() { }
+  constructor(private readonly backendService: BackendService) {}
+
+  listarHistorias(): Observable<HistoriaMedica[]> {
+    return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
+  }
+
+  crearHistoria(solicitud: HistoriaMedica): Observable<unknown> {
+    return this.backendService.post(environment.apiUrlAuth, this.api, 'crear', solicitud);
+  }
 }
