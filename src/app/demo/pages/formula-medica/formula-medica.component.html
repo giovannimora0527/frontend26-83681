@@ -1,0 +1,180 @@
+<div class="container-fluid py-3">
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h3 class="mb-1">Fórmulas médicas</h3>
+      <p class="text-muted mb-0">Prescripciones asociadas a una cita y su mascota.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" (click)="alternarFormulario()">
+        {{mostrarFormulario ? 'Cancelar' : 'Nueva fórmula'}}
+      </button>
+      <button class="btn btn-outline-primary" (click)="cargarFormulas()" [disabled]="cargando">
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="mensajeExito" class="alert alert-success">{{mensajeExito}}</div>
+  <div *ngIf="errorMensaje" class="alert alert-danger">{{errorMensaje}}</div>
+
+  <div *ngIf="mostrarFormulario" class="card mb-4">
+    <div class="card-body">
+      <h5>{{editando ? 'Editar fórmula médica' : 'Registrar fórmula médica'}}</h5>
+
+      <div *ngIf="errorFormulario" class="alert alert-danger">{{errorFormulario}}</div>
+
+      <form (ngSubmit)="guardar()">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label">Cita asociada *</label>
+            <select class="form-select" name="citaId" [(ngModel)]="nuevaFormula.citaId" required>
+              <option value="">Selecciona una cita atendida</option>
+              <option *ngFor="let c of citas" [value]="c.id">
+                #{{c.id}} · {{c.mascota?.nombreMascota}} · {{c.fechaHora | date:'dd/MM/yyyy HH:mm'}} · {{c.estado}}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Medicamento *</label>
+            <select class="form-select" name="medicamentoId" [(ngModel)]="nuevaFormula.medicamentoId" required>
+              <option value="">Selecciona medicamento</option>
+              <option *ngFor="let m of medicamentos" [value]="m.id">
+                {{m.nombre}} — {{m.presentacion}}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Dosis *</label>
+            <input class="form-control" name="dosis" [(ngModel)]="nuevaFormula.dosis"
+                   placeholder="Ej. 1 tableta" maxlength="500" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Indicaciones</label>
+            <textarea class="form-control" name="indicaciones" [(ngModel)]="nuevaFormula.indicaciones"
+                      rows="2" maxlength="3000"></textarea>
+          </div>
+
+          <div class="col-12">
+            <button class="btn btn-success me-2" [disabled]="guardando">
+              {{guardando ? 'Guardando...' : 'Guardar fórmula'}}
+            </button>
+            <button class="btn btn-outline-secondary" type="button" (click)="alternarFormulario()">
+              Cancelar
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+
+      <div class="row align-items-center g-3 mb-3">
+        <div class="col-md-7">
+          <input class="form-control" type="search"
+                 placeholder="Buscar por mascota, medicamento, cita o dosis"
+                 [(ngModel)]="filtro" (ngModelChange)="paginaActual = 1">
+        </div>
+        <div class="col-md-5 text-md-end text-muted">{{filtradas.length}} fórmulas</div>
+      </div>
+
+      <div *ngIf="cargando" class="text-center py-4">
+        <span class="spinner-border text-primary"></span>
+        <p class="text-muted mt-2">Cargando fórmulas...</p>
+      </div>
+
+      <div class="table-responsive" *ngIf="!cargando">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th><button class="btn btn-link p-0" (click)="ordenarPor('id')">ID ↕</button></th>
+              <th><button class="btn btn-link p-0" (click)="ordenarPor('fechaCreacionRegistro')">Fecha ↕</button></th>
+              <th>Mascota</th>
+              <th>Cita</th>
+              <th><button class="btn btn-link p-0" (click)="ordenarPor('medicamento')">Medicamento ↕</button></th>
+              <th>Dosis</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of paginaDatos">
+              <td>#{{f.id}}</td>
+              <td>{{formatearFecha(f)}}</td>
+              <td>{{nombreMascota(f)}}</td>
+              <td>#{{obtenerCita(f)}}</td>
+              <td>{{nombreMedicamento(f)}}</td>
+              <td>{{f.dosis}}</td>
+              <td class="text-nowrap">
+                <button class="btn btn-sm btn-outline-primary me-1" (click)="ver(f)">Ver</button>
+                <button class="btn btn-sm btn-outline-secondary" (click)="editar(f)">Editar</button>
+              </td>
+            </tr>
+            <tr *ngIf="!paginaDatos.length">
+              <td colspan="8" class="text-center text-muted py-4">No hay fórmulas para mostrar.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <small class="text-muted">Mostrando {{primerRegistro}}–{{ultimoRegistro}} de {{filtradas.length}}</small>
+        <div>
+          <button class="btn btn-sm btn-outline-secondary me-2"
+                  [disabled]="paginaActual === 1" (click)="cambiarPagina(paginaActual - 1)">
+            Anterior
+          </button>
+          <span class="small">{{paginaActual}} / {{totalPaginas}}</span>
+          <button class="btn btn-sm btn-outline-secondary ms-2"
+                  [disabled]="paginaActual === totalPaginas" (click)="cambiarPagina(paginaActual + 1)">
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div *ngIf="detalle" class="card mt-4 border-primary">
+    <div class="card-body">
+      <div class="d-flex justify-content-between">
+        <h5>Detalle de fórmula #{{detalle.id}}</h5>
+        <button class="btn-close" (click)="detalle = null"></button>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <strong>Fecha de emisión</strong>
+          <p>{{formatearFecha(detalle)}}</p>
+        </div>
+        <div class="col-md-4">
+          <strong>Mascota</strong>
+          <p>{{nombreMascota(detalle)}}</p>
+        </div>
+        <div class="col-md-4">
+          <strong>Veterinario</strong>
+          <p>{{obtenerVeterinario(detalle)}}</p>
+        </div>
+        <div class="col-md-4">
+          <strong>Medicamento</strong>
+          <p>{{nombreMedicamento(detalle)}}</p>
+        </div>
+        <div class="col-md-4">
+          <strong>Dosis</strong>
+          <p>{{detalle.dosis}}</p>
+        </div>
+        <div class="col-12">
+          <strong>Indicaciones</strong>
+          <p>{{detalle.indicaciones || 'Sin indicaciones adicionales.'}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

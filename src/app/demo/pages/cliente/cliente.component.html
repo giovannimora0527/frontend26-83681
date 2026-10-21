@@ -1,0 +1,152 @@
+
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3>Gestión de clientes</h3>
+      <p class="text-muted mb-0">Consulta y visualiza los clientes registrados.</p>
+    </div>
+    <button class="btn btn-outline-primary" (click)="listarClientes()">
+      Actualizar
+    </button>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Consultar cliente por documento</h5>
+      <div class="row g-2">
+        <div class="col-md-8">
+          <input class="form-control"
+                 [(ngModel)]="documento"
+                 placeholder="Número de documento"
+                 (keyup.enter)="buscarPorDocumento()">
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" (click)="buscarPorDocumento()">
+            Buscar cliente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="mensajeError" class="alert alert-warning">
+    {{ mensajeError }}
+  </div>
+
+  <div *ngIf="clienteSeleccionado" class="card mb-4">
+    <div class="card-header d-flex justify-content-between">
+      <strong>Detalle del cliente</strong>
+      <button class="btn btn-sm btn-outline-secondary" (click)="cerrarDetalle()">
+        Cerrar
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <strong>Nombre completo</strong>
+          <div>{{ clienteSeleccionado.nombres }} {{ clienteSeleccionado.apellidos }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Documento</strong>
+          <div>{{ clienteSeleccionado.tipo_documento }} {{ clienteSeleccionado.numero_documento }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Teléfono</strong>
+          <div>{{ clienteSeleccionado.telefono || 'No registrado' }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Dirección</strong>
+          <div>{{ clienteSeleccionado.direccion || 'No registrada' }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Fecha de nacimiento</strong>
+          <div>{{ clienteSeleccionado.fecha_nacimiento || 'No registrada' }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Estado</strong>
+          <div>{{ clienteSeleccionado.activo ? 'Activo' : 'Inactivo' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row align-items-center mb-3">
+        <div class="col-md-7">
+          <h5>Clientes registrados</h5>
+        </div>
+        <div class="col-md-5">
+          <input class="form-control"
+                 [(ngModel)]="filtro"
+                 (ngModelChange)="filtrarClientes()"
+                 placeholder="Filtrar por nombre o documento">
+        </div>
+      </div>
+
+      <div *ngIf="cargando" class="alert alert-info">Cargando clientes...</div>
+
+      <div class="table-responsive" *ngIf="!cargando">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Documento</th>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Dirección</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cliente of clientesPagina">
+              <td>{{ cliente.tipo_documento }} {{ cliente.numero_documento }}</td>
+              <td>{{ cliente.nombres }} {{ cliente.apellidos }}</td>
+              <td>{{ cliente.telefono || '—' }}</td>
+              <td>{{ cliente.direccion || '—' }}</td>
+              <td>
+                <span class="badge"
+                      [class.bg-success]="cliente.activo"
+                      [class.bg-secondary]="!cliente.activo">
+                  {{ cliente.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary"
+                        (click)="verDetalle(cliente)">
+                  Ver
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="clientesFiltrados.length === 0">
+              <td colspan="6" class="text-center text-muted">
+                No hay clientes para mostrar.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+          {{ clientesFiltrados.length }} clientes encontrados
+        </small>
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary btn-sm"
+                  [disabled]="pagina <= 1"
+                  (click)="cambiarPagina(pagina - 1)">
+            Anterior
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" disabled>
+            {{ pagina }} / {{ totalPaginas }}
+          </button>
+          <button class="btn btn-outline-secondary btn-sm"
+                  [disabled]="pagina >= totalPaginas"
+                  (click)="cambiarPagina(pagina + 1)">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

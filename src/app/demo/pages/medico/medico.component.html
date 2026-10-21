@@ -1,0 +1,94 @@
+
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3>Gestión de veterinarios</h3>
+      <p class="text-muted mb-0">Consulta los profesionales registrados en la clínica.</p>
+    </div>
+    <button class="btn btn-outline-primary" (click)="listarMedicos()">
+      Actualizar
+    </button>
+  </div>
+
+  <div *ngIf="mensajeError" class="alert alert-warning">
+    {{ mensajeError }}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row align-items-center mb-3">
+        <div class="col-md-7">
+          <h5>Veterinarios registrados</h5>
+        </div>
+        <div class="col-md-5">
+          <input class="form-control"
+                 [(ngModel)]="filtro"
+                 (ngModelChange)="filtrarMedicos()"
+                 placeholder="Buscar por nombre, documento o registro">
+        </div>
+      </div>
+
+      <div *ngIf="cargando" class="alert alert-info">
+        Cargando veterinarios...
+      </div>
+
+      <div class="table-responsive" *ngIf="!cargando">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Documento</th>
+              <th>Nombre completo</th>
+              <th>Teléfono</th>
+              <th>Registro profesional</th>
+              <th>Especialización</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let medico of medicosPagina">
+              <td>
+                {{ medico.tipoDocumento || medico.tipo_documento }}
+                {{ medico.numeroDocumento || medico.numero_documento }}
+              </td>
+              <td>{{ medico.nombres }} {{ medico.apellidos }}</td>
+              <td>{{ medico.telefono || '—' }}</td>
+              <td>
+                {{ medico.registroProfesional || medico.registro_profesional || '—' }}
+              </td>
+              <td>
+                {{ medico.especializacion?.nombre
+                   || medico.especializacion?.nombreEspecializacion
+                   || '—' }}
+              </td>
+            </tr>
+            <tr *ngIf="medicosFiltrados.length === 0">
+              <td colspan="5" class="text-center text-muted">
+                No hay veterinarios para mostrar.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+          {{ medicosFiltrados.length }} veterinarios encontrados
+        </small>
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary btn-sm"
+                  [disabled]="pagina <= 1"
+                  (click)="cambiarPagina(pagina - 1)">
+            Anterior
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" disabled>
+            {{ pagina }} / {{ totalPaginas }}
+          </button>
+          <button class="btn btn-outline-secondary btn-sm"
+                  [disabled]="pagina >= totalPaginas"
+                  (click)="cambiarPagina(pagina + 1)">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
