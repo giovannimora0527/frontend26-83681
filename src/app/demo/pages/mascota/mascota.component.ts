@@ -1,11 +1,15 @@
 import { Component } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 
-import { MascotaServiceService } from './service/mascota-service.service';
+import { MascotaRq, MascotaServiceService } from './service/mascota-service.service';
 import { Mascota } from 'src/app/models/mascota';
-import { FormBuilder, FormGroup, Validators, AbstractControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Cliente } from 'src/app/models/cliente';
+import { Raza } from 'src/app/models/raza';
+import { ClienteService } from 'src/app/demo/pages/cliente/service/cliente.service';
+import { RazaService } from 'src/app/demo/pages/raza/service/raza.service';
+import { mensajeDeError } from 'src/app/services/api.util';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import Swal from 'sweetalert2';
 import { Modal } from 'bootstrap';
 
 @Component({
@@ -27,29 +31,51 @@ export class MascotaComponent {
   paginaActual = 1;
   readonly registrosPorPagina = 10;
 
+  // Catálogos para los combos del formulario.
+  razas: Raza[] = [];
+  clientes: Cliente[] = [];
+
   // Formulario para crear o editar mascota.
   form!: FormGroup;
   mascotaSelected: Mascota | null = null;
+  guardando = false;
+  avisoFormulario: string | null = null;
+  mensajeLista: { tipo: 'success' | 'danger'; texto: string } | null = null;
 
   constructor(private readonly mascotaService: MascotaServiceService,
-    private readonly formBuilder: FormBuilder) {
-    this.listar();
+    private readonly formBuilder: FormBuilder,
+    private readonly razaService: RazaService,
+    private readonly clienteService: ClienteService) {
     this.inicializarFormulario();
+    this.listar();
+    this.cargarCatalogos();
   }
 
   // Metodo ue permite inicializar el formulario con sus controles y validaciones.
   inicializarFormulario() {
     this.form = this.formBuilder.group({
-      nombreMascota: ['', Validators.required],
-      raza: ['', Validators.required],
-      edad: ['', Validators.required],
-      cliente: ['', Validators.required]
+      nombreMascota: ['', [Validators.required, Validators.maxLength(100)]],
+      razaId: ['', Validators.required],
+      edad: ['', [Validators.required, Validators.min(0), Validators.max(60)]],
+      clienteId: ['', Validators.required]
     });
   }
 
   // Obtiene los controles del formulario para facilitar el acceso a sus propiedades y métodos.
   get f(): { [key: string]: AbstractControl } {
     return this.form.controls;
+  }
+
+  /** Carga razas y clientes para los combos. */
+  cargarCatalogos() {
+    this.razaService.getRazas().subscribe({
+      next: (data) => (this.razas = data),
+      error: (error) => (this.mensajeLista = { tipo: 'danger', texto: mensajeDeError(error) })
+    });
+    this.clienteService.getClientes().subscribe({
+      next: (data) => (this.clientes = data),
+      error: (error) => (this.mensajeLista = { tipo: 'danger', texto: mensajeDeError(error) })
+    });
   }
 
   /**
@@ -101,12 +127,11 @@ export class MascotaComponent {
       .subscribe(
         {
           next: (data) => {
-            console.log(data);
             this.listMascotas = data;
             this.paginaActual = 1;
           },
           error: (error) => {
-            console.error('Error al obtener las mascotas:', error);
+            this.mensajeLista = { tipo: 'danger', texto: mensajeDeError(error) };
           }
         }
       );
@@ -130,7 +155,7 @@ export class MascotaComponent {
     return texto
       .toLocaleLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+      .replace(/[̀-ͯ]/g, '');
   }
 
   // Evento para abrir el modal de crear o editar mascota, dependiendo del modo recibido.
@@ -138,6 +163,7 @@ export class MascotaComponent {
     this.titleModal = modo === 'C' ? 'Crear Mascota' : 'Editar Mascota';
     this.modoFormulario = modo;
     this.mascotaSelected = null;
+    this.mensajeLista = null;
     this.resetFormulario();
     this.openModal(modo);
   }
@@ -146,18 +172,21 @@ export class MascotaComponent {
     this.form.reset();
     this.form.markAsPristine();
     this.form.markAsUntouched();
+    this.avisoFormulario = null;
   }
 
   abrirEdicion(mascota: Mascota) {
     this.mascotaSelected = mascota;
-    this.modoFormulario = 'E';
+    this.mensajeLista = null;
+    this.resetFormulario();
+    // Los combos trabajan con texto; los ids se convierten a cadena.
     this.form.patchValue({
-      nombreMascota: mascota.nombreMascota,
-      raza: mascota.raza,
-      edad: mascota.edad,
-      cliente: mascota.cliente
+      nombreMascota: mascota.nombreMascota ?? '',
+      razaId: String(mascota.raza?.razaId ?? ''),
+      edad: mascota.edad ?? '',
+      clienteId: String(mascota.cliente?.clienteId ?? mascota.cliente?.id ?? '')
     });
-    this.openModal(this.modoFormulario);
+    this.openModal('E');
   }
 
   closeModal() {
@@ -179,5 +208,41 @@ export class MascotaComponent {
     }
   }
 
+  /** Valida el formulario y guarda la mascota (crear o actualizar según el modo). */
+  guardar() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.avisoFormulario = 'Complete los campos obligatorios marcados en rojo. La edad debe estar entre 0 y 60 años.';
+      return;
+    }
 
+    const v = this.form.getRawValue();
+    const rq: MascotaRq = {
+      mascotaId: this.mascotaSelected?.mascotaId,
+      nombre: String(v.nombreMascota).trim(),
+      edad: Number(v.edad),
+      razaId: Number(v.razaId),
+      clienteId: Number(v.clienteId)
+    };
+
+    const esEdicion = this.mascotaSelected !== null;
+    this.guardando = true;
+    this.avisoFormulario = null;
+    const peticion = esEdicion
+      ? this.mascotaService.actualizar(rq)
+      : this.mascotaService.crear(rq);
+
+    peticion.subscribe({
+      next: (respuesta) => {
+        this.guardando = false;
+        this.closeModal();
+        this.mensajeLista = { tipo: 'success', texto: respuesta.message };
+        this.listar();
+      },
+      error: (error) => {
+        this.guardando = false;
+        this.avisoFormulario = mensajeDeError(error);
+      }
+    });
+  }
 }

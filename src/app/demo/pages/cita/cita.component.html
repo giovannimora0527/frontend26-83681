@@ -1,0 +1,214 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <h5 class="mb-0">Gestión de Citas</h5>
+        <small class="text-muted">{{ totalRegistros }} registros encontrados</small>
+      </div>
+      <button class="btn btn-primary btn-sm" type="button" (click)="abrirNueva()">Nueva cita</button>
+    </div>
+
+    <div class="card-body">
+      <app-alerta [mensaje]="aviso?.texto ?? null" [tipo]="aviso?.tipo ?? 'info'" />
+
+      <!-- Filtros: se aplican en el servidor -->
+      <form [formGroup]="filtrosForm" (ngSubmit)="buscar()" class="row g-2 mb-3">
+        <div class="col-12 col-md-6 col-xl-3">
+          <label class="form-label small mb-1" for="f-cliente">Cliente</label>
+          <select id="f-cliente" class="form-select form-select-sm" formControlName="clienteId">
+            <option value="">Todos</option>
+            @for (c of clientes; track c.id) {
+              <option [value]="c.id">{{ nombreCompleto(c) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <label class="form-label small mb-1" for="f-mascota">Mascota</label>
+          <select id="f-mascota" class="form-select form-select-sm" formControlName="mascotaId"
+                  [disabled]="!filtrosForm.controls.clienteId.value">
+            <option value="">Todas</option>
+            @for (m of mascotasFiltro; track m.mascotaId) {
+              <option [value]="m.mascotaId">{{ m.nombreMascota }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <label class="form-label small mb-1" for="f-medico">Veterinario</label>
+          <select id="f-medico" class="form-select form-select-sm" formControlName="medicoId">
+            <option value="">Todos</option>
+            @for (v of veterinarios; track v.id) {
+              <option [value]="v.id">{{ nombreCompleto(v) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <label class="form-label small mb-1" for="f-estado">Estado</label>
+          <select id="f-estado" class="form-select form-select-sm" formControlName="estado">
+            <option value="">Todos</option>
+            @for (e of estados; track e) {
+              <option [value]="e">{{ e }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-6 col-xl-2">
+          <label class="form-label small mb-1" for="f-desde">Desde</label>
+          <input id="f-desde" type="date" class="form-control form-control-sm" formControlName="fechaDesde" />
+        </div>
+        <div class="col-6 col-xl-2">
+          <label class="form-label small mb-1" for="f-hasta">Hasta</label>
+          <input id="f-hasta" type="date" class="form-control form-control-sm" formControlName="fechaHasta" />
+        </div>
+        <div class="col-12 col-xl-4">
+          <label class="form-label small mb-1" for="f-texto">Motivo contiene</label>
+          <input id="f-texto" type="text" class="form-control form-control-sm" formControlName="texto" placeholder="Ej: vacuna" />
+        </div>
+        <div class="col-12 col-xl-4 d-flex align-items-end gap-2">
+          <button class="btn btn-primary btn-sm" type="submit">Buscar</button>
+          <button class="btn btn-outline-secondary btn-sm" type="button" (click)="limpiarFiltros()">Limpiar</button>
+        </div>
+      </form>
+
+      <!-- DataTable -->
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              @for (col of columnas; track col.etiqueta) {
+                <th scope="col" class="text-nowrap">
+                  <button type="button" class="btn btn-link p-0 text-reset fw-semibold text-decoration-none"
+                          (click)="ordenar(col.campo)" [attr.aria-label]="'Ordenar por ' + col.etiqueta">
+                    {{ col.etiqueta }} {{ indicador(col.campo) }}
+                  </button>
+                </th>
+              }
+              <th scope="col" class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (cargando) {
+              <tr><td colspan="8" class="text-center text-muted py-4">Cargando citas...</td></tr>
+            }
+            @for (c of citas; track c.id) {
+              <tr>
+                <td>{{ c.fechaHora | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ c.fechaHora | date: 'HH:mm' }}</td>
+                <td>{{ c.clienteNombre }}</td>
+                <td>{{ c.mascotaNombre }}</td>
+                <td>{{ c.medicoNombre }}</td>
+                <td><span class="badge" [class]="claseEstado(c.estado)">{{ c.estado }}</span></td>
+                <td class="text-truncate" style="max-width: 220px;" [title]="c.motivo">{{ c.motivo }}</td>
+                <td class="text-end text-nowrap">
+                  <button class="btn btn-sm btn-outline-info me-1" type="button" (click)="verDetalle(c)">Ver</button>
+                  <button class="btn btn-sm btn-outline-primary me-1" type="button"
+                          [disabled]="!sePuedeEditar(c)" [title]="sePuedeEditar(c) ? 'Editar cita' : 'Esta cita no se puede modificar'"
+                          (click)="editar(c)">Editar</button>
+                  @if (c.estado === 'Cancelada') {
+                    <button class="btn btn-sm btn-outline-success" type="button" (click)="reactivar(c)">Reactivar</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              @if (!cargando) {
+                <tr><td colspan="8" class="text-center text-muted py-4">No hay citas con los filtros seleccionados.</td></tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-3">
+        <app-paginador [pagina]="pagina" [totalPaginas]="totalPaginas" (cambiarPagina)="irAPagina($event)" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario crear / editar -->
+  <app-modal [visible]="mostrarFormulario" [titulo]="editando ? 'Editar cita' : 'Nueva cita'" (cerrar)="cerrarFormulario()">
+    <app-alerta [mensaje]="avisoFormulario?.texto ?? null" [tipo]="avisoFormulario?.tipo ?? 'info'" />
+
+    <form [formGroup]="citaForm" (ngSubmit)="guardar()" novalidate>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="c-cliente">Cliente *</label>
+          <select id="c-cliente" class="form-select" formControlName="clienteId"
+                  [class.is-invalid]="citaForm.controls.clienteId.touched && citaForm.controls.clienteId.invalid">
+            <option value="" disabled>Seleccione un cliente</option>
+            @for (c of clientes; track c.id) {
+              <option [value]="c.id">{{ nombreCompleto(c) }} ({{ c.numeroDocumento }})</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="c-mascota">Mascota del cliente *</label>
+          <select id="c-mascota" class="form-select" formControlName="mascotaId"
+                  [class.is-invalid]="citaForm.controls.mascotaId.touched && citaForm.controls.mascotaId.invalid">
+            <option value="" disabled>{{ citaForm.controls.clienteId.value ? 'Seleccione una mascota' : 'Primero seleccione un cliente' }}</option>
+            @for (m of mascotasFormulario; track m.mascotaId) {
+              <option [value]="m.mascotaId">{{ m.nombreMascota }}</option>
+            }
+          </select>
+          @if (citaForm.controls.clienteId.value && mascotasFormulario.length === 0) {
+            <div class="form-text text-warning">Este cliente no tiene mascotas registradas.</div>
+          }
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="c-medico">Veterinario *</label>
+          <select id="c-medico" class="form-select" formControlName="medicoId"
+                  [class.is-invalid]="citaForm.controls.medicoId.touched && citaForm.controls.medicoId.invalid">
+            <option value="" disabled>Seleccione un veterinario</option>
+            @for (v of veterinarios; track v.id) {
+              <option [value]="v.id">{{ nombreCompleto(v) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="c-fecha">Fecha *</label>
+          <input id="c-fecha" type="date" class="form-control" formControlName="fecha"
+                 [attr.min]="editando ? null : hoy"
+                 [class.is-invalid]="citaForm.controls.fecha.touched && citaForm.controls.fecha.invalid" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="c-hora">Hora *</label>
+          <input id="c-hora" type="time" class="form-control" formControlName="hora"
+                 [class.is-invalid]="citaForm.controls.hora.touched && citaForm.controls.hora.invalid" />
+          <div class="form-text">Separación mínima de 15 min con otras citas del veterinario.</div>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label" for="c-motivo">Motivo de la consulta *</label>
+          <input id="c-motivo" type="text" class="form-control" formControlName="motivo" maxlength="500"
+                 [class.is-invalid]="citaForm.controls.motivo.touched && citaForm.controls.motivo.invalid" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="c-estado">Estado *</label>
+          <select id="c-estado" class="form-select" formControlName="estado">
+            @for (e of estados; track e) {
+              <option [value]="e">{{ e }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button class="btn btn-outline-secondary" type="button" (click)="cerrarFormulario()">Cancelar</button>
+        <button class="btn btn-primary" type="submit" [disabled]="guardando">
+          {{ guardando ? 'Guardando...' : (editando ? 'Guardar cambios' : 'Registrar cita') }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+
+  <!-- Detalle -->
+  <app-modal [visible]="detalle !== null" titulo="Detalle de la cita" (cerrar)="detalle = null">
+    @if (detalle) {
+      <dl class="row mb-0">
+        <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8">{{ detalle.clienteNombre }}</dd>
+        <dt class="col-sm-4">Mascota</dt><dd class="col-sm-8">{{ detalle.mascotaNombre }}</dd>
+        <dt class="col-sm-4">Veterinario</dt><dd class="col-sm-8">{{ detalle.medicoNombre }}</dd>
+        <dt class="col-sm-4">Fecha y hora</dt><dd class="col-sm-8">{{ detalle.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        <dt class="col-sm-4">Estado</dt>
+        <dd class="col-sm-8"><span class="badge" [class]="claseEstado(detalle.estado)">{{ detalle.estado }}</span></dd>
+        <dt class="col-sm-4">Motivo</dt><dd class="col-sm-8">{{ detalle.motivo }}</dd>
+      </dl>
+    }
+  </app-modal>
+</div>

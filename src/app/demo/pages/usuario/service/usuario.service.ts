@@ -1,24 +1,38 @@
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Usuario } from 'src/app/models/usuario';
-import { BackendService } from 'src/app/services/backend.service';
-import { environment } from 'src/environments/environment';
+import { API_BASE } from 'src/app/services/api.util';
+
+/** Datos que el backend espera para crear un usuario. */
+export interface UsuarioRq {
+  username: string;
+  password: string;
+  rol: string;
+  email: string;
+  activo: boolean;
+}
+
+/** Respuesta del backend al guardar un usuario. */
+export interface RespuestaUsuario {
+  status: number;
+  message: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioService {
-  private api = `usuario`;
+  private readonly http = inject(HttpClient);
+  private readonly url = `${API_BASE}/usuario`;
 
-  constructor(private backendService: BackendService) { 
-    this.testService();
+  /** @returns usuarios ordenados por username. */
+  listar(): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(`${this.url}/listar`);
   }
 
-  testService() {
-    this.backendService.get(environment.apiUrlAuth, this.api, "test");
-  }
-
-  getUsuarios(): Observable<Usuario[]> {
-    return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
+  /** @param rq datos del usuario nuevo. */
+  crear(rq: UsuarioRq): Observable<RespuestaUsuario> {
+    return this.http.post<RespuestaUsuario>(`${this.url}/guardar`, rq);
   }
 }

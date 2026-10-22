@@ -17,6 +17,11 @@
             </div>
         </div>
         <div class="card-body">
+            <div *ngIf="mensajeLista" class="alert mb-3"
+                [class.alert-success]="mensajeLista.tipo === 'success'"
+                [class.alert-danger]="mensajeLista.tipo === 'danger'" role="alert">
+                {{ mensajeLista.texto }}
+            </div>
             <div class="row">
                 <div class="table table-responsive table-condensed col col-md-12">
                     <table class="table table-stripped table-condensed table-responsive">
@@ -44,14 +49,14 @@
                         <tbody *ngIf="mascotasFiltradas.length > 0">
                             <tr *ngFor="let mascota of mascotasPaginadas">
                                 <td class="text-center">{{ mascota.nombreMascota }}</td>
-                                <td class="text-center">{{ mascota.raza.especie }}</td>
-                                <td class="text-center">{{ mascota.raza.nombre }}</td>
+                                <td class="text-center">{{ mascota.raza?.especie }}</td>
+                                <td class="text-center">{{ mascota.raza?.nombre }}</td>
                                 <td class="text-center">{{ mascota.edad }}</td>
-                                <td class="text-center">{{ mascota.cliente.nombres }} {{ mascota.cliente.apellidos }}
+                                <td class="text-center">{{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}
                                 </td>
                                 <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-info d-inline-flex 
+                                    <button class="btn btn-outline-info d-inline-flex
                                     align-items-center justify-content-center" (click)="abrirEdicion(mascota)">
                                         <i class="fa fa-edit"></i>&nbsp;Editar</button>
                                 </td>
@@ -91,18 +96,54 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
                 (click)="closeModal()"></button>
             </div>
-            <div class="modal-body">
-                <div class="card">
-                    <div class="card-body">
-                      
+            <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+                <div class="modal-body">
+                    <div *ngIf="avisoFormulario" class="alert alert-danger" role="alert">{{ avisoFormulario }}</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="mas-nombre">Nombre de la mascota *</label>
+                            <input id="mas-nombre" type="text" class="form-control" formControlName="nombreMascota"
+                                maxlength="100"
+                                [class.is-invalid]="f['nombreMascota'].touched && f['nombreMascota'].invalid" />
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="mas-edad">Edad (años) *</label>
+                            <input id="mas-edad" type="number" class="form-control" formControlName="edad" min="0" max="60"
+                                [class.is-invalid]="f['edad'].touched && f['edad'].invalid" />
+                            <div class="invalid-feedback">Entre 0 y 60 años.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="mas-raza">Raza *</label>
+                            <select id="mas-raza" class="form-select" formControlName="razaId"
+                                [class.is-invalid]="f['razaId'].touched && f['razaId'].invalid">
+                                <option value="" disabled>Seleccione una raza</option>
+                                <option *ngFor="let raza of razas" [value]="raza.razaId">
+                                    {{ raza.nombre }} ({{ raza.especie }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="mas-cliente">Cliente (dueño) *</label>
+                            <select id="mas-cliente" class="form-select" formControlName="clienteId"
+                                [class.is-invalid]="f['clienteId'].touched && f['clienteId'].invalid">
+                                <option value="" disabled>Seleccione un cliente</option>
+                                <option *ngFor="let cliente of clientes" [value]="cliente.clienteId ?? cliente.id">
+                                    {{ cliente.nombres }} {{ cliente.apellidos }} ({{ cliente.numeroDocumento }})
+                                </option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary">{{ titleBoton}}</button>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="guardando">
+                        {{ guardando ? 'Guardando...' : titleBoton }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

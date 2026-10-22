@@ -17,6 +17,11 @@
             </div>
         </div>
         <div class="card-body">
+            <div *ngIf="mensajeLista" class="alert mb-3"
+                [class.alert-success]="mensajeLista.tipo === 'success'"
+                [class.alert-danger]="mensajeLista.tipo === 'danger'" role="alert">
+                {{ mensajeLista.texto }}
+            </div>
             <div class="row">
                 <div class="table table-responsive table-condensed col col-md-12">
                     <table class="table table-stripped table-condensed table-responsive">
@@ -50,7 +55,7 @@
                                 <td class="text-center">{{ cliente.telefono }}</td>
                                 <td class="text-center">{{ cliente.direccion }}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-info d-inline-flex 
+                                    <button class="btn btn-outline-info d-inline-flex
                                     align-items-center justify-content-center" (click)="abrirEdicion(cliente)">
                                         <i class="fa fa-edit"></i>&nbsp;Editar</button>
                                 </td>
@@ -90,18 +95,77 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
                 (click)="closeModal()"></button>
             </div>
-            <div class="modal-body">
-                <div class="card">
-                    <div class="card-body">
-                        
+            <form [formGroup]="clienteForm" (ngSubmit)="guardar()" novalidate>
+                <div class="modal-body">
+                    <div *ngIf="avisoFormulario" class="alert alert-danger" role="alert">{{ avisoFormulario }}</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="cli-tipo">Tipo de documento *</label>
+                            <select id="cli-tipo" class="form-select" formControlName="tipoDocumento"
+                                [class.is-invalid]="clienteForm.controls.tipoDocumento.touched && clienteForm.controls.tipoDocumento.invalid">
+                                <option value="CC">Cédula de ciudadanía (CC)</option>
+                                <option value="TI">Tarjeta de identidad (TI)</option>
+                                <option value="CE">Cédula de extranjería (CE)</option>
+                                <option value="PA">Pasaporte (PA)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="cli-documento">Número de documento *</label>
+                            <input id="cli-documento" type="text" class="form-control" formControlName="numeroDocumento"
+                                maxlength="20"
+                                [class.is-invalid]="clienteForm.controls.numeroDocumento.touched && clienteForm.controls.numeroDocumento.invalid" />
+                            <div class="invalid-feedback">Obligatorio, máximo 20 caracteres, solo letras y números.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="cli-nombres">Nombres *</label>
+                            <input id="cli-nombres" type="text" class="form-control" formControlName="nombres" maxlength="100"
+                                [class.is-invalid]="clienteForm.controls.nombres.touched && clienteForm.controls.nombres.invalid" />
+                            <div class="invalid-feedback">Los nombres son obligatorios.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="cli-apellidos">Apellidos *</label>
+                            <input id="cli-apellidos" type="text" class="form-control" formControlName="apellidos" maxlength="100"
+                                [class.is-invalid]="clienteForm.controls.apellidos.touched && clienteForm.controls.apellidos.invalid" />
+                            <div class="invalid-feedback">Los apellidos son obligatorios.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label" for="cli-nacimiento">Fecha de nacimiento *</label>
+                            <input id="cli-nacimiento" type="date" class="form-control" formControlName="fechaNacimiento"
+                                [attr.max]="hoy"
+                                [class.is-invalid]="clienteForm.controls.fechaNacimiento.touched && clienteForm.controls.fechaNacimiento.invalid" />
+                            <div class="invalid-feedback">La fecha de nacimiento es obligatoria.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="cli-genero">Género</label>
+                            <select id="cli-genero" class="form-select" formControlName="genero">
+                                <option value="">Sin especificar</option>
+                                <option value="F">Femenino</option>
+                                <option value="M">Masculino</option>
+                                <option value="O">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="cli-telefono">Teléfono</label>
+                            <input id="cli-telefono" type="text" class="form-control" formControlName="telefono" maxlength="20" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label" for="cli-direccion">Dirección</label>
+                            <input id="cli-direccion" type="text" class="form-control" formControlName="direccion" maxlength="200" />
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary">{{ titleBoton}}</button>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="guardando">
+                        {{ guardando ? 'Guardando...' : titleBoton }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

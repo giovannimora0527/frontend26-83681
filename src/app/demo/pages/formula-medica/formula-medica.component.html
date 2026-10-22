@@ -1,0 +1,230 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <h5 class="mb-0">Gestión de Fórmulas Médicas</h5>
+        <small class="text-muted">{{ totalRegistros }} fórmulas encontradas</small>
+      </div>
+      <button class="btn btn-primary btn-sm" type="button" (click)="abrirNueva()">Nueva fórmula</button>
+    </div>
+
+    <div class="card-body">
+      <app-alerta [mensaje]="aviso?.texto ?? null" [tipo]="aviso?.tipo ?? 'info'" />
+
+      <!-- Filtros: se aplican en el servidor -->
+      <form [formGroup]="filtrosForm" (ngSubmit)="buscar()" class="row g-2 mb-3">
+        <div class="col-12 col-md-6 col-xl-3">
+          <label class="form-label small mb-1" for="ff-cliente">Cliente</label>
+          <select id="ff-cliente" class="form-select form-select-sm" formControlName="clienteId">
+            <option value="">Todos</option>
+            @for (c of clientes; track c.id) {
+              <option [value]="c.id">{{ nombreCompleto(c) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <label class="form-label small mb-1" for="ff-mascota">Mascota</label>
+          <select id="ff-mascota" class="form-select form-select-sm" formControlName="mascotaId"
+                  [disabled]="!filtrosForm.controls.clienteId.value">
+            <option value="">Todas</option>
+            @for (m of mascotasFiltro; track m.mascotaId) {
+              <option [value]="m.mascotaId">{{ m.nombreMascota }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <label class="form-label small mb-1" for="ff-medico">Veterinario</label>
+          <select id="ff-medico" class="form-select form-select-sm" formControlName="medicoId">
+            <option value="">Todos</option>
+            @for (v of veterinarios; track v.id) {
+              <option [value]="v.id">{{ nombreCompleto(v) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <label class="form-label small mb-1" for="ff-medicamento">Medicamento contiene</label>
+          <input id="ff-medicamento" type="text" class="form-control form-control-sm" formControlName="medicamento" />
+        </div>
+        <div class="col-6 col-xl-2">
+          <label class="form-label small mb-1" for="ff-desde">Emitida desde</label>
+          <input id="ff-desde" type="date" class="form-control form-control-sm" formControlName="fechaDesde" />
+        </div>
+        <div class="col-6 col-xl-2">
+          <label class="form-label small mb-1" for="ff-hasta">Emitida hasta</label>
+          <input id="ff-hasta" type="date" class="form-control form-control-sm" formControlName="fechaHasta" />
+        </div>
+        <div class="col-12 col-xl-8 d-flex align-items-end gap-2">
+          <button class="btn btn-primary btn-sm" type="submit">Buscar</button>
+          <button class="btn btn-outline-secondary btn-sm" type="button" (click)="limpiarFiltros()">Limpiar</button>
+        </div>
+      </form>
+
+      <!-- DataTable resumido: solo los campos clave de la fórmula -->
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              @for (col of columnas; track col.campo) {
+                <th scope="col" class="text-nowrap">
+                  <button type="button" class="btn btn-link p-0 text-reset fw-semibold text-decoration-none"
+                          (click)="ordenar(col.campo)" [attr.aria-label]="'Ordenar por ' + col.etiqueta">
+                    {{ col.etiqueta }} {{ indicador(col.campo) }}
+                  </button>
+                </th>
+              }
+              <th scope="col" class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (cargando) {
+              <tr><td colspan="6" class="text-center text-muted py-4">Cargando fórmulas...</td></tr>
+            }
+            @for (f of formulas; track f.id) {
+              <tr>
+                <td>{{ f.fechaEmision | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ f.mascotaNombre }}</td>
+                <td>{{ f.medicoNombre }}</td>
+                <td>{{ f.medicamento }}</td>
+                <td>{{ f.duracionDias }}</td>
+                <td class="text-end text-nowrap">
+                  <button class="btn btn-sm btn-outline-info me-1" type="button" (click)="verDetalle(f)">Ver</button>
+                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="editar(f)">Editar</button>
+                </td>
+              </tr>
+            } @empty {
+              @if (!cargando) {
+                <tr><td colspan="6" class="text-center text-muted py-4">No hay fórmulas con los filtros seleccionados.</td></tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-3">
+        <app-paginador [pagina]="pagina" [totalPaginas]="totalPaginas" (cambiarPagina)="irAPagina($event)" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario crear / editar -->
+  <app-modal [visible]="mostrarFormulario" [titulo]="editando ? 'Editar fórmula médica' : 'Nueva fórmula médica'" (cerrar)="cerrarFormulario()">
+    <app-alerta [mensaje]="avisoFormulario?.texto ?? null" [tipo]="avisoFormulario?.tipo ?? 'info'" />
+
+    @if (editando) {
+      <p class="small text-muted">La mascota, la consulta y el cliente no se pueden cambiar en una fórmula ya emitida.</p>
+    }
+
+    <form [formGroup]="formulaForm" (ngSubmit)="guardar()" novalidate>
+      <h6 class="text-uppercase text-muted small">1. Asociación</h6>
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label class="form-label" for="fo-cliente">Cliente *</label>
+          <select id="fo-cliente" class="form-select" formControlName="clienteId"
+                  [class.is-invalid]="formulaForm.controls.clienteId.touched && formulaForm.controls.clienteId.invalid">
+            <option value="" disabled>Seleccione un cliente</option>
+            @for (c of clientes; track c.id) {
+              <option [value]="c.id">{{ nombreCompleto(c) }} ({{ c.numeroDocumento }})</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="fo-mascota">Mascota *</label>
+          <select id="fo-mascota" class="form-select" formControlName="mascotaId"
+                  [class.is-invalid]="formulaForm.controls.mascotaId.touched && formulaForm.controls.mascotaId.invalid">
+            <option value="" disabled>{{ formulaForm.controls.clienteId.value ? 'Seleccione una mascota' : 'Primero seleccione un cliente' }}</option>
+            @for (m of mascotasFormulario; track m.mascotaId) {
+              <option [value]="m.mascotaId">{{ m.nombreMascota }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="fo-cita">Consulta (cita) *</label>
+          <select id="fo-cita" class="form-select" formControlName="citaId"
+                  [class.is-invalid]="formulaForm.controls.citaId.touched && formulaForm.controls.citaId.invalid">
+            <option value="" disabled>{{ formulaForm.controls.mascotaId.value ? 'Seleccione una consulta' : 'Primero seleccione una mascota' }}</option>
+            @for (c of citasFormulario; track c.id) {
+              <option [value]="c.id">{{ c.fechaHora | date: 'dd/MM/yyyy HH:mm' }} — {{ c.motivo }} ({{ c.estado }})</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="fo-medico">Veterinario que emite *</label>
+          <select id="fo-medico" class="form-select" formControlName="medicoId"
+                  [class.is-invalid]="formulaForm.controls.medicoId.touched && formulaForm.controls.medicoId.invalid">
+            <option value="" disabled>Seleccione un veterinario</option>
+            @for (v of veterinarios; track v.id) {
+              <option [value]="v.id">{{ nombreCompleto(v) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="fo-fecha">Fecha de emisión *</label>
+          <input id="fo-fecha" type="date" class="form-control" formControlName="fechaEmision"
+                 [attr.min]="fechaMinimaEmision()"
+                 [class.is-invalid]="formulaForm.controls.fechaEmision.touched && formulaForm.controls.fechaEmision.invalid" />
+          <div class="form-text">No puede ser anterior a la fecha de la consulta.</div>
+        </div>
+      </div>
+
+      <h6 class="text-uppercase text-muted small">2. Medicamento</h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="fo-medicamento">Medicamento *</label>
+          <select id="fo-medicamento" class="form-select" formControlName="idMedicamento"
+                  [class.is-invalid]="formulaForm.controls.idMedicamento.touched && formulaForm.controls.idMedicamento.invalid">
+            <option value="">Seleccione un medicamento</option>
+            @for (m of medicamentos; track m.id) {
+              <option [value]="m.id">{{ m.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="fo-dosis">Dosis *</label>
+          <input id="fo-dosis" type="text" class="form-control" formControlName="dosis" maxlength="100" placeholder="Ej: 1 tableta"
+                 [class.is-invalid]="formulaForm.controls.dosis.touched && formulaForm.controls.dosis.invalid" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="fo-frecuencia">Frecuencia *</label>
+          <input id="fo-frecuencia" type="text" class="form-control" formControlName="frecuencia" maxlength="100" placeholder="Ej: cada 12 horas"
+                 [class.is-invalid]="formulaForm.controls.frecuencia.touched && formulaForm.controls.frecuencia.invalid" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="fo-duracion">Duración (días) *</label>
+          <input id="fo-duracion" type="number" class="form-control" formControlName="duracionDias" min="1" max="365"
+                 [class.is-invalid]="formulaForm.controls.duracionDias.touched && formulaForm.controls.duracionDias.invalid" />
+          <div class="invalid-feedback">Entre 1 y 365 días.</div>
+        </div>
+        <div class="col-md-9">
+          <label class="form-label" for="fo-indicaciones">Indicaciones *</label>
+          <textarea id="fo-indicaciones" class="form-control" rows="2" formControlName="indicaciones"
+                    [class.is-invalid]="formulaForm.controls.indicaciones.touched && formulaForm.controls.indicaciones.invalid"></textarea>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button class="btn btn-outline-secondary" type="button" (click)="cerrarFormulario()">Cancelar</button>
+        <button class="btn btn-primary" type="submit" [disabled]="guardando">
+          {{ guardando ? 'Guardando...' : (editando ? 'Guardar cambios' : 'Registrar fórmula') }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+
+  <!-- Detalle completo: todos los campos de la fórmula -->
+  <app-modal [visible]="detalle !== null" titulo="Detalle de la fórmula médica" (cerrar)="detalle = null">
+    @if (detalle) {
+      <dl class="row mb-0">
+        <dt class="col-sm-4">Fecha de emisión</dt><dd class="col-sm-8">{{ detalle.fechaEmision | date: 'dd/MM/yyyy' }}</dd>
+        <dt class="col-sm-4">Mascota</dt><dd class="col-sm-8">{{ detalle.mascotaNombre }}</dd>
+        <dt class="col-sm-4">Consulta (cita)</dt><dd class="col-sm-8">#{{ detalle.citaId }}</dd>
+        <dt class="col-sm-4">Veterinario</dt><dd class="col-sm-8">{{ detalle.medicoNombre }}</dd>
+        <dt class="col-sm-4">Medicamento</dt><dd class="col-sm-8">{{ detalle.medicamento }}</dd>
+        <dt class="col-sm-4">Dosis</dt><dd class="col-sm-8">{{ detalle.dosis }}</dd>
+        <dt class="col-sm-4">Frecuencia</dt><dd class="col-sm-8">{{ detalle.frecuencia }}</dd>
+        <dt class="col-sm-4">Duración</dt><dd class="col-sm-8">{{ detalle.duracionDias }} día(s)</dd>
+        <dt class="col-sm-4">Indicaciones</dt><dd class="col-sm-8">{{ detalle.indicaciones }}</dd>
+        <dt class="col-sm-4">Registrada</dt><dd class="col-sm-8">{{ detalle.fechaCreacionRegistro | date: 'dd/MM/yyyy HH:mm' }}</dd>
+      </dl>
+    }
+  </app-modal>
+</div>

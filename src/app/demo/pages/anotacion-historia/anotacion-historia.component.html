@@ -1,0 +1,30 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Anotaciones de historias clínicas</h5>
+      <small class="text-muted">Seleccione una historia para ver y registrar sus anotaciones.</small>
+    </div>
+
+    <div class="card-body">
+      <app-alerta [mensaje]="aviso" tipo="danger" />
+
+      <form [formGroup]="selectorForm" class="row g-2 align-items-end mb-4">
+        <div class="col-12 col-lg-8">
+          <label class="form-label small mb-1" for="as-historia">Historia clínica</label>
+          <select id="as-historia" class="form-select" formControlName="historiaId" [disabled]="cargando">
+            <option value="">{{ cargando ? 'Cargando historias...' : 'Seleccione una historia' }}</option>
+            @for (h of historias; track h.id) {
+              <option [value]="h.id">{{ textoHistoria(h) }}</option>
+            }
+          </select>
+        </div>
+      </form>
+
+      @if (historiaSeleccionada !== null) {
+        <app-anotaciones-panel [historiaId]="historiaSeleccionada" />
+      } @else {
+        <p class="text-muted mb-0">No hay una historia seleccionada.</p>
+      }
+    </div>
+  </div>
+</div>
