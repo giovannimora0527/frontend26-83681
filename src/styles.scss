@@ -45,3 +45,10 @@
 	color: #ffffff;
 	transform: translateY(-2px);
 }
+
+/* Encabezados de tabla que se pueden ordenar con un clic (TablaDatos) */
+.ordenable {
+	cursor: pointer;
+	user-select: none;
+	white-space: nowrap;
+}

@@ -1,0 +1,19 @@
+<div class="row align-items-center" *ngIf="tabla.total > 0">
+    <div class="col col-md-4">
+        Mostrando {{ tabla.primerRegistro }} a {{ tabla.ultimoRegistro }} de {{ tabla.total }} {{ nombre }}
+    </div>
+    <div class="col col-md-3">
+        <select class="form-select" [(ngModel)]="tabla.registrosPorPagina" (ngModelChange)="tabla.reiniciarPagina()">
+            <option *ngFor="let opcion of tabla.opcionesRegistros" [ngValue]="opcion">{{ opcion }} por página</option>
+        </select>
+    </div>
+    <div class="col col-md-5 d-flex justify-content-end">
+        <ngb-pagination
+            [collectionSize]="tabla.total"
+            [(page)]="tabla.paginaActual"
+            [pageSize]="tabla.registrosPorPagina"
+            [maxSize]="5"
+            [boundaryLinks]="true">
+        </ngb-pagination>
+    </div>
+</div>
