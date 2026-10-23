@@ -1,1 +1,26 @@
-<p>anotacion-historia works!</p>
+<div class="container-fluid">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <label class="form-label">Cliente</label>
+            <select class="form-select" [(ngModel)]="clienteId" (ngModelChange)="cambiarCliente()">
+                <option [ngValue]="undefined">Seleccione un cliente</option>
+                <option *ngFor="let c of listClientes" [ngValue]="c.id">{{ c.nombres }} {{ c.apellidos }} - {{ c.numeroDocumento }}</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Mascota</label>
+            <select class="form-select" [(ngModel)]="mascotaId" (ngModelChange)="cambiarMascota()" [disabled]="!clienteId">
+                <option [ngValue]="undefined">{{ clienteId ? 'Seleccione una mascota' : 'Primero seleccione un cliente' }}</option>
+                <option *ngFor="let m of listMascotas" [ngValue]="m.mascotaId">{{ m.nombreMascota }}</option>
+            </select>
+        </div>
+    </div>
+    <small class="text-muted d-block mt-2">
+        Para agregar anotaciones abra la historia clínica con el botón "Ver" del módulo Historia Clínica.
+    </small>
+    <br>
+
+    <div *ngIf="cargando" class="text-center"><span class="spinner-border spinner-border-sm me-2"></span> Cargando anotaciones...</div>
+    <app-tabla-anotaciones *ngIf="mascotaId && !cargando" [anotaciones]="anotaciones" [mostrarHistoria]="true"></app-tabla-anotaciones>
+    <p *ngIf="!mascotaId" class="text-center text-muted">Seleccione un cliente y una mascota para ver su historial.</p>
+</div>
