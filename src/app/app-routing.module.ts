@@ -10,7 +10,6 @@ import { EspecializacionComponent } from './demo/pages/especializacion/especiali
 import { CitaComponent } from './demo/pages/cita/cita.component';
 import { FormulaMedicaComponent } from './demo/pages/formula-medica/formula-medica.component';
 import { HistoriaMedicaComponent } from './demo/pages/historia-medica/historia-medica.component';
-import { AnotacionHistoriaComponent } from './demo/pages/anotacion-historia/anotacion-historia.component';
 import { MedicamentoComponent } from './demo/pages/medicamento/medicamento.component';
 
 
@@ -34,7 +33,6 @@ export const routes: Routes = [
       { path: 'citas', component: CitaComponent, data: { title: 'Citas' }},
       { path: 'formulas-medicas', component: FormulaMedicaComponent, data: { title: 'Fórmulas Médicas' }},
       { path: 'historias-medicas', component: HistoriaMedicaComponent, data: { title: 'Historias Médicas' }},
-      { path: 'anotaciones-historia', component: AnotacionHistoriaComponent, data: { title: 'Anotaciones Clínicas' }},
       { path: 'medicamentos', component: MedicamentoComponent, data: { title: 'Medicamentos' }}
       /* ---------- Nuevas rutas aqui -------------  */
     ]

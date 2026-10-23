@@ -1,0 +1,4 @@
+// Evita que un motivo largo deforme la tabla; el texto completo se ve en el detalle.
+.celda-motivo {
+  max-width: 220px;
+}

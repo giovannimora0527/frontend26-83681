@@ -61,14 +61,60 @@ export interface MedicamentoRq {
     descripcion: string | null;
 }
 
-export interface AnotacionRq {
+/** Datos para crear o editar una cita (CitaRq del backend). */
+export interface CitaRq {
+    clienteId: number;
     mascotaId: number;
     medicoId: number;
+    /** Fecha y hora en formato ISO local (yyyy-MM-ddTHH:mm:ss). */
+    fechaCita: string;
+    motivo: string;
+    /** Solo se usa al crear la cita. */
+    estado?: string;
+}
+
+/** Datos para crear una historia clínica (HistoriaMedicaRq del backend). */
+export interface HistoriaMedicaRq {
+    clienteId: number;
+    mascotaId: number;
+    citaId: number;
+    medicoId: number;
+    fechaConsulta: string;
+    motivoConsulta: string;
+    diagnostico: string;
+    observaciones: string | null;
+}
+
+/** Datos para agregar una anotación (AnotacionHistoriaRq del backend). */
+export interface AnotacionHistoriaRq {
+    historiaId: number;
+    medicoId: number;
+    fechaAnotacion: string;
     descripcion: string;
+    observacion: string;
+    diagnosticoEvolucion: string;
+}
+
+/** Datos para crear o editar una fórmula médica (FormulaMedicaRq del backend). */
+export interface FormulaMedicaRq {
+    clienteId: number;
+    mascotaId: number;
+    historiaId: number;
+    medicoId: number;
+    /** Fecha de emisión (yyyy-MM-dd). */
+    fechaEmision: string;
+    medicamento: string;
+    dosis: number;
+    unidadDosis: string;
+    frecuenciaHoras: number;
+    duracionDias: number;
+    indicaciones: string;
 }
 
 // Respuesta generica del backend (MiRespuestaRS).
 export interface MiRespuestaRS {
     status: number;
     message: string;
+    /** Id del registro creado o modificado. */
+    id?: number;
 }

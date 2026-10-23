@@ -95,18 +95,10 @@ export const NavigationItems: NavigationItem[] = [
       },
       {
         id: 'historia-medica',
-        title: 'Gestión de Historias Médicas',
+        title: 'Historias Clínicas y Anotaciones',
         type: 'item',
         url: '/inicio/historias-medicas',
         icon: 'feather icon-folder',
-        classes: 'nav-item'
-      },
-      {
-        id: 'anotacion-historia',
-        title: 'Gestión de Anotaciones Clínicas',
-        type: 'item',
-        url: '/inicio/anotaciones-historia',
-        icon: 'feather icon-edit',
         classes: 'nav-item'
       },
       /* ---------- Nuevos menus aqui -------------  */
