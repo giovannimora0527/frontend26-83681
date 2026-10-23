@@ -84,6 +84,26 @@ export class BackendService {
     });
   }
 
+  // Servicio generico para realizar peticiones PATCH al backend.
+  // Se usa para cambios parciales (ej: reactivar una cita, inactivar una formula),
+  // por eso no lleva cuerpo, solo parametros en la URL.
+  patch<T>(
+    urlApi: string,
+    endpoint: string,
+    service: string,
+    routerParams?: HttpParams
+  ): Observable<T> {
+    const tokenRecuperado = localStorage.getItem('token') || ''; // Evita `null`
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: tokenRecuperado ? `Bearer ${tokenRecuperado}` : '',
+    });
+    return this.http.patch<T>(`${urlApi}/${endpoint}/${service}`, null, {
+      params: routerParams,
+      headers: headers,
+    });
+  }
+
   // Servicio generico para realizar peticiones POST al backend con archivos.
   postFile<T>(
     urlApi: string,
