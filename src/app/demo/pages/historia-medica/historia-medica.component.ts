@@ -1,78 +1,75 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { HistoriaMedicaService, HistoriaMedica } from './service/historia-medica.service';
+import { TablaDatosComponent, ColumnaTabla } from 'src/app/components/tabla-datos/tabla-datos.component';
+import { HistoriaMedica } from 'src/app/models/historia-medica';
+import { NotificacionService } from 'src/app/services/notificacion.service';
+import { mensajeDeError } from 'src/app/utils/api-error.util';
+import { HistoriaMedicaService } from './service/historia-medica.service';
+import { HistoriaFormComponent } from './historia-form/historia-form.component';
+import { HistoriaDetalleComponent } from './historia-detalle/historia-detalle.component';
 
+/**
+ * Módulo de historias clínicas: listado (DataTable) ordenado por fecha y hora de la consulta
+ * descendente, creación de historias y visualización del detalle con su histórico de anotaciones.
+ */
 @Component({
   selector: 'app-historia-medica',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, TablaDatosComponent],
   templateUrl: './historia-medica.component.html',
   styleUrl: './historia-medica.component.scss'
 })
 export class HistoriaMedicaComponent implements OnInit {
 
-  registros: HistoriaMedica[] = [];
-  form: FormGroup;
-  editando = false;
+  /** Historias mostradas en la tabla. */
+  historias: HistoriaMedica[] = [];
+  /** Indica si se está consultando el backend. */
   cargando = false;
-  mensajeError = '';
+
+  /** Columnas de la tabla (información resumida). */
+  columnas: ColumnaTabla[] = [
+    { id: 'fecha', etiqueta: 'Fecha', ruta: 'fechaHora', tipo: 'fechaHora' },
+    { id: 'mascota', etiqueta: 'Mascota', ruta: 'mascotaNombre', filtro: 'texto' },
+    { id: 'cliente', etiqueta: 'Cliente', ruta: 'clienteNombre', filtro: 'texto' },
+    { id: 'veterinario', etiqueta: 'Veterinario', ruta: 'medicoNombre', filtro: 'lista' },
+    { id: 'motivo', etiqueta: 'Motivo de consulta', ruta: 'motivoConsulta' },
+    { id: 'estado', etiqueta: 'Estado', ruta: 'estado', tipo: 'insignia', filtro: 'lista' }
+  ];
 
   constructor(
-    private service: HistoriaMedicaService,
+    private historiaService: HistoriaMedicaService,
     private modalService: NgbModal,
-    private fb: FormBuilder
-  ) {
-    this.form = this.fb.group({
-      id: [null],
-      mascotaId: [null, Validators.required],
-      observacionesGenerales: [''],
-    });
-  }
+    private notificacion: NotificacionService
+  ) { }
 
+  /** Carga las historias al abrir la página. */
   ngOnInit(): void {
     this.cargar();
   }
 
+  /** Consulta las historias clínicas en el backend. */
   cargar(): void {
     this.cargando = true;
-    this.service.listar().subscribe({
-      next: (data) => { this.registros = data; this.cargando = false; },
-      error: () => { this.cargando = false; }
+    this.historiaService.listar().subscribe({
+      next: (data) => { this.historias = data; this.cargando = false; },
+      error: (err) => { this.cargando = false; this.notificacion.error(mensajeDeError(err)); }
     });
   }
 
-  abrirModalAgregar(modal: any): void {
-    this.editando = false;
-    this.form.reset();
-    this.mensajeError = '';
-    this.modalService.open(modal);
+  /** Abre el formulario para registrar una nueva historia clínica. */
+  nueva(): void {
+    const ref = this.modalService.open(HistoriaFormComponent, { size: 'lg', backdrop: 'static' });
+    ref.result.then((guardado) => { if (guardado) { this.cargar(); } }, () => undefined);
   }
 
-  abrirModalEditar(modal: any, item: HistoriaMedica): void {
-    this.editando = true;
-    this.mensajeError = '';
-    this.form.patchValue({
-      id: item.id,
-      mascotaId: item.mascota?.mascotaId,
-      observacionesGenerales: item.observacionesGenerales,
-    });
-    this.modalService.open(modal);
-  }
-
-  guardar(modalRef: any): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    const accion = this.editando
-      ? this.service.actualizar(this.form.value)
-      : this.service.guardar(this.form.value);
-
-    accion.subscribe({
-      next: () => { modalRef.close(); this.cargar(); },
-      error: (err) => { this.mensajeError = err?.error?.message || 'Ocurrió un error al guardar'; }
-    });
+  /**
+   * Abre el detalle de una historia con su histórico de anotaciones.
+   * @param historia historia seleccionada.
+   */
+  ver(historia: HistoriaMedica): void {
+    const ref = this.modalService.open(HistoriaDetalleComponent, { size: 'xl', scrollable: true });
+    ref.componentInstance.historia = historia;
+    ref.result.then(() => this.cargar(), () => this.cargar());
   }
 }

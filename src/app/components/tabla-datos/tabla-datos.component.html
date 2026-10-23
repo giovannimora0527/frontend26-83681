@@ -1,0 +1,92 @@
+<div class="tabla-datos">
+
+  <!-- Filtros -->
+  <div class="row g-2 align-items-end mb-3">
+    <div class="col-12 col-md-4">
+      <label class="form-label small mb-1">Búsqueda general</label>
+      <input type="search" class="form-control form-control-sm" [placeholder]="textoBusqueda"
+             [(ngModel)]="busqueda" (ngModelChange)="alCambiarFiltro()">
+    </div>
+
+    <div class="col-6 col-md-2" *ngFor="let c of columnasFiltrables">
+      <label class="form-label small mb-1">{{ c.etiqueta }}</label>
+      <select *ngIf="c.filtro === 'lista'" class="form-select form-select-sm"
+              [ngModel]="filtrosColumna[c.id] || ''" (ngModelChange)="establecerFiltro(c.id, $event)">
+        <option value="">Todos</option>
+        <option *ngFor="let o of opcionesLista(c)" [value]="o">{{ o }}</option>
+      </select>
+      <input *ngIf="c.filtro === 'texto'" type="text" class="form-control form-control-sm"
+             [ngModel]="filtrosColumna[c.id] || ''" (ngModelChange)="establecerFiltro(c.id, $event)">
+    </div>
+
+    <ng-container *ngIf="rutaFiltroFechas">
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">Desde</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="fechaDesde" (ngModelChange)="alCambiarFiltro()">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">Hasta</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="fechaHasta" (ngModelChange)="alCambiarFiltro()">
+      </div>
+    </ng-container>
+
+    <div class="col-auto">
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltros()" [disabled]="!hayFiltros">
+        Limpiar filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-responsive">
+    <table class="table table-hover table-striped align-middle mb-2">
+      <thead>
+        <tr>
+          <th *ngFor="let c of columnas" scope="col" [class.ordenable]="esOrdenable(c)" (click)="ordenar(c)">
+            {{ c.etiqueta }}
+            <span *ngIf="esOrdenable(c)" class="flecha-orden" [class.activa]="orden.ruta === c.ruta">{{ flecha(c) }}</span>
+          </th>
+          <th *ngIf="plantillaAcciones" scope="col" class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="cargando">
+          <td [attr.colspan]="totalColumnas" class="text-center py-4">
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>Cargando información...
+          </td>
+        </tr>
+        <tr *ngIf="!cargando && filasPagina.length === 0">
+          <td [attr.colspan]="totalColumnas" class="text-center text-muted py-4">
+            {{ hayFiltros ? 'Ningún registro coincide con los filtros aplicados.' : mensajeVacio }}
+          </td>
+        </tr>
+        <ng-container *ngIf="!cargando">
+          <tr *ngFor="let fila of filasPagina">
+            <td *ngFor="let c of columnas">
+              <span *ngIf="c.tipo === 'insignia'; else textoSimple" class="badge" [ngClass]="claseInsignia(fila, c)">{{ texto(fila, c) }}</span>
+              <ng-template #textoSimple>{{ texto(fila, c) || '—' }}</ng-template>
+            </td>
+            <td *ngIf="plantillaAcciones" class="text-end text-nowrap">
+              <ng-container *ngTemplateOutlet="plantillaAcciones; context: { $implicit: fila }"></ng-container>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <small class="text-muted">
+      Mostrando {{ primerRegistro }} a {{ ultimoRegistro }} de {{ filasFiltradas.length }} registros
+    </small>
+    <div class="d-flex align-items-center gap-2">
+      <select class="form-select form-select-sm w-auto" [ngModel]="tamanoPagina" (ngModelChange)="alCambiarTamano($event)">
+        <option *ngFor="let t of tamanosPagina" [ngValue]="t">{{ t }} por página</option>
+      </select>
+      <ngb-pagination [collectionSize]="filasFiltradas.length" [page]="pagina" [pageSize]="tamanoPagina"
+                      [maxSize]="5" [rotate]="true" [boundaryLinks]="true" size="sm" class="mb-0"
+                      (pageChange)="alCambiarPagina($event)"></ngb-pagination>
+    </div>
+  </div>
+</div>

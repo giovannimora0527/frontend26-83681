@@ -1,0 +1,89 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ esEdicion ? 'Editar' : 'Nueva' }} fórmula médica</h5>
+  <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="alert alert-info py-2 small" *ngIf="esEdicion">
+    El cliente, la mascota y la historia clínica no se pueden cambiar: la fórmula pertenece a esa consulta.
+  </div>
+  <div class="alert alert-danger" *ngIf="mensajeError">{{ mensajeError }}</div>
+
+  <form [formGroup]="form" novalidate>
+    <app-cliente-mascota-selector [form]="form"></app-cliente-mascota-selector>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-12">
+        <label class="form-label">Historia clínica (consulta) <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="historiaId" (change)="alSeleccionarHistoria()" [class.is-invalid]="invalido('historiaId')">
+          <option [ngValue]="null">
+            {{ form.get('mascotaId')?.value ? (historias.length ? 'Seleccione una historia...' : 'La mascota no tiene historias clínicas') : 'Seleccione primero una mascota' }}
+          </option>
+          <option *ngFor="let h of historias" [ngValue]="h.id">{{ etiquetaHistoria(h) }}</option>
+        </select>
+        <div class="invalid-feedback">Seleccione la historia clínica a la que pertenece la fórmula.</div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Veterinario <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="medicoId" [class.is-invalid]="invalido('medicoId')">
+          <option [ngValue]="null">Seleccione un veterinario...</option>
+          <option *ngFor="let m of medicos" [ngValue]="m.id">{{ m.nombres }} {{ m.apellidos }}</option>
+        </select>
+        <div class="invalid-feedback">Seleccione un veterinario.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Fecha de emisión <span class="text-danger">*</span></label>
+        <input type="datetime-local" class="form-control" formControlName="fechaEmision"
+               [class.is-invalid]="invalido('fechaEmision') || form.errors?.['emisionAnteriorConsulta']">
+        <div class="invalid-feedback">
+          {{ form.errors?.['emisionAnteriorConsulta'] ? 'La fecha de emisión no puede ser anterior a la consulta (' + fechaConsultaTexto + ').' : 'Indique la fecha de emisión.' }}
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <label class="form-label">Medicamento <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="medicamentoId" [class.is-invalid]="invalido('medicamentoId')">
+          <option [ngValue]="null">Seleccione un medicamento...</option>
+          <option *ngFor="let m of medicamentos" [ngValue]="m.id">{{ m.nombre }}{{ m.presentacion ? ' - ' + m.presentacion : '' }}</option>
+        </select>
+        <div class="invalid-feedback">Seleccione un medicamento.</div>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Dosis <span class="text-danger">*</span></label>
+        <input type="number" step="0.01" class="form-control" formControlName="dosis" [class.is-invalid]="invalido('dosis')">
+        <div class="invalid-feedback">Dosis válida: mayor que 0.</div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Unidad</label>
+        <select class="form-select" formControlName="unidadDosis">
+          <option *ngFor="let u of unidades" [value]="u">{{ u }}</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Cada (horas) <span class="text-danger">*</span></label>
+        <input type="number" class="form-control" formControlName="frecuenciaHoras" [class.is-invalid]="invalido('frecuenciaHoras')">
+        <div class="invalid-feedback">Entero entre 1 y 72.</div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Duración (días) <span class="text-danger">*</span></label>
+        <input type="number" class="form-control" formControlName="duracionDias" [class.is-invalid]="invalido('duracionDias')">
+        <div class="invalid-feedback">Entero entre 1 y 365.</div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Indicaciones <span class="text-danger">*</span></label>
+        <textarea class="form-control" rows="3" formControlName="indicaciones" [class.is-invalid]="invalido('indicaciones')"></textarea>
+        <div class="invalid-feedback">Las indicaciones son obligatorias (máximo 500 caracteres).</div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="guardando">
+    <span class="spinner-border spinner-border-sm me-1" *ngIf="guardando"></span>Guardar
+  </button>
+</div>

@@ -1,23 +1,61 @@
-<div class="container">
-    <h3>Modulo de gestión de mascotas</h3>
-    <label>Bienvenido</label>
-    <br><br><br><br>
-    <h2>{{ title }}</h2>
-    <div class="form-floating mb-3">
-        <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
-        <label for="floatingInput">Email address</label>
-    </div>
-    <div class="form-floating">
-        <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
-        <label for="floatingPassword">Password</label>
-    </div>
-    <div class="form-floating">
-        <input type="date" class="form-control" id="floatingPassword" placeholder="Fecha">
-        <label for="floatingPassword">Fecha</label>
-    </div>
-    <br><br>
-    <div>
-        <button type="button" class="btn btn-outline-primary" (click)="saludar()">Primary</button>
-        <button type="button" class="btn btn-secondary">Secondary</button>
-    </div>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Gestión de Mascotas</h4>
+    <button class="btn btn-primary" (click)="abrirNueva(modalMascota)">+ Agregar mascota</button>
+  </div>
+
+  <app-tabla-datos
+    [columnas]="columnas"
+    [filas]="mascotas"
+    [cargando]="cargando"
+    [ordenInicial]="{ ruta: 'nombreMascota', direccion: 'asc' }"
+    [plantillaAcciones]="acciones"
+    mensajeVacio="No hay mascotas registradas.">
+  </app-tabla-datos>
 </div>
+
+<ng-template #acciones let-m>
+  <button class="btn btn-sm btn-outline-secondary" (click)="abrirEdicion(modalMascota, m)">Editar</button>
+</ng-template>
+
+<ng-template #modalMascota let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">{{ editando ? 'Editar' : 'Agregar' }} mascota</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="alert alert-danger" *ngIf="mensajeError">{{ mensajeError }}</div>
+    <form [formGroup]="form" novalidate>
+      <div class="mb-3">
+        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="nombreMascota" [class.is-invalid]="invalido('nombreMascota')">
+        <div class="invalid-feedback">El nombre es obligatorio (máximo 100 caracteres).</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Edad (años) <span class="text-danger">*</span></label>
+        <input type="number" class="form-control" formControlName="edad" [class.is-invalid]="invalido('edad')">
+        <div class="invalid-feedback">Ingrese una edad válida entre 0 y 60.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Raza <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="razaId" [class.is-invalid]="invalido('razaId')">
+          <option [ngValue]="null">Seleccione una raza...</option>
+          <option *ngFor="let r of razas" [ngValue]="r.razaId">{{ r.nombre }} ({{ r.especie }})</option>
+        </select>
+        <div class="invalid-feedback">Seleccione una raza.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Dueño (cliente) <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="clienteId" [class.is-invalid]="invalido('clienteId')">
+          <option [ngValue]="null">Seleccione un cliente...</option>
+          <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.nombres }} {{ c.apellidos }} - {{ c.numeroDocumento }}</option>
+        </select>
+        <div class="invalid-feedback">Seleccione el dueño de la mascota.</div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+    <button class="btn btn-primary" (click)="guardar()">Guardar</button>
+  </div>
+</ng-template>

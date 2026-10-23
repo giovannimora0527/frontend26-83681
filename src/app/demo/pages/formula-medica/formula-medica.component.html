@@ -1,53 +1,22 @@
-<div class="container mt-3">
+<div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Gestión de Fórmulas Médicas</h3>
-    <button class="btn btn-primary" (click)="abrirModalAgregar(modalItem)">+ Agregar fórmula</button>
+    <h4 class="mb-0">Gestión de Fórmulas Médicas</h4>
+    <button class="btn btn-primary" (click)="nueva()">+ Nueva fórmula</button>
   </div>
 
-  <div *ngIf="cargando">Cargando...</div>
-
-  <table class="table table-striped" *ngIf="!cargando">
-    <thead>
-      <tr><th>ID</th><th>Mascota</th><th>Médico</th><th>Fecha</th><th>Observaciones</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let f of registros">
-        <td>{{ f.id }}</td>
-        <td>{{ f.mascota?.nombreMascota || f.mascota?.mascotaId }}</td>
-        <td>{{ f.medico?.nombres || f.medico?.id }}</td>
-        <td>{{ f.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
-        <td>{{ f.observaciones }}</td>
-        <td><button class="btn btn-sm btn-outline-secondary" (click)="abrirModalEditar(modalItem, f)">Editar</button></td>
-      </tr>
-      <tr *ngIf="registros.length === 0"><td colspan="6" class="text-center">No hay fórmulas registradas</td></tr>
-    </tbody>
-  </table>
+  <app-tabla-datos
+    [columnas]="columnas"
+    [filas]="formulas"
+    [cargando]="cargando"
+    [ordenInicial]="{ ruta: 'fechaCreacion', direccion: 'desc' }"
+    rutaFiltroFechas="fechaEmision"
+    [plantillaAcciones]="acciones"
+    mensajeVacio="No hay fórmulas médicas registradas.">
+  </app-tabla-datos>
 </div>
 
-<ng-template #modalItem let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">{{ editando ? 'Editar' : 'Agregar' }} fórmula médica</h5>
-    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
-  </div>
-  <div class="modal-body">
-    <div class="alert alert-danger" *ngIf="mensajeError">{{ mensajeError }}</div>
-    <form [formGroup]="form">
-      <div class="mb-3">
-        <label class="form-label">ID de la mascota</label>
-        <input type="number" class="form-control" formControlName="mascotaId">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">ID del médico</label>
-        <input type="number" class="form-control" formControlName="medicoId">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Observaciones</label>
-        <textarea class="form-control" formControlName="observaciones"></textarea>
-      </div>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
-    <button class="btn btn-primary" (click)="guardar(modal)">Guardar</button>
-  </div>
+<ng-template #acciones let-f>
+  <button class="btn btn-sm btn-outline-primary me-1" (click)="ver(f)">Ver</button>
+  <button *ngIf="f.estado === 'ACTIVA'" class="btn btn-sm btn-outline-secondary me-1" (click)="editar(f)">Editar</button>
+  <button *ngIf="f.estado === 'ACTIVA'" class="btn btn-sm btn-outline-danger" (click)="inactivar(f)">Inactivar</button>
 </ng-template>

@@ -1,0 +1,113 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    Historia clínica #{{ historia.id }}
+    <span class="badge ms-2" [ngClass]="historia.estado === 'ABIERTA' ? 'bg-success' : 'bg-secondary'">
+      {{ historia.estado === 'ABIERTA' ? 'Abierta' : 'Cerrada' }}
+    </span>
+  </h5>
+  <button type="button" class="btn-close" (click)="modal.close(huboCambios)"></button>
+</div>
+
+<div class="modal-body">
+  <!-- Detalle completo de la historia -->
+  <div class="row g-2 mb-3">
+    <div class="col-md-4"><div class="text-muted small">Fecha y hora</div><div>{{ fechaConsulta }}</div></div>
+    <div class="col-md-4"><div class="text-muted small">Mascota</div><div>{{ historia.mascotaNombre }}</div></div>
+    <div class="col-md-4"><div class="text-muted small">Cliente</div><div>{{ historia.clienteNombre }}</div></div>
+    <div class="col-md-4"><div class="text-muted small">Veterinario</div><div>{{ historia.medicoNombre }}</div></div>
+    <div class="col-md-8"><div class="text-muted small">Motivo de consulta</div><div>{{ historia.motivoConsulta }}</div></div>
+    <div class="col-12"><div class="text-muted small">Diagnóstico</div><div>{{ historia.diagnostico }}</div></div>
+    <div class="col-12"><div class="text-muted small">Observaciones</div><div>{{ historia.observaciones || '—' }}</div></div>
+  </div>
+
+  <hr>
+
+  <!-- Vista: listado de anotaciones -->
+  <ng-container *ngIf="vista === 'lista'">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0">Histórico de anotaciones</h6>
+      <div>
+        <button *ngIf="puedeAnotar" class="btn btn-sm btn-outline-secondary me-2" (click)="cerrarHistoria()">Cerrar historia</button>
+        <button *ngIf="puedeAnotar" class="btn btn-sm btn-primary" (click)="nuevaAnotacion()">+ Agregar anotación</button>
+      </div>
+    </div>
+    <div class="alert alert-secondary py-2 small" *ngIf="!puedeAnotar">
+      Esta historia está cerrada: se puede consultar, pero ya no admite nuevas anotaciones.
+    </div>
+
+    <app-tabla-datos
+      [columnas]="columnas"
+      [filas]="anotaciones"
+      [cargando]="cargando"
+      [ordenInicial]="{ ruta: 'fechaHora', direccion: 'desc' }"
+      rutaFiltroFechas="fechaHora"
+      [tamanoPagina]="5"
+      [tamanosPagina]="[5, 10, 25]"
+      [plantillaAcciones]="accionesAnotacion"
+      mensajeVacio="Esta historia aún no tiene anotaciones.">
+    </app-tabla-datos>
+
+    <ng-template #accionesAnotacion let-a>
+      <button class="btn btn-sm btn-outline-secondary" (click)="verDetalle(a)">Ver detalle</button>
+    </ng-template>
+  </ng-container>
+
+  <!-- Vista: nueva anotación -->
+  <ng-container *ngIf="vista === 'nueva'">
+    <h6>Nueva anotación</h6>
+    <div class="alert alert-danger" *ngIf="mensajeError">{{ mensajeError }}</div>
+    <form [formGroup]="form" novalidate class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Veterinario <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="medicoId" [class.is-invalid]="invalido('medicoId')">
+          <option [ngValue]="null">Seleccione un veterinario...</option>
+          <option *ngFor="let m of medicos" [ngValue]="m.id">{{ m.nombres }} {{ m.apellidos }}</option>
+        </select>
+        <div class="invalid-feedback">Seleccione un veterinario.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Fecha y hora <span class="text-danger">*</span></label>
+        <input type="datetime-local" class="form-control" formControlName="fechaHora" [class.is-invalid]="invalido('fechaHora')">
+        <div class="invalid-feedback">Indique la fecha y hora.</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Descripción <span class="text-danger">*</span></label>
+        <textarea class="form-control" rows="2" formControlName="descripcion" [class.is-invalid]="invalido('descripcion')"></textarea>
+        <div class="invalid-feedback">La descripción es obligatoria (máximo 500 caracteres).</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Observación</label>
+        <textarea class="form-control" rows="2" formControlName="observacion" [class.is-invalid]="invalido('observacion')"></textarea>
+        <div class="invalid-feedback">Máximo 500 caracteres.</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Diagnóstico o evolución <span class="text-danger">*</span></label>
+        <textarea class="form-control" rows="2" formControlName="diagnosticoEvolucion" [class.is-invalid]="invalido('diagnosticoEvolucion')"></textarea>
+        <div class="invalid-feedback">El diagnóstico o evolución es obligatorio (máximo 500 caracteres).</div>
+      </div>
+      <div class="col-12 d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary" (click)="volver()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarAnotacion()" [disabled]="guardando">
+          <span class="spinner-border spinner-border-sm me-1" *ngIf="guardando"></span>Guardar anotación
+        </button>
+      </div>
+    </form>
+  </ng-container>
+
+  <!-- Vista: detalle de una anotación -->
+  <ng-container *ngIf="vista === 'detalle' && anotacionDetalle">
+    <h6>Detalle de la anotación #{{ anotacionDetalle.id }}</h6>
+    <div class="row g-2">
+      <div class="col-md-6"><div class="text-muted small">Fecha y hora</div><div>{{ anotacionDetalle.fechaHora | date:'dd/MM/yyyy HH:mm' }}</div></div>
+      <div class="col-md-6"><div class="text-muted small">Veterinario</div><div>{{ anotacionDetalle.medicoNombre }}</div></div>
+      <div class="col-12"><div class="text-muted small">Descripción</div><div>{{ anotacionDetalle.descripcion }}</div></div>
+      <div class="col-12"><div class="text-muted small">Observación</div><div>{{ anotacionDetalle.observacion || '—' }}</div></div>
+      <div class="col-12"><div class="text-muted small">Diagnóstico / evolución</div><div>{{ anotacionDetalle.diagnosticoEvolucion }}</div></div>
+    </div>
+    <div class="mt-3"><button class="btn btn-secondary" (click)="volver()">← Volver al histórico</button></div>
+  </ng-container>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="modal.close(huboCambios)">Cerrar</button>
+</div>

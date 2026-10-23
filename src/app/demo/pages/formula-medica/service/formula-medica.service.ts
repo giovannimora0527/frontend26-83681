@@ -1,39 +1,60 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+import { BackendService } from 'src/app/services/backend.service';
+import { environment } from 'src/environments/environment';
+import { FormulaDetalle, FormulaResumen, FormulaRq } from 'src/app/models/formula-medica';
+import { Respuesta } from 'src/app/models/respuesta';
 
-export interface FormulaMedica {
-  id?: number;
-  mascota?: { mascotaId: number; nombreMascota?: string };
-  medico?: { id: number; nombres?: string };
-  fechaCreacion?: string;
-  observaciones?: string;
-}
-
-export interface FormulaMedicaRq {
-  id?: number;
-  mascotaId: number;
-  medicoId: number;
-  observaciones?: string;
-}
-
+/**
+ * Servicio de acceso a los endpoints de fórmulas médicas del backend (/formula-medica).
+ * El listado devuelve información resumida; el detalle devuelve todos los campos.
+ */
 @Injectable({ providedIn: 'root' })
 export class FormulaMedicaService {
 
-  private base = `${environment.apiUrlAuth}/formula-medica`;
+  /** Nombre del recurso en la API. */
+  private readonly endpoint = 'formula-medica';
 
-  constructor(private http: HttpClient) { }
+  constructor(private backend: BackendService) { }
 
-  listar(): Observable<FormulaMedica[]> {
-    return this.http.get<FormulaMedica[]>(`${this.base}/listar`);
+  /**
+   * Lista las fórmulas (resumen), de la más reciente a la más antigua por fecha de creación.
+   */
+  listar(): Observable<FormulaResumen[]> {
+    return this.backend.get<FormulaResumen[]>(environment.apiUrlAuth, this.endpoint, 'listar');
   }
 
-  guardar(item: FormulaMedicaRq): Observable<any> {
-    return this.http.post(`${this.base}/guardar`, item);
+  /**
+   * Consulta el detalle completo de una fórmula.
+   * @param id identificador de la fórmula.
+   * @returns la fórmula (404 si no existe).
+   */
+  consultar(id: number): Observable<FormulaDetalle> {
+    return this.backend.get<FormulaDetalle>(environment.apiUrlAuth, this.endpoint, `${id}`);
   }
 
-  actualizar(item: FormulaMedicaRq): Observable<any> {
-    return this.http.post(`${this.base}/actualizar`, item);
+  /**
+   * Registra una nueva fórmula médica.
+   * @param formula datos de la fórmula.
+   */
+  crear(formula: FormulaRq): Observable<Respuesta> {
+    return this.backend.post<Respuesta>(environment.apiUrlAuth, this.endpoint, 'crear', formula);
+  }
+
+  /**
+   * Edita una fórmula existente (PUT).
+   * @param id identificador de la fórmula.
+   * @param formula datos nuevos.
+   */
+  editar(id: number, formula: FormulaRq): Observable<Respuesta> {
+    return this.backend.put<Respuesta>(environment.apiUrlAuth, this.endpoint, `${id}`, formula);
+  }
+
+  /**
+   * Inactiva una fórmula (no se elimina físicamente porque está asociada a información clínica).
+   * @param id identificador de la fórmula.
+   */
+  inactivar(id: number): Observable<Respuesta> {
+    return this.backend.patch<Respuesta>(environment.apiUrlAuth, this.endpoint, `${id}/inactivar`);
   }
 }

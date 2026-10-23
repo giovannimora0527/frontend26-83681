@@ -12,7 +12,6 @@ import { CitaComponent } from './demo/pages/cita/cita.component';
 import { MedicamentoComponent } from './demo/pages/medicamento/medicamento.component';
 import { FormulaMedicaComponent } from './demo/pages/formula-medica/formula-medica.component';
 import { HistoriaMedicaComponent } from './demo/pages/historia-medica/historia-medica.component';
-import { AnotacionHistoriaComponent } from './demo/pages/anotacion-historia/anotacion-historia.component';
 
 export const routes: Routes = [
   {
@@ -34,8 +33,7 @@ export const routes: Routes = [
       { path: 'citas', component: CitaComponent, data: { title: 'Citas' } },
       { path: 'medicamentos', component: MedicamentoComponent, data: { title: 'Medicamentos' } },
       { path: 'formulas-medicas', component: FormulaMedicaComponent, data: { title: 'Fórmulas médicas' } },
-      { path: 'historias-medicas', component: HistoriaMedicaComponent, data: { title: 'Historias médicas' } },
-      { path: 'anotaciones-historia', component: AnotacionHistoriaComponent, data: { title: 'Anotaciones de historia' } }
+      { path: 'historias-medicas', component: HistoriaMedicaComponent, data: { title: 'Historias clínicas' } }
     ]
   },
   { path: '**', redirectTo: 'inicio' }

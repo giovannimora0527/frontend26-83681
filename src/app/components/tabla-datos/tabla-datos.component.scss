@@ -1,0 +1,17 @@
+.tabla-datos {
+  th.ordenable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .flecha-orden {
+    margin-left: 4px;
+    font-size: 0.7rem;
+    color: #adb5bd;
+
+    &.activa {
+      color: #212529;
+    }
+  }
+}

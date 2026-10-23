@@ -1,0 +1,24 @@
+<div class="row g-3" [formGroup]="form">
+  <div class="col-md-6">
+    <label class="form-label">Cliente <span class="text-danger">*</span></label>
+    <select class="form-select" formControlName="clienteId" (change)="alCambiarCliente()"
+            [class.is-invalid]="invalido('clienteId')">
+      <option [ngValue]="null">Seleccione un cliente...</option>
+      <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.nombres }} {{ c.apellidos }} - {{ c.numeroDocumento }}</option>
+    </select>
+    <div class="invalid-feedback">Seleccione un cliente.</div>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Mascota <span class="text-danger">*</span></label>
+    <select class="form-select" formControlName="mascotaId" [class.is-invalid]="invalido('mascotaId')">
+      <option [ngValue]="null">
+        {{ cargandoMascotas ? 'Cargando mascotas...' : (form.get('clienteId')?.value ? 'Seleccione una mascota...' : 'Seleccione primero un cliente') }}
+      </option>
+      <option *ngFor="let m of mascotas" [ngValue]="m.mascotaId">{{ m.nombreMascota }}</option>
+    </select>
+    <div class="invalid-feedback">Seleccione una mascota del cliente.</div>
+    <div class="form-text text-warning" *ngIf="form.get('clienteId')?.value && !cargandoMascotas && mascotas.length === 0">
+      Este cliente no tiene mascotas registradas.
+    </div>
+  </div>
+</div>

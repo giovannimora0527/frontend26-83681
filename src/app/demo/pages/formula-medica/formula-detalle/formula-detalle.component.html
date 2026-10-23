@@ -1,0 +1,30 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    Fórmula médica #{{ formula.id }}
+    <span class="badge ms-2" [ngClass]="claseEstado">{{ formula.estado === 'ACTIVA' ? 'Activa' : 'Inactiva' }}</span>
+  </h5>
+  <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="row g-3">
+    <div class="col-md-4"><div class="text-muted small">Cliente</div><div>{{ formula.clienteNombre }}</div></div>
+    <div class="col-md-4"><div class="text-muted small">Mascota</div><div>{{ formula.mascotaNombre }}</div></div>
+    <div class="col-md-4"><div class="text-muted small">Veterinario</div><div>{{ formula.medicoNombre }}</div></div>
+
+    <div class="col-md-4"><div class="text-muted small">Consulta asociada</div><div>{{ formula.fechaConsulta | date:'dd/MM/yyyy HH:mm' }}</div></div>
+    <div class="col-md-4"><div class="text-muted small">Fecha de emisión</div><div>{{ formula.fechaEmision | date:'dd/MM/yyyy HH:mm' }}</div></div>
+    <div class="col-md-4"><div class="text-muted small">Registrada en el sistema</div><div>{{ formula.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</div></div>
+
+    <div class="col-md-4"><div class="text-muted small">Medicamento</div><div>{{ formula.medicamentoNombre }}</div></div>
+    <div class="col-md-2"><div class="text-muted small">Dosis</div><div>{{ formula.dosis }} {{ formula.unidadDosis }}</div></div>
+    <div class="col-md-3"><div class="text-muted small">Frecuencia</div><div>Cada {{ formula.frecuenciaHoras }} horas</div></div>
+    <div class="col-md-3"><div class="text-muted small">Duración</div><div>{{ formula.duracionDias }} días</div></div>
+
+    <div class="col-12"><div class="text-muted small">Indicaciones</div><div>{{ formula.indicaciones }}</div></div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cerrar</button>
+</div>

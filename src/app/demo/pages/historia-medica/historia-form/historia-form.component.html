@@ -1,0 +1,71 @@
+<div class="modal-header">
+  <h5 class="modal-title">Nueva historia clínica</h5>
+  <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="alert alert-danger" *ngIf="mensajeError">{{ mensajeError }}</div>
+
+  <form [formGroup]="form" novalidate>
+    <app-cliente-mascota-selector [form]="form"></app-cliente-mascota-selector>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-12">
+        <label class="form-label">Cita atendida <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="citaId" (change)="alSeleccionarCita()" [class.is-invalid]="invalido('citaId')">
+          <option [ngValue]="null">
+            {{ form.get('mascotaId')?.value ? (citas.length ? 'Seleccione una cita...' : 'La mascota no tiene citas atendidas') : 'Seleccione primero una mascota' }}
+          </option>
+          <option *ngFor="let c of citas" [ngValue]="c.id">{{ etiquetaCita(c) }}</option>
+        </select>
+        <div class="invalid-feedback">Seleccione la cita atendida que origina la historia.</div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Veterinario <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="medicoId" [class.is-invalid]="invalido('medicoId')">
+          <option [ngValue]="null">Seleccione un veterinario...</option>
+          <option *ngFor="let m of medicos" [ngValue]="m.id">{{ m.nombres }} {{ m.apellidos }}</option>
+        </select>
+        <div class="invalid-feedback">Seleccione un veterinario.</div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Fecha y hora de la consulta <span class="text-danger">*</span></label>
+        <input type="datetime-local" class="form-control" formControlName="fechaHora"
+               [class.is-invalid]="invalido('fechaHora') || form.errors?.['fechaAnteriorCita']">
+        <div class="invalid-feedback">
+          {{ form.errors?.['fechaAnteriorCita'] ? 'La consulta no puede ser anterior a la fecha de la cita.' : 'Indique la fecha y hora.' }}
+        </div>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Estado</label>
+        <select class="form-select" formControlName="estado">
+          <option *ngFor="let e of estados" [value]="e">{{ e.charAt(0) + e.slice(1).toLowerCase() }}</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Motivo de consulta <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="motivoConsulta" [class.is-invalid]="invalido('motivoConsulta')">
+        <div class="invalid-feedback">El motivo es obligatorio (máximo 200 caracteres).</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Diagnóstico <span class="text-danger">*</span></label>
+        <textarea class="form-control" rows="2" formControlName="diagnostico" [class.is-invalid]="invalido('diagnostico')"></textarea>
+        <div class="invalid-feedback">El diagnóstico es obligatorio (máximo 500 caracteres).</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Observaciones</label>
+        <textarea class="form-control" rows="2" formControlName="observaciones" [class.is-invalid]="invalido('observaciones')"></textarea>
+        <div class="invalid-feedback">Máximo 500 caracteres.</div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="guardando">
+    <span class="spinner-border spinner-border-sm me-1" *ngIf="guardando"></span>Guardar
+  </button>
+</div>

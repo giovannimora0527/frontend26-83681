@@ -1,1 +1,23 @@
-<p>cita works!</p>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Gestión de Citas</h4>
+    <button class="btn btn-primary" (click)="abrirFormulario()">+ Nueva cita</button>
+  </div>
+
+  <app-tabla-datos
+    [columnas]="columnas"
+    [filas]="citas"
+    [cargando]="cargando"
+    [ordenInicial]="{ ruta: 'fechaHora', direccion: 'desc' }"
+    rutaFiltroFechas="fechaHora"
+    [plantillaAcciones]="acciones"
+    mensajeVacio="No hay citas registradas.">
+  </app-tabla-datos>
+</div>
+
+<ng-template #acciones let-cita>
+  <button class="btn btn-sm btn-outline-secondary me-1" (click)="abrirFormulario(cita)">
+    {{ cita.estado === 'CANCELADA' ? 'Ver' : 'Editar' }}
+  </button>
+  <button *ngIf="cita.estado === 'CANCELADA'" class="btn btn-sm btn-outline-success" (click)="reactivar(cita)">Reactivar</button>
+</ng-template>

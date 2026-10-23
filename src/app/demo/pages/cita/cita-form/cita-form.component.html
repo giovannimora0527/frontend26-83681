@@ -1,0 +1,65 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ esEdicion ? 'Editar' : 'Nueva' }} cita médica</h5>
+  <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="alert alert-warning" *ngIf="aviso">{{ aviso }}</div>
+  <div class="alert alert-danger" *ngIf="mensajeError">{{ mensajeError }}</div>
+
+  <form [formGroup]="form" novalidate>
+    <app-cliente-mascota-selector [form]="form"></app-cliente-mascota-selector>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-12">
+        <label class="form-label">Veterinario <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="medicoId" [class.is-invalid]="invalido('medicoId')">
+          <option [ngValue]="null">Seleccione un veterinario...</option>
+          <option *ngFor="let m of medicos" [ngValue]="m.id">{{ m.nombres }} {{ m.apellidos }}{{ m.especializacion?.nombre ? ' - ' + m.especializacion?.nombre : '' }}</option>
+        </select>
+        <div class="invalid-feedback">Seleccione un veterinario.</div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Fecha <span class="text-danger">*</span></label>
+        <input type="date" class="form-control" formControlName="fecha" [min]="esEdicion ? '' : hoy"
+               [class.is-invalid]="invalido('fecha') || (form.errors?.['fechaPasada'] && form.get('fecha')?.touched)">
+        <div class="invalid-feedback">Seleccione una fecha.</div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Hora <span class="text-danger">*</span></label>
+        <input type="time" class="form-control" formControlName="hora"
+               [class.is-invalid]="invalido('hora') || (form.errors?.['fechaPasada'] && form.get('hora')?.touched)">
+        <div class="invalid-feedback">Seleccione una hora.</div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Estado <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="estado">
+          <option *ngFor="let e of estados" [value]="e">{{ e.charAt(0) + e.slice(1).toLowerCase() }}</option>
+        </select>
+      </div>
+
+      <div class="col-12" *ngIf="form.errors?.['fechaPasada'] && (form.get('fecha')?.touched || form.get('hora')?.touched)">
+        <div class="text-danger small">No se pueden registrar citas en fechas u horas anteriores al momento actual.</div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Motivo de la consulta <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="motivo" [class.is-invalid]="invalido('motivo')">
+        <div class="invalid-feedback">El motivo es obligatorio (máximo 200 caracteres).</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Observaciones</label>
+        <textarea class="form-control" rows="2" formControlName="observaciones" [class.is-invalid]="invalido('observaciones')"></textarea>
+        <div class="invalid-feedback">Máximo 255 caracteres.</div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">{{ soloLectura ? 'Cerrar' : 'Cancelar' }}</button>
+  <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="guardando || soloLectura">
+    <span class="spinner-border spinner-border-sm me-1" *ngIf="guardando"></span>Guardar
+  </button>
+</div>

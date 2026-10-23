@@ -1,48 +1,20 @@
-<div class="container mt-3">
+<div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Gestión de Historias Médicas</h3>
-    <button class="btn btn-primary" (click)="abrirModalAgregar(modalItem)">+ Agregar historia</button>
+    <h4 class="mb-0">Gestión de Historias Clínicas</h4>
+    <button class="btn btn-primary" (click)="nueva()">+ Nueva historia clínica</button>
   </div>
 
-  <div *ngIf="cargando">Cargando...</div>
-
-  <table class="table table-striped" *ngIf="!cargando">
-    <thead>
-      <tr><th>ID</th><th>Mascota</th><th>Fecha creación</th><th>Observaciones</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let h of registros">
-        <td>{{ h.id }}</td>
-        <td>{{ h.mascota?.nombreMascota || h.mascota?.mascotaId }}</td>
-        <td>{{ h.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
-        <td>{{ h.observacionesGenerales }}</td>
-        <td><button class="btn btn-sm btn-outline-secondary" (click)="abrirModalEditar(modalItem, h)">Editar</button></td>
-      </tr>
-      <tr *ngIf="registros.length === 0"><td colspan="5" class="text-center">No hay historias registradas</td></tr>
-    </tbody>
-  </table>
+  <app-tabla-datos
+    [columnas]="columnas"
+    [filas]="historias"
+    [cargando]="cargando"
+    [ordenInicial]="{ ruta: 'fechaHora', direccion: 'desc' }"
+    rutaFiltroFechas="fechaHora"
+    [plantillaAcciones]="acciones"
+    mensajeVacio="No hay historias clínicas registradas.">
+  </app-tabla-datos>
 </div>
 
-<ng-template #modalItem let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">{{ editando ? 'Editar' : 'Agregar' }} historia médica</h5>
-    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
-  </div>
-  <div class="modal-body">
-    <div class="alert alert-danger" *ngIf="mensajeError">{{ mensajeError }}</div>
-    <form [formGroup]="form">
-      <div class="mb-3">
-        <label class="form-label">ID de la mascota</label>
-        <input type="number" class="form-control" formControlName="mascotaId">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Observaciones generales</label>
-        <textarea class="form-control" formControlName="observacionesGenerales"></textarea>
-      </div>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
-    <button class="btn btn-primary" (click)="guardar(modal)">Guardar</button>
-  </div>
+<ng-template #acciones let-historia>
+  <button class="btn btn-sm btn-outline-primary" (click)="ver(historia)">Ver</button>
 </ng-template>
