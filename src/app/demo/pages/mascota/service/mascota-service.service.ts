@@ -34,4 +34,10 @@ export class MascotaServiceService {
     return this.backendService.post(environment.apiUrlAuth, this.api, "actualizar", mascota);
   }
 
+  // Mascotas de un cliente: alimenta el combo dependiente Cliente -> Mascota
+  getMascotasPorCliente(clienteId: number): Observable<Mascota[]> {
+    const params = new HttpParams().set('clienteId', clienteId);
+    return this.backendService.get(environment.apiUrlAuth, this.api, "por-cliente", params);
+  }
+
 }
