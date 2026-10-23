@@ -1,0 +1,143 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h3>Citas médicas</h3>
+      <p class="text-muted mb-0">Programación y seguimiento de consultas veterinarias.</p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="nueva()">Nueva cita</button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="exito" class="alert alert-success">{{ exito }}</div>
+
+  <div *ngIf="!cargando && (!clientes.length || !mascotas.length || !medicos.length)" class="alert alert-warning">
+    <strong>Antes de agendar:</strong> registra los datos que faltan para poder seleccionar las relaciones de la cita.
+    <ul class="mb-0 mt-2">
+      <li *ngIf="!clientes.length"><a routerLink="/inicio/clientes">Registrar un cliente</a></li>
+      <li *ngIf="!mascotas.length"><a routerLink="/inicio/mascotas">Registrar una mascota</a></li>
+      <li *ngIf="!medicos.length"><a routerLink="/inicio/medicos">Registrar un veterinario</a></li>
+    </ul>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>{{ editando ? 'Editar cita' : 'Registrar cita' }}</h5>
+      <form (ngSubmit)="guardar()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Cliente *</label>
+            <select class="form-select" name="clienteId" [(ngModel)]="form.clienteId"
+                    (ngModelChange)="cambiarCliente()" required>
+              <option value="">Selecciona cliente</option>
+              <option *ngFor="let cliente of clientes" [value]="cliente.id">
+                {{ cliente.nombres }} {{ cliente.apellidos }} · {{ cliente.numeroDocumento }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Mascota *</label>
+            <select class="form-select" name="mascotaId" [(ngModel)]="form.mascotaId" required>
+              <option value="">Selecciona mascota</option>
+              <option *ngFor="let mascota of mascotasCliente" [value]="mascota.mascotaId">
+                {{ mascota.nombreMascota }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Veterinario *</label>
+            <select class="form-select" name="medicoId" [(ngModel)]="form.medicoId" required>
+              <option value="">Selecciona veterinario</option>
+              <option *ngFor="let medico of medicos" [value]="medico.id">
+                {{ medico.nombres }} {{ medico.apellidos }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Fecha *</label>
+            <input class="form-control" type="date" name="fecha" [(ngModel)]="form.fecha"
+                   [min]="fechaMinima" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Hora *</label>
+            <input class="form-control" type="time" name="hora" [(ngModel)]="form.hora" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Estado</label>
+            <select class="form-select" name="estado" [(ngModel)]="form.estado">
+              <option>PENDIENTE</option>
+              <option>CONFIRMADA</option>
+              <option>PROGRAMADA</option>
+              <option>ATENDIDA</option>
+              <option>CANCELADA</option>
+            </select>
+          </div>
+          <div class="col-md-9">
+            <label class="form-label">Motivo de consulta *</label>
+            <input class="form-control" name="motivo" [(ngModel)]="form.motivo" maxlength="500" required>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-success me-2" type="submit"
+                    [disabled]="guardando || !clientes.length || !mascotas.length || !medicos.length">
+              {{ guardando ? 'Guardando...' : 'Guardar cita' }}
+            </button>
+            <button class="btn btn-outline-secondary" type="button" (click)="nueva()">Limpiar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <input class="form-control" placeholder="Filtrar por cliente, mascota, veterinario o estado"
+                 [(ngModel)]="filtro" (ngModelChange)="pagina = 1">
+        </div>
+        <div class="col-md-6 text-md-end text-muted">{{ filtradas.length }} citas</div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th><th>Fecha y hora</th><th>Cliente</th><th>Mascota</th>
+              <th>Veterinario</th><th>Estado</th><th>Motivo</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cita of paginaDatos">
+              <td>{{ cita.id }}</td>
+              <td>{{ cita.fechaHora | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ cita.mascota?.cliente?.nombres }} {{ cita.mascota?.cliente?.apellidos }}</td>
+              <td>{{ cita.mascota?.nombreMascota }}</td>
+              <td>{{ cita.medico?.nombres }} {{ cita.medico?.apellidos }}</td>
+              <td>
+                <span class="badge"
+                      [class.text-bg-success]="cita.estado === 'ATENDIDA'"
+                      [class.text-bg-danger]="cita.estado === 'CANCELADA'"
+                      [class.text-bg-primary]="cita.estado === 'CONFIRMADA'"
+                      [class.text-bg-secondary]="!['ATENDIDA', 'CANCELADA', 'CONFIRMADA'].includes(cita.estado || '')">
+                  {{ cita.estado }}
+                </span>
+              </td>
+              <td>{{ cita.motivo }}</td>
+              <td><button class="btn btn-sm btn-outline-primary" (click)="editar(cita)">Editar</button></td>
+            </tr>
+            <tr *ngIf="!cargando && !paginaDatos.length">
+              <td colspan="8" class="text-center text-muted py-4">No hay citas para mostrar.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">Página {{ pagina }} de {{ paginas }}</small>
+        <div>
+          <button class="btn btn-sm btn-outline-secondary me-2" [disabled]="pagina <= 1"
+                  (click)="pagina = pagina - 1">Anterior</button>
+          <button class="btn btn-sm btn-outline-secondary" [disabled]="pagina >= paginas"
+                  (click)="pagina = pagina + 1">Siguiente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,77 @@
+<app-navigation
+  class="pcoded-navbar"
+  [ngClass]="{
+    'navbar-collapsed': navCollapsed,
+    'mob-open': navCollapsedMob
+  }"
+  (NavCollapse)="this.navCollapsed = !this.navCollapsed"
+  (NavCollapsedMob)="navMobClick()"
+/>
+<app-nav-bar class="navbar pcoded-header navbar-expand-lg navbar-light" (NavCollapsedMob)="navMobClick()" />
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <app-breadcrumb />
+        <div class="main-body">
+          <div class="page-wrapper">
+            @if (isHome) {
+              <section class="clinic-home" aria-labelledby="clinic-home-title">
+                <div class="clinic-home__intro">
+                  <span class="clinic-home__eyebrow">Bienestar animal · Servicio veterinario</span>
+                  <h1 id="clinic-home-title">Bienestar animal con atención cercana y responsable.</h1>
+                  <p>
+                    Coordina la atención veterinaria, da seguimiento a cada caso y mantén al día la información de pacientes y familias.
+                  </p>
+                  <a class="clinic-home__action" routerLink="/inicio/usuarios">
+                    <i class="feather icon-users" aria-hidden="true"></i>
+                    Administrar usuarios
+                  </a>
+                </div>
+
+                <div class="clinic-home__panel" aria-label="Nuestro propósito">
+                  <div class="clinic-home__logo-wrap">
+                    <img class="clinic-home__logo" src="assets/images/logouniminuto.jpg" alt="Logo de Uniminuto" />
+                  </div>
+                  <div class="clinic-home__panel-mark">
+                    <i class="feather icon-heart" aria-hidden="true"></i>
+                  </div>
+                  <span>El sentido de nuestro trabajo</span>
+                  <strong>Ciencia y cuidado, en equilibrio</strong>
+                  <p>Unimos atención cercana y formación profesional para contribuir al bienestar de cada animal.</p>
+                </div>
+
+                <div class="clinic-home__highlights">
+                  <article>
+                    <i class="feather icon-calendar" aria-hidden="true"></i>
+                    <div>
+                      <strong>Atención coordinada</strong>
+                      <span>Consulta las citas y organiza cada jornada con una visión clara de la atención.</span>
+                    </div>
+                  </article>
+                  <article>
+                    <i class="feather icon-shield" aria-hidden="true"></i>
+                    <div>
+                      <strong>Información al día</strong>
+                      <span>Reúne los datos de familias, pacientes, equipo veterinario e insumos en un mismo espacio.</span>
+                    </div>
+                  </article>
+                  <article>
+                    <i class="feather icon-book-open" aria-hidden="true"></i>
+                    <div>
+                      <strong>Conocimiento en práctica</strong>
+                      <span>Conecta la formación universitaria con un servicio comprometido con la comunidad.</span>
+                    </div>
+                  </article>
+                </div>
+              </section>
+            }
+            <router-outlet />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pc-menu-overlay" (click)="closeMenu()" (keydown)="handleKeyDown($event)" tabindex="0"></div>
+</div>
+<app-configuration />
