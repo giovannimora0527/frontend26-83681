@@ -1,1 +1,68 @@
-<p>especializacion works!</p>
+<div class="container-fluid py-3">
+  <div class="mb-4">
+    <h3>Especializaciones</h3>
+    <p class="text-muted mb-0">Administra las áreas profesionales de la clínica.</p>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="exito" class="alert alert-success">{{ exito }}</div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Registrar especialización</h5>
+      <form (ngSubmit)="guardar()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="nombreEspecializacion">Nombre *</label>
+            <input id="nombreEspecializacion" class="form-control" name="nombreEspecializacion"
+                   [(ngModel)]="nueva.nombre" maxlength="100" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="codigoEspecializacion">Código *</label>
+            <input id="codigoEspecializacion" class="form-control" name="codigoEspecializacion"
+                   [(ngModel)]="nueva.codigoEspecializacion" maxlength="10" required>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label" for="descripcionEspecializacion">Descripción</label>
+            <input id="descripcionEspecializacion" class="form-control" name="descripcionEspecializacion"
+                   [(ngModel)]="nueva.descripcion">
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary" type="submit" [disabled]="guardando">
+              {{ guardando ? 'Guardando...' : 'Registrar especialización' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Especializaciones registradas</h5>
+        <button class="btn btn-outline-primary" type="button" (click)="cargar()" [disabled]="cargando">
+          Actualizar
+        </button>
+      </div>
+      <div *ngIf="cargando" class="alert alert-info">Cargando especializaciones...</div>
+      <div class="table-responsive" *ngIf="!cargando">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr><th>Código</th><th>Nombre</th><th>Descripción</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of especializaciones">
+              <td>{{ item.codigoEspecializacion }}</td>
+              <td>{{ item.nombre }}</td>
+              <td>{{ item.descripcion || '—' }}</td>
+            </tr>
+            <tr *ngIf="!especializaciones.length">
+              <td colspan="3" class="text-center text-muted">Aún no hay especializaciones registradas.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

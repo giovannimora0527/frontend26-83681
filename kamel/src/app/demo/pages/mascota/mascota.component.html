@@ -1,108 +1,216 @@
-<div class="container-fluid">
-    <div class="card">
-        <div class="card-header">
-            <div class="row">
-                <div class="col col-md-9">
-                    <input class="form-control" placeholder="Buscar mascota" type="text"
-                        (input)="actualizarBusqueda($event)" />
-                </div>
-                <div class="col col-md-3 text-end">
-                    <button
-                        class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
-                        (click)="nuevaMascota('C')" title="Agregar mascota">
-                        <i class="fa fa-plus" aria-hidden="true"></i>
-                        &nbsp; Nuevo
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="table table-responsive table-condensed col col-md-12">
-                    <table class="table table-stripped table-condensed table-responsive">
-                        <thead>
-                            <tr>
-                                <th class="text-center">Nombre</th>
-                                <th class="text-center">Especie</th>
-                                <th class="text-center">Raza</th>
-                                <th class="text-center">Edad</th>
-                                <th class="text-center">Cliente</th>
-                                <th class="text-center">Fecha de Registro</th>
-                                <th class="text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody *ngIf="listMascotas.length === 0">
-                            <tr>
-                                <td colspan="7" class="text-center">No hay mascotas registradas</td>
-                            </tr>
-                        </tbody>
-                        <tbody *ngIf="listMascotas.length > 0 && mascotasFiltradas.length === 0">
-                            <tr>
-                                <td colspan="7" class="text-center">No se encontraron mascotas</td>
-                            </tr>
-                        </tbody>
-                        <tbody *ngIf="mascotasFiltradas.length > 0">
-                            <tr *ngFor="let mascota of mascotasPaginadas">
-                                <td class="text-center">{{ mascota.nombreMascota }}</td>
-                                <td class="text-center">{{ mascota.raza.especie }}</td>
-                                <td class="text-center">{{ mascota.raza.nombre }}</td>
-                                <td class="text-center">{{ mascota.edad }}</td>
-                                <td class="text-center">{{ mascota.cliente.nombres }} {{ mascota.cliente.apellidos }}
-                                </td>
-                                <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-outline-info d-inline-flex 
-                                    align-items-center justify-content-center" (click)="abrirEdicion(mascota)">
-                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de mascotas">
-                <ul class="pagination justify-content-end mb-0">
-                    <li class="page-item" [class.disabled]="paginaActual === 1">
-                        <button class="page-link" type="button" [disabled]="paginaActual === 1"
-                            (click)="cambiarPagina(paginaActual - 1)">Anterior</button>
-                    </li>
-                    <li class="page-item" *ngFor="let pagina of paginas" [class.active]="pagina === paginaActual">
-                        <button class="page-link" type="button"
-                            [attr.aria-current]="pagina === paginaActual ? 'page' : null"
-                            (click)="cambiarPagina(pagina)">{{ pagina }}</button>
-                    </li>
-                    <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
-                        <button class="page-link" type="button" [disabled]="paginaActual === totalPaginas"
-                            (click)="cambiarPagina(paginaActual + 1)">Siguiente</button>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </div>
-</div>
 
-<!-- Modal -->
-<div class="modal fade" id="modalCrearMascota" tabindex="-1" aria-labelledby="modalCrearMascotaLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="modalCrearMascotaLabel">{{ titleModal }}</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                (click)="closeModal()"></button>
-            </div>
-            <div class="modal-body">
-                <div class="card">
-                    <div class="card-body">
-                      
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                (click)="closeModal()">Cerrar</button>
-                <button type="button" class="btn btn-primary">{{ titleBoton}}</button>
-            </div>
-        </div>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3>Gestión de mascotas</h3>
+      <p class="text-muted mb-0">Consulta las mascotas y sus propietarios.</p>
     </div>
+    <button class="btn btn-outline-primary" (click)="cargarMascotas()">
+      Actualizar
+    </button>
+  </div>
+
+  <div *ngIf="mensajeExito" class="alert alert-success">{{ mensajeExito }}</div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Registrar mascota</h5>
+      <div *ngIf="!clientes.length" class="alert alert-info">
+        Primero registra un cliente para asociarlo con la mascota.
+        <a routerLink="/inicio/clientes">Ir a clientes</a>
+      </div>
+      <div *ngIf="!razas.length" class="alert alert-info">
+        Registra una raza antes de crear una mascota.
+        <a routerLink="/inicio/razas">Ir a razas</a>
+      </div>
+      <form (ngSubmit)="guardarMascota()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="nombreNuevaMascota">Nombre *</label>
+            <input id="nombreNuevaMascota" class="form-control" name="nombreNuevaMascota"
+                   [(ngModel)]="nuevaMascota.nombreMascota" maxlength="100" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label" for="edadNuevaMascota">Edad (años) *</label>
+            <input id="edadNuevaMascota" class="form-control" type="number" name="edadNuevaMascota"
+                   [(ngModel)]="nuevaMascota.edad" min="0" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="razaNuevaMascota">Raza *</label>
+            <select id="razaNuevaMascota" class="form-select" name="razaNuevaMascota"
+                    [(ngModel)]="nuevaMascota.razaId" required>
+              <option value="">Selecciona una raza</option>
+              <option *ngFor="let raza of razas" [value]="raza.razaId">
+                {{ raza.nombre }} ({{ raza.especie }})
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="clienteNuevaMascota">Cliente responsable *</label>
+            <select id="clienteNuevaMascota" class="form-select" name="clienteNuevaMascota"
+                    [(ngModel)]="nuevaMascota.clienteId" required>
+              <option value="">Selecciona un cliente</option>
+              <option *ngFor="let cliente of clientes" [value]="cliente.cliente_id">
+                {{ cliente.nombres }} {{ cliente.apellidos }} · {{ cliente.numero_documento }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary" type="submit"
+                    [disabled]="guardandoMascota || !clientes.length || !razas.length">
+              {{ guardandoMascota ? 'Guardando...' : 'Registrar mascota' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Buscar mascota por ID</h5>
+      <div class="row g-2">
+        <div class="col-md-8">
+          <input type="number"
+                 class="form-control"
+                 min="1"
+                 [(ngModel)]="mascotaId"
+                 (keyup.enter)="buscarPorId()"
+                 placeholder="ID de la mascota">
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" (click)="buscarPorId()">
+            Buscar mascota
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="mensajeError" class="alert alert-warning">
+    {{ mensajeError }}
+  </div>
+
+  <div *ngIf="mascotaSeleccionada" class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <strong>Detalle de la mascota</strong>
+      <button class="btn btn-sm btn-outline-secondary" (click)="cerrarDetalle()">
+        Cerrar
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <strong>ID</strong>
+          <div>{{ mascotaSeleccionada.mascota_id }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Nombre</strong>
+          <div>{{ mascotaSeleccionada.nombre_mascota }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Edad</strong>
+          <div>{{ mascotaSeleccionada.edad ?? 'No registrada' }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Cliente</strong>
+          <div>{{ mascotaSeleccionada.clienteNombre || 'No disponible' }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Fecha de registro</strong>
+          <div>{{ mascotaSeleccionada.fecha_registro || mascotaSeleccionada.fechaRegistro || 'No registrada' }}</div>
+        </div>
+        <div class="col-md-4">
+          <strong>Raza</strong>
+          <div>{{ mascotaSeleccionada.raza?.nombre || mascotaSeleccionada.raza?.nombreRaza || 'No disponible' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-5">
+          <label for="cliente" class="form-label">Filtrar por cliente</label>
+          <select id="cliente"
+                  class="form-select"
+                  [(ngModel)]="clienteId"
+                  (ngModelChange)="seleccionarCliente()">
+            <option [ngValue]="null">Todos los clientes</option>
+            <option *ngFor="let cliente of clientes"
+                    [ngValue]="cliente.cliente_id">
+              {{ cliente.nombres }} {{ cliente.apellidos }} - {{ cliente.numero_documento }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-7">
+          <label for="filtroMascota" class="form-label">Buscar mascota</label>
+          <input id="filtroMascota"
+                 class="form-control"
+                 [(ngModel)]="filtro"
+                 (ngModelChange)="filtrarMascotas()"
+                 placeholder="Nombre o ID">
+        </div>
+      </div>
+
+      <div *ngIf="cargando" class="alert alert-info">Cargando mascotas...</div>
+
+      <div class="table-responsive" *ngIf="!cargando">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Edad</th>
+              <th>Cliente</th>
+              <th>Registro</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let mascota of mascotasPagina">
+              <td>{{ mascota.mascota_id }}</td>
+              <td>{{ mascota.nombre_mascota }}</td>
+              <td>{{ mascota.edad ?? '—' }}</td>
+              <td>{{ mascota.clienteNombre || '—' }}</td>
+              <td>{{ mascota.fecha_registro || mascota.fechaRegistro || '—' }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary"
+                        (click)="verDetalle(mascota)">
+                  Ver
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="mascotasFiltradas.length === 0">
+              <td colspan="6" class="text-center text-muted">
+                No hay mascotas para mostrar.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+          {{ mascotasFiltradas.length }} mascotas encontradas
+        </small>
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary btn-sm"
+                  [disabled]="pagina <= 1"
+                  (click)="cambiarPagina(pagina - 1)">
+            Anterior
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" disabled>
+            {{ pagina }} / {{ totalPaginas }}
+          </button>
+          <button class="btn btn-outline-secondary btn-sm"
+                  [disabled]="pagina >= totalPaginas"
+                  (click)="cambiarPagina(pagina + 1)">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

@@ -1,183 +1,222 @@
-import { Component } from '@angular/core';
-import { CommonModule, formatDate } from '@angular/common';
 
-import { MascotaServiceService } from './service/mascota-service.service';
-import { Mascota } from 'src/app/models/mascota';
-import { FormBuilder, FormGroup, Validators, AbstractControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
+import { Cliente } from 'src/app/models/cliente';
+import { environment } from 'src/environments/environment';
 
-import Swal from 'sweetalert2';
-import { Modal } from 'bootstrap';
+interface ClienteApiItem {
+  id?: number;
+  cliente_id?: number;
+  nombres?: string;
+  apellidos?: string;
+  numeroDocumento?: string;
+  numero_documento?: string;
+}
+
+interface RazaItem {
+  razaId: number;
+  nombre: string;
+  especie: string;
+}
+
+interface MascotaItem {
+  mascota_id?: number;
+  mascotaId?: number;
+  nombre_mascota?: string;
+  nombreMascota?: string;
+  edad?: number | null;
+  fecha_registro?: string;
+  fechaRegistro?: string;
+  cliente_id?: number;
+  clienteId?: number;
+  clienteNombre?: string;
+  cliente?: { id?: number; nombres?: string; apellidos?: string };
+  raza?: { nombre?: string; nombreRaza?: string };
+}
 
 @Component({
   selector: 'app-mascota',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './mascota.component.html',
   styleUrl: './mascota.component.scss'
 })
-export class MascotaComponent {
-  // Variables para el modal.
-  modalInstance: Modal | null = null;
-  titleModal: string = "";
-  modoFormulario: string = "";
-  titleBoton: string = "";
+export class MascotaComponent implements OnInit {
+  clientes: Cliente[] = [];
+  mascotas: MascotaItem[] = [];
+  mascotasFiltradas: MascotaItem[] = [];
+  mascotaSeleccionada: MascotaItem | null = null;
 
-  // Variables para la paginación y búsqueda en la datatable.
-  listMascotas: Mascota[] = [];
-  terminoBusqueda = '';
-  paginaActual = 1;
-  readonly registrosPorPagina = 10;
+  clienteId: number | null = null;
+  mascotaId = '';
+  filtro = '';
+  cargando = false;
+  mensajeError = '';
 
-  // Formulario para crear o editar mascota.
-  form!: FormGroup;
-  mascotaSelected: Mascota | null = null;
+  pagina = 1;
+  tamanoPagina = 8;
+  razas: RazaItem[] = [];
+  guardandoMascota = false;
+  mensajeExito = '';
+  nuevaMascota = { nombreMascota: '', edad: '', razaId: '', clienteId: '' };
 
-  constructor(private readonly mascotaService: MascotaServiceService,
-    private readonly formBuilder: FormBuilder) {
-    this.listar();
-    this.inicializarFormulario();
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.cargarClientes();
+    this.cargarMascotas();
+    this.cargarRazas();
   }
 
-  // Metodo ue permite inicializar el formulario con sus controles y validaciones.
-  inicializarFormulario() {
-    this.form = this.formBuilder.group({
-      nombreMascota: ['', Validators.required],
-      raza: ['', Validators.required],
-      edad: ['', Validators.required],
-      cliente: ['', Validators.required]
+  cargarRazas(): void {
+    this.http.get<RazaItem[]>(`${environment.apiUrlAuth}/gestion/razas`).subscribe({
+      next: (razas) => this.razas = razas || [],
+      error: (error) => {
+        this.mensajeError = error?.error?.message || 'No fue posible cargar las razas.';
+      }
     });
   }
 
-  // Obtiene los controles del formulario para facilitar el acceso a sus propiedades y métodos.
-  get f(): { [key: string]: AbstractControl } {
-    return this.form.controls;
-  }
-
-  /**
-   * Filtra la lista de mascotas según el término de búsqueda ingresado por el usuario.
-   * @returns Un arreglo de mascotas filtradas.
-   */
-  get mascotasFiltradas(): Mascota[] {
-    const termino = this.normalizarTexto(this.terminoBusqueda.trim());
-    if (!termino) {
-      return this.listMascotas;
+  guardarMascota(): void {
+    this.mensajeError = '';
+    this.mensajeExito = '';
+    if (!this.nuevaMascota.nombreMascota.trim() || this.nuevaMascota.edad === '' ||
+        !this.nuevaMascota.razaId || !this.nuevaMascota.clienteId) {
+      this.mensajeError = 'Completa el nombre, la edad, la raza y el cliente de la mascota.';
+      return;
     }
 
-    return this.listMascotas.filter((mascota) => {
-      const valores = [
-        mascota.nombreMascota,
-        mascota.raza?.especie,
-        mascota.raza?.nombre,
-        mascota.edad,
-        `${mascota.cliente?.nombres ?? ''} ${mascota.cliente?.apellidos ?? ''}`,
-        mascota.fechaRegistro
-          ? formatDate(mascota.fechaRegistro, 'yyyy-MM-dd HH:mm', 'en-US')
-          : ''
-      ];
-
-      return valores.some((valor) =>
-        this.normalizarTexto(String(valor ?? '')).includes(termino)
-      );
+    this.guardandoMascota = true;
+    this.http.post(`${environment.apiUrlAuth}/mascota/guardar`, {
+      nombreMascota: this.nuevaMascota.nombreMascota.trim(),
+      edad: Number(this.nuevaMascota.edad),
+      razaId: Number(this.nuevaMascota.razaId),
+      clienteId: Number(this.nuevaMascota.clienteId)
+    }).subscribe({
+      next: () => {
+        this.guardandoMascota = false;
+        this.mensajeExito = 'Mascota registrada correctamente.';
+        this.nuevaMascota = { nombreMascota: '', edad: '', razaId: '', clienteId: '' };
+        this.cargarMascotas();
+      },
+      error: (error) => {
+        this.guardandoMascota = false;
+        this.mensajeError = error?.error?.message || 'No fue posible registrar la mascota.';
+      }
     });
   }
 
-  get mascotasPaginadas(): Mascota[] {
-    const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
-    return this.mascotasFiltradas.slice(inicio, inicio + this.registrosPorPagina);
+  cargarClientes(): void {
+    this.http.get<ClienteApiItem[]>(`${environment.apiUrlAuth}/gestion/clientes`).subscribe({
+      next: (datos) => {
+        this.clientes = (datos || []).map(c => ({
+          cliente_id: c.cliente_id ?? c.id,
+          nombres: c.nombres,
+          apellidos: c.apellidos,
+          numero_documento: c.numero_documento ?? c.numeroDocumento
+        }));
+      },
+      error: () => {
+        this.mensajeError = 'No fue posible cargar los clientes.';
+      }
+    });
+  }
+
+  cargarMascotas(): void {
+    this.cargando = true;
+    this.mensajeError = '';
+
+    this.http.get<MascotaItem[]>(`${environment.apiUrlAuth}/gestion/mascotas`).subscribe({
+      next: (datos) => {
+        this.mascotas = (datos || []).map(m => ({
+          ...m,
+          mascota_id: m.mascota_id ?? m.mascotaId,
+          nombre_mascota: m.nombre_mascota ?? m.nombreMascota,
+          cliente_id: m.cliente_id ?? m.clienteId ?? m.cliente?.id,
+          clienteNombre: m.cliente
+            ? `${m.cliente.nombres || ''} ${m.cliente.apellidos || ''}`.trim()
+            : ''
+        }));
+
+        this.filtrarMascotas();
+        this.cargando = false;
+      },
+      error: () => {
+        this.mensajeError = 'No fue posible cargar las mascotas. Verifica que el backend esté activo.';
+        this.cargando = false;
+      }
+    });
+  }
+
+  seleccionarCliente(): void {
+    this.mascotaSeleccionada = null;
+    this.filtrarMascotas();
+  }
+
+  filtrarMascotas(): void {
+    const texto = this.filtro.trim().toLowerCase();
+
+    this.mascotasFiltradas = this.mascotas.filter(m => {
+      const perteneceCliente =
+        this.clienteId === null ||
+        Number(m.cliente_id) === Number(this.clienteId);
+
+      const coincideTexto =
+        `${m.nombre_mascota || ''} ${m.mascota_id || ''} ${m.clienteNombre || ''}`
+          .toLowerCase()
+          .includes(texto);
+
+      return perteneceCliente && coincideTexto;
+    });
+
+    this.pagina = 1;
+  }
+
+  buscarPorId(): void {
+    if (!this.mascotaId.trim()) {
+      this.mensajeError = 'Ingresa el ID de la mascota.';
+      this.mascotaSeleccionada = null;
+      return;
+    }
+
+    const mascota = this.mascotas.find(m =>
+      Number(m.mascota_id) === Number(this.mascotaId)
+    );
+
+    if (!mascota) {
+      this.mensajeError = 'No se encontró una mascota con ese ID.';
+      this.mascotaSeleccionada = null;
+      return;
+    }
+
+    this.mascotaSeleccionada = mascota;
+    this.mensajeError = '';
+  }
+
+  verDetalle(mascota: MascotaItem): void {
+    this.mascotaSeleccionada = mascota;
+    this.mensajeError = '';
+  }
+
+  cerrarDetalle(): void {
+    this.mascotaSeleccionada = null;
+  }
+
+  get mascotasPagina(): MascotaItem[] {
+    const inicio = (this.pagina - 1) * this.tamanoPagina;
+    return this.mascotasFiltradas.slice(inicio, inicio + this.tamanoPagina);
   }
 
   get totalPaginas(): number {
-    return Math.ceil(this.mascotasFiltradas.length / this.registrosPorPagina);
+    return Math.max(1, Math.ceil(this.mascotasFiltradas.length / this.tamanoPagina));
   }
 
-  get paginas(): number[] {
-    return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
-  }
-
-  /**
-   * Metodo que permite listar las mascotas registradas en la base de datos y mostrarlas en la tabla.
-   */
-  listar() {
-    this.mascotaService.getMascotas()
-      .subscribe(
-        {
-          next: (data) => {
-            console.log(data);
-            this.listMascotas = data;
-            this.paginaActual = 1;
-          },
-          error: (error) => {
-            console.error('Error al obtener las mascotas:', error);
-          }
-        }
-      );
-  }
-
-  // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
-  actualizarBusqueda(event: Event) {
-    this.terminoBusqueda = (event.target as HTMLInputElement).value;
-    this.paginaActual = 1;
-  }
-
-  // Cambia paginacion.
-  cambiarPagina(pagina: number) {
-    if (pagina >= 1 && pagina <= this.totalPaginas) {
-      this.paginaActual = pagina;
+  cambiarPagina(valor: number): void {
+    if (valor >= 1 && valor <= this.totalPaginas) {
+      this.pagina = valor;
     }
   }
-
-  // Metodo privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
-  private normalizarTexto(texto: string): string {
-    return texto
-      .toLocaleLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-  }
-
-  // Evento para abrir el modal de crear o editar mascota, dependiendo del modo recibido.
-  nuevaMascota(modo: string) {
-    this.titleModal = modo === 'C' ? 'Crear Mascota' : 'Editar Mascota';
-    this.modoFormulario = modo;
-    this.mascotaSelected = null;
-    this.resetFormulario();
-    this.openModal(modo);
-  }
-
-  resetFormulario() {
-    this.form.reset();
-    this.form.markAsPristine();
-    this.form.markAsUntouched();
-  }
-
-  abrirEdicion(mascota: Mascota) {
-    this.mascotaSelected = mascota;
-    this.modoFormulario = 'E';
-    this.form.patchValue({
-      nombreMascota: mascota.nombreMascota,
-      raza: mascota.raza,
-      edad: mascota.edad,
-      cliente: mascota.cliente
-    });
-    this.openModal(this.modoFormulario);
-  }
-
-  closeModal() {
-    if (this.modalInstance) {
-      this.modalInstance.hide();
-    }
-    this.resetFormulario();
-  }
-
-  openModal(modo: string) {
-    this.titleModal = modo === 'C' ? 'Crear Mascota' : 'Editar Mascota';
-    this.titleBoton = modo === 'C' ? 'Guardar Mascota' : 'Actualizar Mascota';
-    this.modoFormulario = modo;
-    const modalElement = document.getElementById('modalCrearMascota');
-    if (modalElement) {
-      // Verificar si ya existe una instancia del modal
-      this.modalInstance ??= new Modal(modalElement);
-      this.modalInstance.show();
-    }
-  }
-
-
 }

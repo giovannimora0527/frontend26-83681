@@ -1,11 +1,20 @@
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-historia-medica',
-  imports: [],
-  templateUrl: './historia-medica.component.html',
-  styleUrl: './historia-medica.component.scss'
-})
-export class HistoriaMedicaComponent {
-
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { environment } from 'src/environments/environment';
+@Component({ selector: 'app-historia-medica', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './historia-medica.component.html', styleUrl: './historia-medica.component.scss' })
+export class HistoriaMedicaComponent implements OnInit {
+ private api = `${environment.apiUrlAuth}/gestion`; historias: any[]=[]; clientes:any[]=[]; mascotas:any[]=[]; mascotasCliente:any[]=[]; medicos:any[]=[]; citas:any[]=[]; citasMascota:any[]=[]; anotaciones:any[]=[];
+ filtro=''; error=''; exito=''; cargando=false; guardando=false; pagina=1; porPagina=8; historiaSeleccionada:any=null; clienteId:any=''; mascotaId:any=''; citaId:any=''; motivo=''; diagnostico=''; observaciones=''; anotacion={medicoId:'',descripcion:'',diagnostico:'',observacion:''};
+ constructor(private http:HttpClient){}
+ ngOnInit():void { this.cargar(); this.http.get<any[]>(`${this.api}/clientes`).subscribe({next:x=>this.clientes=x||[],error:e=>this.fallo(e)}); this.http.get<any[]>(`${this.api}/mascotas`).subscribe({next:x=>this.mascotas=x||[],error:e=>this.fallo(e)}); this.http.get<any[]>(`${this.api}/medicos`).subscribe({next:x=>this.medicos=x||[],error:e=>this.fallo(e)}); this.http.get<any[]>(`${this.api}/citas`).subscribe({next:x=>this.citas=x||[],error:e=>this.fallo(e)}); }
+ cargar():void {this.cargando=true;this.http.get<any[]>(`${this.api}/historias`).subscribe({next:x=>{this.historias=x||[];this.cargando=false;},error:e=>this.fallo(e)});}
+ cambiarCliente():void {this.mascotasCliente=this.mascotas.filter(m=>Number(m.cliente?.id??m.clienteId)===Number(this.clienteId));this.mascotaId='';this.citaId='';this.citasMascota=[];} cambiarMascota():void {this.citasMascota=this.citas.filter(c=>Number(c.mascota?.mascotaId)===Number(this.mascotaId)&&(c.estado||'').toUpperCase()==='ATENDIDA');this.citaId='';}
+ crear():void {this.error='';this.exito='';if(!this.clienteId||!this.mascotaId||!this.citaId||!this.motivo.trim()||!this.diagnostico.trim()){this.error='Selecciona cliente, mascota y cita; registra motivo y diagnóstico.';return;}this.guardando=true;this.http.post<any>(`${this.api}/historias`,{clienteId:Number(this.clienteId),mascotaId:Number(this.mascotaId),citaId:Number(this.citaId),motivo:this.motivo.trim(),diagnostico:this.diagnostico.trim(),observaciones:this.observaciones.trim()}).subscribe({next:h=>{this.guardando=false;this.exito='Historia clínica creada.';this.clienteId='';this.mascotaId='';this.citaId='';this.motivo='';this.diagnostico='';this.observaciones='';this.mascotasCliente=[];this.citasMascota=[];this.cargar();this.ver(h);},error:e=>{this.guardando=false;this.fallo(e);}});}
+ ver(h:any):void {this.historiaSeleccionada=h;this.anotaciones=[];this.anotacion={medicoId:'',descripcion:'',diagnostico:'',observacion:''};this.http.get<any[]>(`${this.api}/historias/${h.id}/anotaciones`).subscribe({next:x=>this.anotaciones=x||[],error:e=>this.fallo(e)});}
+ guardarAnotacion():void {if(!this.historiaSeleccionada)return;this.error='';if(!this.anotacion.medicoId||!this.anotacion.descripcion.trim()||!this.anotacion.diagnostico.trim()){this.error='Selecciona un veterinario y completa descripción y diagnóstico.';return;}this.guardando=true;this.http.post<any>(`${this.api}/historias/${this.historiaSeleccionada.id}/anotaciones`,{medicoId:Number(this.anotacion.medicoId),descripcion:this.anotacion.descripcion.trim(),diagnostico:this.anotacion.diagnostico.trim(),observacion:this.anotacion.observacion.trim()}).subscribe({next:()=>{this.guardando=false;this.exito='Anotación agregada al historial.';this.anotacion={medicoId:'',descripcion:'',diagnostico:'',observacion:''};this.ver(this.historiaSeleccionada);},error:e=>{this.guardando=false;this.fallo(e);}});}
+ get filtradas():any[]{const q=this.filtro.toLowerCase().trim();return this.historias.filter(h=>[h.id,h.mascota?.nombreMascota,h.mascota?.cliente?.nombres,h.mascota?.cliente?.apellidos,h.fechaCreacion].join(' ').toLowerCase().includes(q));}
+ get paginaDatos():any[]{return this.filtradas.slice((this.pagina-1)*this.porPagina,this.pagina*this.porPagina);} get paginas():number{return Math.max(1,Math.ceil(this.filtradas.length/this.porPagina));}
+ fallo(e:any):void{this.error=e?.error?.message||e?.error?.detail||(e.status===0?'No hay conexión con el backend.':'No fue posible completar la operación.');this.cargando=false;}
 }

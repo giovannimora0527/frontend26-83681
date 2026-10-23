@@ -1,7 +1,7 @@
 export class Raza {
-    razaId?: number;
+    raza_id?: number;
     nombre?: string;
     especie?: string;
-    fechaCreacion?: Date;
-    fechaModificacion?: Date;
+    fecha_creacion?: Date;
+    fecha_modificacion?: Date;
 }

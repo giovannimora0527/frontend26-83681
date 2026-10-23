@@ -20,5 +20,5 @@ export class UsuarioService {
 
   getUsuarios(): Observable<Usuario[]> {
     return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
-  }
+  }s
 }

@@ -1,12 +1,9 @@
-import { Cliente } from "./cliente";
-import { Raza } from "./raza";
-
 export class Mascota {
-    mascotaId?: number;
-    nombreMascota?: string;
+    mascota_id?: number;
+    nombre_mascota?: string;
     edad?: number;
-    fechaRegistro?: Date;
-    fechaModificacion?: Date;
-    raza?: Raza;
-    cliente?: Cliente;
+    raza_id?: string;
+    fecha_registro?: Date;
+    fecha_modificacion?: Date;
+    cliente_id?: number;
 }

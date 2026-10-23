@@ -1,1 +1,68 @@
-<p>raza works!</p>
+<div class="container-fluid py-3">
+  <div class="mb-4">
+    <h3>Razas</h3>
+    <p class="text-muted mb-0">Administra las razas para poder registrar mascotas.</p>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="exito" class="alert alert-success">{{ exito }}</div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Registrar raza</h5>
+      <form (ngSubmit)="guardar()">
+        <div class="row g-3">
+          <div class="col-md-5">
+            <label class="form-label" for="nombreRaza">Nombre *</label>
+            <input id="nombreRaza" class="form-control" name="nombreRaza"
+                   [(ngModel)]="nuevaRaza.nombre" maxlength="100" required>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label" for="especieRaza">Especie *</label>
+            <select id="especieRaza" class="form-select" name="especieRaza"
+                    [(ngModel)]="nuevaRaza.especie" required>
+              <option value="">Selecciona una especie</option>
+              <option value="Canina">Canina</option>
+              <option value="Felina">Felina</option>
+              <option value="Otra">Otra</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100" type="submit" [disabled]="guardando">
+              {{ guardando ? 'Guardando...' : 'Agregar' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Razas registradas</h5>
+        <button class="btn btn-outline-primary" type="button" (click)="cargar()" [disabled]="cargando">
+          Actualizar
+        </button>
+      </div>
+      <div *ngIf="cargando" class="alert alert-info">Cargando razas...</div>
+      <div class="table-responsive" *ngIf="!cargando">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr><th>ID</th><th>Raza</th><th>Especie</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let raza of razas">
+              <td>{{ raza.razaId }}</td>
+              <td>{{ raza.nombre }}</td>
+              <td>{{ raza.especie }}</td>
+            </tr>
+            <tr *ngIf="!razas.length">
+              <td colspan="3" class="text-center text-muted">Aún no hay razas registradas.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -44,6 +44,7 @@ export class BackendService {
     return this.http.get<T>(`${urlApi}/${endpoint}/${service}`, {
       params: routerParams,
       headers: headers,
+      withCredentials: true,
     });
   }
 
@@ -61,8 +62,12 @@ export class BackendService {
       'Content-Type': 'application/json',
       Authorization: tokenRecuperado ? `Bearer ${tokenRecuperado}` : '',
     });
-    return this.http.post<T>(`${urlApi}/${endpoint}/${service}`, data, {
+    const url = service
+      ? `${urlApi}/${endpoint}/${service}`
+      : `${urlApi}/${endpoint}`;
+    return this.http.post<T>(url, data, {
       headers: headers,
+      withCredentials: true,
     });
   }
 
@@ -99,6 +104,7 @@ export class BackendService {
     });
     return this.http.post<T>(`${urlApi}/${endpoint}/${service}`, data, {
       headers: headers,
+      withCredentials: true,
     });
   }
 }

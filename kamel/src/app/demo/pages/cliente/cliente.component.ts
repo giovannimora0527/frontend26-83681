@@ -1,136 +1,184 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { Cliente } from 'src/app/models/cliente';
-import { ClienteService } from './service/cliente.service';
+import { environment } from 'src/environments/environment';
 
-import { Modal } from 'bootstrap';
+interface ClienteApiItem {
+  id?: number;
+  cliente_id?: number;
+  tipoDocumento?: string;
+  tipo_documento?: string;
+  numeroDocumento?: string;
+  numero_documento?: string;
+  nombres?: string;
+  apellidos?: string;
+  fechaNacimiento?: string;
+  fecha_nacimiento?: string;
+  genero?: string;
+  telefono?: string;
+  direccion?: string;
+  activo?: boolean;
+}
 
 @Component({
   selector: 'app-cliente',
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './cliente.component.html',
   styleUrl: './cliente.component.scss'
 })
-export class ClienteComponent {
-  listClientes: Cliente[] = [];
-  // Variables para el modal.
-  modalInstance: Modal | null = null;
-  titleModal: string = "";
-  modoFormulario: string = "";
-  titleBoton: string = "";
+export class ClienteComponent implements OnInit {
+  clientes: Cliente[] = [];
+  clientesFiltrados: Cliente[] = [];
+  clienteSeleccionado: Cliente | null = null;
 
-  terminoBusqueda = '';
-  paginaActual = 1;
-  readonly registrosPorPagina = 4;
+  filtro = '';
+  documento = '';
+  cargando = false;
+  mensajeError = '';
+  pagina = 1;
+  tamanoPagina = 8;
+  guardandoCliente = false;
+  mensajeExito = '';
+  nuevoCliente = {
+    tipoDocumento: 'CC',
+    numeroDocumento: '',
+    nombres: '',
+    apellidos: '',
+    fechaNacimiento: '',
+    genero: '',
+    telefono: '',
+    direccion: ''
+  };
 
-  constructor(private readonly clienteService: ClienteService) {
-    this.getClientes();
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.listarClientes();
   }
 
-  getClientes() {
-    this.clienteService.getClientes()
-      .subscribe(
-        {
-          next: (data) => {
-            console.log(data);
-            this.listClientes = data;
-          },
-          error: (error) => {
-            console.error(error);
-          }
-        }
-      );
-  }
+  listarClientes(): void {
+    this.cargando = true;
+    this.mensajeError = '';
 
-  /**
-     * Filtra la lista de clientes según el término de búsqueda ingresado por el usuario.
-     * @returns Un arreglo de clientes filtrados.
-     */
-  get clientesFiltrados(): Cliente[] {
-    const termino = this.normalizarTexto(this.terminoBusqueda.trim());
-    if (!termino) {
-      return this.listClientes;
-    }
+    this.http.get<ClienteApiItem[]>(`${environment.apiUrlAuth}/gestion/clientes`).subscribe({
+      next: (respuesta) => {
+        this.clientes = (respuesta || []).map(c => ({
+          cliente_id: c.cliente_id ?? c.id,
+          tipo_documento: c.tipo_documento ?? c.tipoDocumento,
+          numero_documento: c.numero_documento ?? c.numeroDocumento,
+          nombres: c.nombres,
+          apellidos: c.apellidos,
+          fecha_nacimiento: c.fecha_nacimiento || c.fechaNacimiento
+            ? new Date(c.fecha_nacimiento || c.fechaNacimiento!)
+            : undefined,
+          genero: c.genero,
+          telefono: c.telefono,
+          direccion: c.direccion,
+          activo: c.activo
+        }));
 
-    return this.listClientes.filter((cliente) => {
-      const valores = [
-        cliente.nombres,
-        cliente.apellidos,
-        cliente.numeroDocumento,
-        cliente.telefono,
-        cliente.direccion
-      ];
-
-      return valores.some((valor) =>
-        this.normalizarTexto(String(valor ?? '')).includes(termino)
-      );
+        this.filtrarClientes();
+        this.cargando = false;
+      },
+      error: () => {
+        this.mensajeError = 'No fue posible cargar los clientes. Verifica que el backend esté activo.';
+        this.cargando = false;
+      }
     });
   }
 
-  // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
-  actualizarBusqueda(event: Event) {
-    this.terminoBusqueda = (event.target as HTMLInputElement).value;
-    this.paginaActual = 1;
-  }
-
-  // Cambia paginacion.
-  cambiarPagina(pagina: number) {
-    if (pagina >= 1 && pagina <= this.totalPaginas) {
-      this.paginaActual = pagina;
+  guardarCliente(): void {
+    this.mensajeError = '';
+    this.mensajeExito = '';
+    if (!this.nuevoCliente.tipoDocumento || !this.nuevoCliente.numeroDocumento.trim() ||
+        !this.nuevoCliente.nombres.trim() || !this.nuevoCliente.apellidos.trim()) {
+      this.mensajeError = 'Completa tipo y número de documento, nombres y apellidos.';
+      return;
     }
+
+    this.guardandoCliente = true;
+    this.http.post(`${environment.apiUrlAuth}/gestion/clientes`, {
+      ...this.nuevoCliente,
+      numeroDocumento: this.nuevoCliente.numeroDocumento.trim(),
+      nombres: this.nuevoCliente.nombres.trim(),
+      apellidos: this.nuevoCliente.apellidos.trim(),
+      fechaNacimiento: this.nuevoCliente.fechaNacimiento || null
+    }).subscribe({
+      next: () => {
+        this.guardandoCliente = false;
+        this.mensajeExito = 'Cliente registrado correctamente.';
+        this.nuevoCliente = {
+          tipoDocumento: 'CC',
+          numeroDocumento: '',
+          nombres: '',
+          apellidos: '',
+          fechaNacimiento: '',
+          genero: '',
+          telefono: '',
+          direccion: ''
+        };
+        this.listarClientes();
+      },
+      error: (error) => {
+        this.guardandoCliente = false;
+        this.mensajeError = error?.error?.message || 'No fue posible registrar el cliente.';
+      }
+    });
   }
 
-  // Metodo privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
-  private normalizarTexto(texto: string): string {
-    return texto
-      .toLocaleLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+  filtrarClientes(): void {
+    const texto = this.filtro.trim().toLowerCase();
+
+    this.clientesFiltrados = this.clientes.filter(c =>
+      `${c.nombres || ''} ${c.apellidos || ''} ${c.numero_documento || ''}`
+        .toLowerCase()
+        .includes(texto)
+    );
+
+    this.pagina = 1;
   }
 
+  buscarPorDocumento(): void {
+    const numero = this.documento.trim();
 
-  get clientesPaginados(): Cliente[] {
-    const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
-    return this.clientesFiltrados.slice(inicio, inicio + this.registrosPorPagina);
+    if (!numero) {
+      this.mensajeError = 'Ingresa el número de documento.';
+      this.clienteSeleccionado = null;
+      return;
+    }
+
+    const cliente = this.clientes.find(c =>
+      String(c.numero_documento ?? '') === numero
+    );
+
+    this.clienteSeleccionado = cliente || null;
+    this.mensajeError = cliente ? '' : 'No se encontró un cliente con ese documento.';
+  }
+
+  verDetalle(cliente: Cliente): void {
+    this.clienteSeleccionado = cliente;
+    this.mensajeError = '';
+  }
+
+  get clientesPagina(): Cliente[] {
+    const inicio = (this.pagina - 1) * this.tamanoPagina;
+    return this.clientesFiltrados.slice(inicio, inicio + this.tamanoPagina);
   }
 
   get totalPaginas(): number {
-    return Math.ceil(this.clientesFiltrados.length / this.registrosPorPagina);
+    return Math.max(1, Math.ceil(this.clientesFiltrados.length / this.tamanoPagina));
   }
 
-  get paginas(): number[] {
-    return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
+  cambiarPagina(valor: number): void {
+    if (valor >= 1 && valor <= this.totalPaginas) {
+      this.pagina = valor;
+    }
   }
 
-  // Evento para abrir el modal de crear o editar cliente, dependiendo del modo recibido.
-  nuevoCliente(modo: string) {
-    this.titleModal = modo === 'C' ? 'Crear Cliente' : 'Editar Cliente';
-    this.modoFormulario = modo;    
-    this.openModal(modo);
+  cerrarDetalle(): void {
+    this.clienteSeleccionado = null;
   }
-
-  abrirEdicion(cliente: Cliente) {      
-      this.modoFormulario = 'E';      
-      this.openModal(this.modoFormulario);
-    }
-  
-    closeModal() {
-      if (this.modalInstance) {
-        this.modalInstance.hide();
-      }      
-    }
-  
-    openModal(modo: string) {
-      this.titleModal = modo === 'C' ? 'Crear Cliente' : 'Editar Cliente';
-      this.titleBoton = modo === 'C' ? 'Guardar Cliente' : 'Actualizar Cliente';
-      this.modoFormulario = modo;
-      const modalElement = document.getElementById('modalCrearCliente');
-      if (modalElement) {
-        // Verificar si ya existe una instancia del modal
-        this.modalInstance ??= new Modal(modalElement);
-        this.modalInstance.show();
-      }
-    }
-
-
 }

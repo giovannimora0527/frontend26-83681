@@ -30,7 +30,55 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       /* ---------- Nuevos menus aqui -------------  */  
-       {
+      {
+        id: 'anotacion',
+        title: 'Anotaciones de Historias',
+        type: 'item',
+        url: '/inicio/anotaciones',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
+      {
+        id: 'cita',
+        title: 'Citas',
+        type: 'item',
+        url: '/inicio/citas',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
+      {
+        id: 'cliente',
+        title: 'Clientes',
+        type: 'item',
+        url: '/inicio/clientes',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
+      {
+        id: 'especializacion',
+        title: 'Especializaciones',
+        type: 'item',
+        url: '/inicio/especializaciones',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
+      {
+        id: 'formula',
+        title: 'Fórmulas Médicas',
+        type: 'item',
+        url: '/inicio/formulas',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
+      {
+        id: 'historia',
+        title: 'Historias Médicas',
+        type: 'item',
+        url: '/inicio/historias',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
+      {
         id: 'mascota',
         title: 'Gestión de Mascotas',
         type: 'item',
@@ -39,79 +87,37 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       {
-        id: 'cliente',
-        title: 'Gestión de Clientes',
+        id: 'medicamento',
+        title: 'Medicamentos',
         type: 'item',
-        url: '/inicio/clientes',
+        url: '/inicio/medicamentos',
         icon: 'feather icon-user',
         classes: 'nav-item'
       },
       {
-      id: 'medicos',
-      title: 'Gestión de Médicos',
-      type: 'item',
-      url: '/inicio/medicos',
-      icon: 'feather icon-user-plus',
-      classes: 'nav-item'
-      },
-      {
-      id: 'citas',
-      title: 'Gestión de Citas',
-      type: 'item',
-      url: '/inicio/citas',
-      icon: 'feather icon-calendar',
-      classes: 'nav-item'
-      },
-      {
-        id: 'especializaciones',
-        title: 'Gestión de Especializaciones',
+        id: 'medico',
+        title: 'Medicos',
         type: 'item',
-        url: '/inicio/especializaciones',
-        icon: 'feather icon-award',
+        url: '/inicio/medicos',
+        icon: 'feather icon-user',
         classes: 'nav-item'
       },
       {
-        id: 'historias-medicas',
-        title: 'Historias Médicas',
-        type: 'item',
-        url: '/inicio/historias-medicas',
-        icon: 'feather icon-clipboard',
-        classes: 'nav-item'
-      },
-      {
-        id: 'anotaciones-historias',
-        title: 'Anotaciones Clínicas',
-        type: 'item',
-        url: '/inicio/anotaciones-historias',
-        icon: 'feather icon-edit',
-        classes: 'nav-item'
-      },
-      {
-        id: 'formulas-medicas',
-        title: 'Fórmulas Médicas',
-        type: 'item',
-        url: '/inicio/formulas-medicas',
-        icon: 'feather icon-file-text',
-        classes: 'nav-item'
-      },
-      {
-        id: 'medicamentos',
-        title: 'Gestión de Medicamentos',
-        type: 'item',
-        url: '/inicio/medicamentos',
-        icon: 'feather icon-box',
-        classes: 'nav-item'
-      },
-      {
-        id: 'razas',
-        title: 'Gestión de Razas',
+        id: 'raza',
+        title: 'Razas',
         type: 'item',
         url: '/inicio/razas',
-        icon: 'feather icon-target',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
+      {
+        id: 'sesion',
+        title: 'Sesiones',
+        type: 'item',
+        url: '/inicio/sesiones',
+        icon: 'feather icon-user',
         classes: 'nav-item'
       }
-
-
     ]
-  },  
+  },   
 ];
