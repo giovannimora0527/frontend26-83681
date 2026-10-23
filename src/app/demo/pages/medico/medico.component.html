@@ -1,0 +1,160 @@
+
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3>Gestión de veterinarios</h3>
+      <p class="text-muted mb-0">Consulta los profesionales registrados en la clínica.</p>
+    </div>
+    <button class="btn btn-outline-primary" (click)="listarMedicos()">
+      Actualizar
+    </button>
+  </div>
+
+  <div *ngIf="mensajeExito" class="alert alert-success">{{ mensajeExito }}</div>
+
+  <div *ngIf="mensajeError" class="alert alert-warning">
+    {{ mensajeError }}
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Registrar veterinario</h5>
+      <div *ngIf="!especializaciones.length" class="alert alert-info">
+        Primero registra una especialización.
+        <a routerLink="/inicio/especializaciones">Ir a especializaciones</a>
+      </div>
+      <form (ngSubmit)="guardarMedico()">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label" for="tipoDocumentoMedico">Tipo de documento *</label>
+            <select id="tipoDocumentoMedico" class="form-select" name="tipoDocumentoMedico"
+                    [(ngModel)]="nuevoMedico.tipoDocumento" required>
+              <option value="CC">Cédula de ciudadanía</option>
+              <option value="CE">Cédula de extranjería</option>
+              <option value="PASAPORTE">Pasaporte</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="documentoMedico">Número de documento *</label>
+            <input id="documentoMedico" class="form-control" name="documentoMedico"
+                   [(ngModel)]="nuevoMedico.numeroDocumento" maxlength="20" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="nombresMedico">Nombres *</label>
+            <input id="nombresMedico" class="form-control" name="nombresMedico"
+                   [(ngModel)]="nuevoMedico.nombres" maxlength="100" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="apellidosMedico">Apellidos *</label>
+            <input id="apellidosMedico" class="form-control" name="apellidosMedico"
+                   [(ngModel)]="nuevoMedico.apellidos" maxlength="100" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="registroMedico">Registro profesional *</label>
+            <input id="registroMedico" class="form-control" name="registroMedico"
+                   [(ngModel)]="nuevoMedico.registroProfesional" maxlength="50" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="telefonoMedico">Teléfono</label>
+            <input id="telefonoMedico" class="form-control" name="telefonoMedico"
+                   [(ngModel)]="nuevoMedico.telefono" maxlength="20">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="especializacionMedico">Especialización *</label>
+            <select id="especializacionMedico" class="form-select" name="especializacionMedico"
+                    [(ngModel)]="nuevoMedico.especializacionId" required>
+              <option value="">Selecciona una especialización</option>
+              <option *ngFor="let especializacion of especializaciones" [value]="especializacion.id">
+                {{ especializacion.nombre }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary" type="submit"
+                    [disabled]="guardandoMedico || !especializaciones.length">
+              {{ guardandoMedico ? 'Guardando...' : 'Registrar veterinario' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row align-items-center mb-3">
+        <div class="col-md-7">
+          <h5>Veterinarios registrados</h5>
+        </div>
+        <div class="col-md-5">
+          <input class="form-control"
+                 [(ngModel)]="filtro"
+                 (ngModelChange)="filtrarMedicos()"
+                 placeholder="Buscar por nombre, documento o registro">
+        </div>
+      </div>
+
+      <div *ngIf="cargando" class="alert alert-info">
+        Cargando veterinarios...
+      </div>
+
+      <div class="table-responsive" *ngIf="!cargando">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Documento</th>
+              <th>Nombre completo</th>
+              <th>Teléfono</th>
+              <th>Registro profesional</th>
+              <th>Especialización</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let medico of medicosPagina">
+              <td>
+                {{ medico.tipoDocumento || medico.tipo_documento }}
+                {{ medico.numeroDocumento || medico.numero_documento }}
+              </td>
+              <td>{{ medico.nombres }} {{ medico.apellidos }}</td>
+              <td>{{ medico.telefono || '—' }}</td>
+              <td>
+                {{ medico.registroProfesional || medico.registro_profesional || '—' }}
+              </td>
+              <td>
+                {{ medico.especializacion?.nombre
+                   || medico.especializacion?.nombreEspecializacion
+                   || '—' }}
+              </td>
+            </tr>
+            <tr *ngIf="medicosFiltrados.length === 0">
+              <td colspan="5" class="text-center text-muted">
+                No hay veterinarios para mostrar.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+          {{ medicosFiltrados.length }} veterinarios encontrados
+        </small>
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary btn-sm"
+                  [disabled]="pagina <= 1"
+                  (click)="cambiarPagina(pagina - 1)">
+            Anterior
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" disabled>
+            {{ pagina }} / {{ totalPaginas }}
+          </button>
+          <button class="btn btn-outline-secondary btn-sm"
+                  [disabled]="pagina >= totalPaginas"
+                  (click)="cambiarPagina(pagina + 1)">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
