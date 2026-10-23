@@ -1,7 +1,7 @@
 export class Usuario {
     id?: number;
     username?: string;
-    password_hash?: string;
+    password?: string;
     rol?: string;
     email?: string;
     fechaCreacion?: Date;

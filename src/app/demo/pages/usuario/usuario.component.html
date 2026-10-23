@@ -1,4 +1,134 @@
-<div class="container">
-   <label>Usuario Component Funciona</label>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col col-md-9">
+                    <input class="form-control" placeholder="Buscar por usuario, correo o rol" type="text"
+                        [value]="terminoBusqueda" (input)="actualizarBusqueda($event)" />
+                </div>
+                <div class="col col-md-3 text-end">
+                    <button
+                        class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevoUsuario()" title="Agregar usuario">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
+                        &nbsp; Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="table table-responsive table-condensed col col-md-12">
+                    <table class="table table-stripped table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Usuario</th>
+                                <th class="text-center">Email</th>
+                                <th class="text-center">Rol</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Fecha de Creación</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody *ngIf="listUsuarios.length === 0">
+                            <tr>
+                                <td colspan="6" class="text-center">No hay usuarios registrados</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="listUsuarios.length > 0 && usuariosFiltrados.length === 0">
+                            <tr>
+                                <td colspan="6" class="text-center">No se encontraron usuarios</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="usuariosFiltrados.length > 0">
+                            <tr *ngFor="let usuario of usuariosPaginados">
+                                <td class="text-center">{{ usuario.username }}</td>
+                                <td class="text-center">{{ usuario.email }}</td>
+                                <td class="text-center">{{ usuario.rol }}</td>
+                                <td class="text-center">{{ usuario.activo ? 'Activo' : 'Inactivo' }}</td>
+                                <td class="text-center">{{ usuario.fechaCreacion | date:'yyyy-MM-dd HH:mm' }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex align-items-center justify-content-center me-2"
+                                        (click)="abrirEdicion(usuario)">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                    <button class="btn btn-outline-danger d-inline-flex align-items-center justify-content-center"
+                                        (click)="eliminar(usuario)">
+                                        <i class="fa fa-trash"></i>&nbsp;Eliminar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de usuarios">
+                <ul class="pagination justify-content-end mb-0">
+                    <li class="page-item" [class.disabled]="paginaActual === 1">
+                        <button class="page-link" type="button" [disabled]="paginaActual === 1"
+                            (click)="cambiarPagina(paginaActual - 1)">Anterior</button>
+                    </li>
+                    <li class="page-item" *ngFor="let pagina of paginas" [class.active]="pagina === paginaActual">
+                        <button class="page-link" type="button" (click)="cambiarPagina(pagina)">{{ pagina }}</button>
+                    </li>
+                    <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                        <button class="page-link" type="button" [disabled]="paginaActual === totalPaginas"
+                            (click)="cambiarPagina(paginaActual + 1)">Siguiente</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalUsuarioLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+            </div>
+            <form [formGroup]="form" (ngSubmit)="guardar()">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="usuarioUsername">Nombre de usuario</label>
+                            <input id="usuarioUsername" class="form-control" formControlName="username" autocomplete="off"
+                                [class.is-invalid]="f['username'].touched && f['username'].invalid" />
+                            <div class="invalid-feedback">El nombre de usuario es obligatorio.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="usuarioEmail">Email</label>
+                            <input id="usuarioEmail" type="email" class="form-control" formControlName="email"
+                                [class.is-invalid]="f['email'].touched && f['email'].invalid" />
+                            <div class="invalid-feedback">Ingrese un email válido.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="usuarioPassword">Contraseña</label>
+                            <input id="usuarioPassword" type="password" class="form-control" formControlName="password"
+                                autocomplete="new-password"
+                                [placeholder]="modoFormulario === 'E' ? 'Dejar vacío para no cambiarla' : ''"
+                                [class.is-invalid]="f['password'].touched && f['password'].invalid" />
+                            <div class="invalid-feedback">La contraseña debe tener mínimo 6 caracteres.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="usuarioRol">Rol</label>
+                            <input id="usuarioRol" class="form-control" formControlName="rol"
+                                [class.is-invalid]="f['rol'].touched && f['rol'].invalid" />
+                            <div class="invalid-feedback">El rol es obligatorio.</div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input id="usuarioActivo" type="checkbox" class="form-check-input" formControlName="activo" />
+                                <label class="form-check-label" for="usuarioActivo">Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">{{ titleBoton }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

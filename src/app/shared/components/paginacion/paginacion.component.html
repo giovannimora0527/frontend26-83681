@@ -1,0 +1,30 @@
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2">
+    <div class="d-flex align-items-center gap-2 text-muted small">
+        <span>Mostrando {{ desde }} - {{ hasta }} de {{ totalRegistros }} registros</span>
+        <select class="form-select form-select-sm w-auto" aria-label="Registros por página"
+            [value]="tamanio" (change)="cambiarTamanio($event)">
+            <option *ngFor="let opcion of opcionesTamanio" [value]="opcion" [selected]="opcion === tamanio">
+                {{ opcion }} por página</option>
+        </select>
+    </div>
+    <nav *ngIf="totalPaginas > 1" aria-label="Paginación">
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="pagina === 0">
+                <button class="page-link" type="button" (click)="irA(0)" title="Primera página">&laquo;</button>
+            </li>
+            <li class="page-item" [class.disabled]="pagina === 0">
+                <button class="page-link" type="button" (click)="irA(pagina - 1)">Anterior</button>
+            </li>
+            <li class="page-item" *ngFor="let numero of paginasVisibles" [class.active]="numero === pagina">
+                <button class="page-link" type="button" [attr.aria-current]="numero === pagina ? 'page' : null"
+                    (click)="irA(numero)">{{ numero + 1 }}</button>
+            </li>
+            <li class="page-item" [class.disabled]="pagina >= totalPaginas - 1">
+                <button class="page-link" type="button" (click)="irA(pagina + 1)">Siguiente</button>
+            </li>
+            <li class="page-item" [class.disabled]="pagina >= totalPaginas - 1">
+                <button class="page-link" type="button" (click)="irA(totalPaginas - 1)" title="Última página">&raquo;</button>
+            </li>
+        </ul>
+    </nav>
+</div>

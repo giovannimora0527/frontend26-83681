@@ -10,7 +10,7 @@ import screenfull from 'screenfull';
 
 @Component({
   selector: 'app-nav-left',
-  imports: [SharedModule],
+  imports: [SharedModule, NavSearchComponent],
   templateUrl: './nav-left.component.html',
   styleUrls: ['./nav-left.component.scss']
 })

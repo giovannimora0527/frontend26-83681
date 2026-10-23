@@ -1,6 +1,7 @@
 <div id="main-search" class="main-search">
   <div class="input-group">
-    <input type="text" id="m-search" class="form-control" placeholder="Search . . ." [style.width]="searchWidthString" />
+    <input type="text" id="m-search" class="form-control" placeholder="Cédula, nombre, correo . . ." autocomplete="off"
+      [style.width]="searchWidthString" [(ngModel)]="terminoBusqueda" (input)="buscar()" (keydown)="onKeydown($event)" />
     <a href="javascript:" class="input-group-append search-close" (click)="searchOff()">
       <i class="feather icon-x input-group-text"></i>
     </a>
@@ -8,4 +9,17 @@
       <i class="feather icon-search input-group-text"></i>
     </span>
   </div>
+  <ul class="search-results list-unstyled" *ngIf="terminoBusqueda.trim()">
+    <li *ngFor="let resultado of resultados; let i = index">
+      <a href="javascript:" [class.active]="i === indiceSeleccionado" (mousedown)="irA(resultado)">
+        <i [class]="resultado.icono"></i>
+        <span class="resultado-texto">
+          <span class="resultado-titulo">{{ resultado.titulo }} <small class="text-muted">· {{ resultado.tipo }}</small></span>
+          <small *ngIf="resultado.detalle" class="text-muted d-block">{{ resultado.detalle }}</small>
+        </span>
+      </a>
+    </li>
+    <li *ngIf="cargando && resultados.length === 0" class="text-muted">Buscando...</li>
+    <li *ngIf="!cargando && resultados.length === 0" class="text-muted">No se encontraron resultados</li>
+  </ul>
 </div>
