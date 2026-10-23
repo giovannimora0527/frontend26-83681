@@ -1,1 +1,36 @@
-<p>medicos works!</p>
+<div class="container-fluid">
+    <input class="form-control" placeholder="Buscar por documento, nombre, registro o especialización"
+        [(ngModel)]="tabla.filtroTexto" (ngModelChange)="tabla.reiniciarPagina()" />
+    <br>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="text-center ordenable" (click)="tabla.ordenarPor('documento')">Documento <i [class]="tabla.icono('documento')"></i></th>
+                    <th class="text-center ordenable" (click)="tabla.ordenarPor('nombre')">Nombre <i [class]="tabla.icono('nombre')"></i></th>
+                    <th class="text-center ordenable" (click)="tabla.ordenarPor('registro')">Registro profesional <i [class]="tabla.icono('registro')"></i></th>
+                    <th class="text-center ordenable" (click)="tabla.ordenarPor('especializacion')">Especialización <i [class]="tabla.icono('especializacion')"></i></th>
+                    <th class="text-center">Teléfono</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="cargando">
+                    <td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm me-2"></span> Cargando veterinarios...</td>
+                </tr>
+                <tr *ngIf="!cargando && tabla.total === 0">
+                    <td colspan="5" class="text-center">No hay veterinarios para mostrar</td>
+                </tr>
+                <ng-container *ngIf="!cargando">
+                    <tr *ngFor="let m of tabla.pagina">
+                        <td class="text-center">{{ m.tipoDocumento }} {{ m.numeroDocumento }}</td>
+                        <td class="text-center">{{ m.nombres }} {{ m.apellidos }}</td>
+                        <td class="text-center">{{ m.registroProfesional }}</td>
+                        <td class="text-center">{{ m.especializacion?.nombre }}</td>
+                        <td class="text-center">{{ m.telefono }}</td>
+                    </tr>
+                </ng-container>
+            </tbody>
+        </table>
+    </div>
+    <app-paginador [tabla]="tabla" nombre="veterinarios"></app-paginador>
+</div>
