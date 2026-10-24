@@ -11,7 +11,6 @@ import { MedicamentoComponent } from './demo/pages/medicamento/medicamento.compo
 import { HistoriaComponent } from './demo/pages/historia/historia.component';
 import { EspecializacionComponent } from './demo/pages/especializacion/especializacion.component';
 
-
 export const routes: Routes = [
   {
     path: '',

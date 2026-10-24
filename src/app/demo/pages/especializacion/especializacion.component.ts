@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+<<<<<<< HEAD
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule, formatDate } from '@angular/common';
 import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
@@ -16,10 +17,17 @@ type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => 
 @Component({
   selector: 'app-especializacion',
   imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule],
+=======
+
+@Component({
+  selector: 'app-especializacion',
+  imports: [],
+>>>>>>> ed128a366bd18b205e64703e24b3bb93662aa307
   templateUrl: './especializacion.component.html',
   styleUrl: './especializacion.component.scss'
 })
 export class EspecializacionComponent {
+<<<<<<< HEAD
   // Variables para el modal.
   modalInstance: ModalBootstrap | null = null;
   titleModal: string = "";
@@ -264,7 +272,4 @@ export class EspecializacionComponent {
       this.modalInstance.show();
     }
   }
-
-
-
 }

@@ -78,8 +78,24 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       {
-        id: 'medicos',
-        title: 'Gestión de Medicos',
+      id: 'medicos',
+      title: 'Gestión de Médicos',
+      type: 'item',
+      url: '/inicio/medicos',
+      icon: 'feather icon-user-plus',
+      classes: 'nav-item'
+      },
+      {
+      id: 'citas',
+      title: 'Gestión de Citas',
+      type: 'item',
+      url: '/inicio/citas',
+      icon: 'feather icon-calendar',
+      classes: 'nav-item'
+      },
+      {
+        id: 'especializaciones',
+        title: 'Gestión de Especializaciones',
         type: 'item',
         url: '/inicio/medicos',
         icon: 'fa-solid fa-user-doctor',

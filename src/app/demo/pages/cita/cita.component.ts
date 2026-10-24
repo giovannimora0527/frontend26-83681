@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
@@ -22,11 +23,19 @@ type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => 
 @Component({
   selector: 'app-cita',
   imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule],
+=======
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-cita',
+  imports: [],
+>>>>>>> ed128a366bd18b205e64703e24b3bb93662aa307
   templateUrl: './cita.component.html',
   styleUrl: './cita.component.scss'
 })
 export class CitaComponent {
 
+<<<<<<< HEAD
   // Variables para el modal.
   modalInstance: ModalBootstrap | null = null;
   modalDetalleInstance: ModalBootstrap | null = null;
@@ -419,5 +428,4 @@ export class CitaComponent {
       this.modalInstance.show();
     }
   }
-
 }

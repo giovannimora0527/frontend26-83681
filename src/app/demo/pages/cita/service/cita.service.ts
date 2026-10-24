@@ -11,27 +11,27 @@ import { environment } from 'src/environments/environment';
 export class CitaService {
 
   private api = `cita`;
-  
-    constructor(private backendService: BackendService) {
-  
-    }
-  
-    listarCitas(): Observable<Cita[]> {
-      return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
-    }    
 
-    listarCitasPorMascota(mascotaId: number): Observable<Cita[]> {
-      const params = new HttpParams().set('mascotaId', mascotaId);
-      return this.backendService.get(environment.apiUrlAuth, this.api, "listar-por-mascota", params);
-    }
+  constructor(private backendService: BackendService) {
 
-    guardarCita(cita: Cita): Observable<Cita> {
-      return this.backendService.post(environment.apiUrlAuth, this.api, "crear", cita);
-    }
-
-    actualizarCita(cita: Cita): Observable<Cita> {
-      return this.backendService.post(environment.apiUrlAuth, this.api, "actualizar", cita);
-    }
-
-  
   }
+
+  listarCitas(): Observable<Cita[]> {
+    return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
+  }
+
+  listarCitasPorMascota(mascotaId: number): Observable<Cita[]> {
+    const params = new HttpParams().set('mascotaId', mascotaId);
+    return this.backendService.get(environment.apiUrlAuth, this.api, "listar-por-mascota", params);
+  }
+
+  guardarCita(cita: Cita): Observable<Cita> {
+    return this.backendService.post(environment.apiUrlAuth, this.api, "crear", cita);
+  }
+
+  actualizarCita(cita: Cita): Observable<Cita> {
+    return this.backendService.post(environment.apiUrlAuth, this.api, "actualizar", cita);
+  }
+
+
+}
