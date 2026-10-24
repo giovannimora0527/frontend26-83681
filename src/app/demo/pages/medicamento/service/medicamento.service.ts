@@ -1,21 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Mascota } from 'src/app/models/mascota';
+import { Medicamento } from 'src/app/models/medicamento';
 import { BackendService } from 'src/app/services/backend.service';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
-export class MascotaServiceService {
-  private api = `mascota`;
+export class MedicamentoService {
 
-  constructor(private readonly backendService: BackendService) {
+  private api = `medicamento`;
+
+  constructor(private backendService: BackendService) {
 
   }
 
-  getMascotas(): Observable<Mascota[]> {
+  listarMedicamentos(): Observable<Medicamento[]> {
     return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
   }
-
 }
