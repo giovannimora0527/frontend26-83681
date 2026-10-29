@@ -1,0 +1,46 @@
+.sort-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sort-button:hover,
+.sort-button:focus-visible {
+  color: var(--bs-primary);
+}
+
+.relationship-summary,
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.relationship-summary > div,
+.detail-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+}
+
+.relationship-summary span,
+.detail-grid span {
+  color: var(--bs-secondary-color);
+  font-size: 0.8rem;
+}
+
+.detail-grid .detail-wide {
+  grid-column: 1 / -1;
+}
+
+.detail-grid p {
+  margin: 0;
+  white-space: pre-wrap;
+}

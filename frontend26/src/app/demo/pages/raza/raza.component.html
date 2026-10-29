@@ -1,0 +1,155 @@
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col col-md-9">
+                    <input class="form-control" placeholder="Buscar raza" type="text"
+                        (input)="actualizarBusqueda($event)" />
+                </div>
+                <div class="col col-md-3 text-end">
+                    <button
+                        class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                        (click)="nuevaRaza('C')"
+                        ngbTooltip="Agregar nueva raza" tooltipClass="tooltip-info" triggers="hover focus" placement="top" container="body">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
+                        &nbsp; Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="table table-responsive table-condensed col col-md-12">
+                    <table class="table table-stripped table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'nombre' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('nombre')">
+                                        Nombre <i class="fa"
+                                            [ngClass]="columnaOrden === 'nombre' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'especie' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('especie')">
+                                        Especie <i class="fa"
+                                            [ngClass]="columnaOrden === 'especie' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th class="text-center"
+                                    [attr.aria-sort]="columnaOrden === 'fechaCreacion' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                    <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
+                                        (click)="ordenarPor('fechaCreacion')">
+                                        Fecha de Creación <i class="fa"
+                                            [ngClass]="columnaOrden === 'fechaCreacion' ? (direccionOrden === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                                            aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody *ngIf="cargando">
+                            <tr>
+                                <td colspan="4" class="text-center">Cargando razas...</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="!cargando && errorLista">
+                            <tr>
+                                <td colspan="4" class="text-center text-danger">{{ errorLista }}</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="!cargando && !errorLista && listRazas.length === 0">
+                            <tr>
+                                <td colspan="4" class="text-center">No hay razas registradas</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="!cargando && listRazas.length > 0 && razasFiltradas.length === 0">
+                            <tr>
+                                <td colspan="4" class="text-center">No se encontraron razas</td>
+                            </tr>
+                        </tbody>
+                        <tbody *ngIf="razasFiltradas.length > 0">
+                            <tr *ngFor="let raza of razasPaginadas">
+                                <td class="text-center">{{ raza.nombre }}</td>
+                                <td class="text-center">{{ raza.especie }}</td>
+                                <td class="text-center">{{ raza.fechaCreacion | date:'yyyy-MM-dd HH:mm' }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info d-inline-flex
+                                    align-items-center justify-content-center" (click)="abrirEdicion(raza)"
+                                    ngbTooltip="Editar" tooltipClass="tooltip-info" triggers="hover focus" placement="top" container="body">
+                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de razas">
+                <ul class="pagination justify-content-end mb-0">
+                    <li class="page-item" [class.disabled]="paginaActual === 1">
+                        <button class="page-link" type="button" [disabled]="paginaActual === 1"
+                            (click)="cambiarPagina(paginaActual - 1)">Anterior</button>
+                    </li>
+                    <li class="page-item" *ngFor="let pagina of paginas" [class.active]="pagina === paginaActual">
+                        <button class="page-link" type="button"
+                            [attr.aria-current]="pagina === paginaActual ? 'page' : null"
+                            (click)="cambiarPagina(pagina)">{{ pagina }}</button>
+                    </li>
+                    <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                        <button class="page-link" type="button" [disabled]="paginaActual === totalPaginas"
+                            (click)="cambiarPagina(paginaActual + 1)">Siguiente</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalCrearRaza" tabindex="-1" aria-labelledby="modalCrearRazaLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalCrearRazaLabel">{{ titleModal }}</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                    (click)="closeModal()"></button>
+            </div>
+            <form [formGroup]="form" (ngSubmit)="guardarRaza()">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label">Nombre de la raza</label>
+                            <input id="nombre" class="form-control" maxlength="100" formControlName="nombre">
+                            <div class="text-danger" *ngIf="f['nombre'].touched && f['nombre'].invalid">
+                                Ingresa el nombre de la raza.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="especie" class="form-label">Especie</label>
+                            <input id="especie" class="form-control" maxlength="100" list="listaEspecies" formControlName="especie">
+                            <datalist id="listaEspecies">
+                                <option *ngFor="let especie of especiesSugeridas" [value]="especie"></option>
+                            </datalist>
+                            <div class="text-danger" *ngIf="f['especie'].touched && f['especie'].invalid">
+                                Ingresa la especie.</div>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger mt-3 mb-0" *ngIf="respuestaError" role="alert">{{ respuestaError }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                        (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="enviando">
+                        {{ enviando ? 'Enviando...' : titleBoton }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

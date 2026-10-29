@@ -1,0 +1,118 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'scss/variables';
+
+/* fonts-icon */
+@import 'scss/fonts/fontawesome/scss/fontawesome';
+@import 'scss/fonts/feather/iconfont';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+@import 'scss/general';
+@import 'scss/generic';
+@import 'scss/mixins/function';
+
+/* important element */
+@import 'scss/menu/menu-lite';
+
+/* basic elements */
+@import 'scss/theme-elements/theme-elements';
+
+/* third party modules style*/
+@import 'scss/plugins/plugins';
+
+@import 'scss/custom';
+
+
+
+/* Mis estilos personalizados que pueden usar todos los componentes */
+
+.clinic-home__action {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.65rem;
+	margin-top: 2rem;
+	padding: 0.8rem 1.1rem;
+	border-radius: 4px;
+	background: var(--clinic-teal);
+	color: #ffffff;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.clinic-home__action:hover,
+.clinic-home__action:focus-visible {
+	background: #05626d;
+	color: #ffffff;
+	transform: translateY(-2px);
+}
+
+/* ==========================================================================
+	Animación del Loader Pacman 
+========================================================================== */
+
+.loader {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 60px;
+}
+
+.pacman {
+	position: relative;
+}
+
+/* Mitad superior e inferior del Pacman */
+.pacman > div:nth-child(1),
+.pacman > div:nth-child(2) {
+	width: 0;
+	height: 0;
+	border: 25px solid var(--clinic-teal, #0d6efd);
+	border-right-color: transparent;
+	border-radius: 50%;
+	position: absolute;
+	left: -30px; /* Ajuste para centrar el cuerpo */
+}
+
+.pacman > div:nth-child(1) {
+	animation: pacman-half-up 0.5s infinite;
+}
+
+.pacman > div:nth-child(2) {
+	animation: pacman-half-down 0.5s infinite;
+}
+
+/* Bolitas que come el Pacman */
+.pacman > div:nth-child(3),
+.pacman > div:nth-child(4),
+.pacman > div:nth-child(5) {
+	background-color: var(--clinic-teal, #0d6efd);
+	border-radius: 50%;
+	width: 12px;
+	height: 12px;
+	position: absolute;
+	top: 19px; /* Centrado vertical respecto a la boca */
+	left: 50px;
+	animation: pacman-balls 1s infinite linear;
+}
+
+/* Retrasos para que las bolitas salgan en fila */
+.pacman > div:nth-child(3) { animation-delay: -0.33s; }
+.pacman > div:nth-child(4) { animation-delay: -0.66s; }
+.pacman > div:nth-child(5) { animation-delay: -0.99s; }
+
+/* Fotogramas clave de la animación */
+@keyframes pacman-half-up {
+	0%, 100% { transform: rotate(270deg); }
+	50% { transform: rotate(360deg); }
+}
+
+@keyframes pacman-half-down {
+	0%, 100% { transform: rotate(90deg); }
+	50% { transform: rotate(0deg); }
+}
+
+@keyframes pacman-balls {
+	0% { transform: translate(0, 0); opacity: 1; }
+	100% { transform: translate(-80px, 0); opacity: 0; }
+}
