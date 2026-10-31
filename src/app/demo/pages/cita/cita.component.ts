@@ -26,6 +26,7 @@ type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => 
   styleUrl: './cita.component.scss'
 })
 export class CitaComponent {
+
   // Variables para el modal.
   modalInstance: ModalBootstrap | null = null;
   modalDetalleInstance: ModalBootstrap | null = null;
@@ -418,4 +419,5 @@ export class CitaComponent {
       this.modalInstance.show();
     }
   }
+
 }

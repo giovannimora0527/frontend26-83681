@@ -348,4 +348,5 @@ export class FormulaMedicaComponent {
       this.modalInstance.show();
     }
   }
+
 }

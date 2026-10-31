@@ -264,4 +264,7 @@ export class EspecializacionComponent {
       this.modalInstance.show();
     }
   }
+
+
+
 }
