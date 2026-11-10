@@ -1,0 +1,13 @@
+---
+applyTo: "**/*.ts"
+---
+- Mantener compatibilidad con la versión de Angular y TypeScript declaradas en `package.json`.
+- Seguir los patrones existentes del proyecto (standalone o NgModules, formularios, estilo de servicios).
+- Preferir inyección por constructor.
+- Tipar modelos y respuestas HTTP; evitar `any` y `@ts-ignore`.
+- Los servicios HTTP usan solo `get` y `post`.
+- No poner llamadas HTTP ni lógica de negocio en los componentes.
+- Cancelar o evitar suscripciones manuales sin desuscripción; preferir el `async` pipe.
+- Usar nombres expresivos y métodos cohesivos.
+- Añadir pruebas para reglas y caminos de error.
+- No usar APIs o sintaxis de versiones posteriores a la instalada salvo que la tarea sea de actualización.

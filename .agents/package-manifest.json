@@ -1,0 +1,46 @@
+{
+  "package": "frontend-ai-engineering-skills",
+  "version": "1.0.0",
+  "baseline": {
+    "angular": "confirmar en package.json",
+    "typescript": "confirmar en package.json",
+    "package_manager": "npm"
+  },
+  "target": {
+    "status": "not-approved",
+    "angular": null,
+    "typescript": null
+  },
+  "skills": [
+    "angular-architecture-design",
+    "angular-frontend-development",
+    "angular-http-api-integration",
+    "angular-performance-rxjs",
+    "angular-security-hardening",
+    "angular-unit-testing",
+    "angular-version-migration",
+    "code-review-quality",
+    "docker-cicd-engineering",
+    "error-handling-resilience",
+    "migration-impact-analysis",
+    "npm-dependency-audit",
+    "typescript-best-practices"
+  ],
+  "agents": [
+    "api-integration-specialist",
+    "code-reviewer",
+    "devops-engineer",
+    "frontend-architect",
+    "frontend-developer",
+    "migration-analyst",
+    "qa-engineer",
+    "security-reviewer"
+  ],
+  "skill_directory": ".agents/skills/<skill-name>/SKILL.md",
+  "agent_profiles_directory": ".agents/agents/",
+  "integrations": [
+    "GitHub Copilot",
+    "OpenAI Codex",
+    "VS Code Agent Mode"
+  ]
+}

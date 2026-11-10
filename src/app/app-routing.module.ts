@@ -3,42 +3,46 @@ import { Routes, RouterModule } from '@angular/router';
 import { AdminComponent } from './theme/layout/admin/admin.component';
 import { UsuarioComponent } from './demo/pages/usuario/usuario.component';
 import { MascotaComponent } from './demo/pages/mascota/mascota.component';
-import { ClienteComponent } from './demo/pages/cliente/cliente.component';
-import { CitaComponent } from './demo/pages/cita/cita.component';
-import { EspecializacionComponent } from './demo/pages/especializacion/especializacion.component';
-import { FormulaMedicaComponent } from './demo/pages/formula-medica/formula-medica.component';
-import { HistoriaMedicaComponent } from './demo/pages/historia-medica/historia-medica.component';
-import { AnotacionHistoriaComponent } from './demo/pages/anotacion-historia/anotacion-historia.component';
-import { MedicamentoComponent } from './demo/pages/medicamento/medicamento.component';
-import { RazaComponent } from './demo/pages/raza/raza.component';
 import { MedicoComponent } from './demo/pages/medico/medico.component';
+import { FormulaMedicaComponent } from './demo/pages/formula-medica/formula-medica.component';
+import { CitaComponent } from './demo/pages/cita/cita.component';
+import { ClienteComponent } from './demo/pages/cliente/cliente.component';
+import { MedicamentoComponent } from './demo/pages/medicamento/medicamento.component';
+import { AnotacionHistoriaComponent } from './demo/pages/anotacion-historia/anotacion-historia.component';
+import { HistoriaMedicaComponent } from './demo/pages/historia-medica/historia-medica.component';
+import { EspecializacionComponent } from './demo/pages/especializacion/especializacion.component';
+import { LoginComponent } from './demo/pages/login/login.component';
+import { authGuard } from './guards/auth.guard';
+
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'inicio',
+    redirectTo: 'login',
     pathMatch: 'full'
-  },  
+  },
+  { path: 'login', component: LoginComponent, data: { title: 'Login' } },
   {
     path: 'inicio',
     component: AdminComponent,
+    canActivate: [authGuard],
+    canActivateChild: [authGuard],
     data: { title: 'Inicio' },
     children: [      
       { path: 'usuarios', component: UsuarioComponent, data: { title: 'Usuarios' }},
       { path: 'mascotas', component: MascotaComponent, data: { title: 'Mascotas' }},
-      { path: 'clientes', component: ClienteComponent, data: { title: 'Clientes' }},
-      { path: 'medicos', component: MedicoComponent, data: { title: 'Médicos' } },
-      { path: 'citas', component: CitaComponent, data: { title: 'Citas' } },
-      { path: 'especializaciones', component: EspecializacionComponent, data: { title: 'Especializaciones' } },
-      { path: 'formulas-medicas', component: FormulaMedicaComponent, data: { title: 'Fórmulas Médicas' } },
-      { path: 'historias-medicas', component: HistoriaMedicaComponent, data: { title: 'Historias Médicas' } },
-      { path: 'anotaciones-historias', component: AnotacionHistoriaComponent, data: { title: 'Anotaciones Clínicas' } },
-      { path: 'medicamentos', component: MedicamentoComponent, data: { title: 'Medicamentos' } },
-      { path: 'razas', component: RazaComponent, data: { title: 'Razas' } }  
+      { path: 'medicos', component: MedicoComponent, data: { title: 'Medicos' }},
       /* Inserte nuevos menus aqui */    
+      { path: 'formulas', component: FormulaMedicaComponent, data: { title: 'Formulas' }},
+      { path: 'citas', component: CitaComponent, data: { title: 'Citas' }},
+      { path: 'clientes', component: ClienteComponent, data: { title: 'Clientes' }},
+       { path: 'anotaciones-historias', component: AnotacionHistoriaComponent, data: { title: 'Anotaciones Clínicas' } },
+      { path: 'medicamentos', component: MedicamentoComponent, data: { title: 'Medicamentos' }},
+      { path: 'historias', component: HistoriaMedicaComponent, data: { title: 'Historias Médicas' }},
+      { path: 'especializaciones', component: EspecializacionComponent, data: { title: 'Especializaciones' }}
     ]
   },
-  { path: '**', redirectTo: 'inicio' }
+  { path: '**', redirectTo: 'login' }
 ];
 
 @NgModule({
