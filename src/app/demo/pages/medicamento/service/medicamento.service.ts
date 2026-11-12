@@ -8,11 +8,14 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class MedicamentoService {
-  private api ='medicamento';
 
-  constructor(private readonly backendService: BackendService) {}
+  private api = `medicamento`;
+
+  constructor(private backendService: BackendService) {
+
+  }
 
   listarMedicamentos(): Observable<Medicamento[]> {
-    return this.backendService.get(environment.apiUrlAuth, this.api, 'listar');
+    return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
   }
 }

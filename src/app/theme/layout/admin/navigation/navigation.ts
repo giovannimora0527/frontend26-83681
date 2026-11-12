@@ -64,14 +64,6 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       {
-        id: 'anotaciones-historias',
-        title: 'Gestión de Anotaciones Clínicas',
-        type: 'item',
-        url: '/inicio/anotaciones-historias',
-        icon: 'feather icon-edit',
-        classes: 'nav-item'
-      },
-      {
         id: 'mascotas',
         title: 'Gestión de Mascotas',
         type: 'item',

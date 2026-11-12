@@ -8,8 +8,7 @@ import { FormulaMedicaComponent } from './demo/pages/formula-medica/formula-medi
 import { CitaComponent } from './demo/pages/cita/cita.component';
 import { ClienteComponent } from './demo/pages/cliente/cliente.component';
 import { MedicamentoComponent } from './demo/pages/medicamento/medicamento.component';
-import { AnotacionHistoriaComponent } from './demo/pages/anotacion-historia/anotacion-historia.component';
-import { HistoriaMedicaComponent } from './demo/pages/historia-medica/historia-medica.component';
+import { HistoriaComponent } from './demo/pages/historia/historia.component';
 import { EspecializacionComponent } from './demo/pages/especializacion/especializacion.component';
 import { LoginComponent } from './demo/pages/login/login.component';
 import { authGuard } from './guards/auth.guard';
@@ -36,9 +35,8 @@ export const routes: Routes = [
       { path: 'formulas', component: FormulaMedicaComponent, data: { title: 'Formulas' }},
       { path: 'citas', component: CitaComponent, data: { title: 'Citas' }},
       { path: 'clientes', component: ClienteComponent, data: { title: 'Clientes' }},
-       { path: 'anotaciones-historias', component: AnotacionHistoriaComponent, data: { title: 'Anotaciones Clínicas' } },
       { path: 'medicamentos', component: MedicamentoComponent, data: { title: 'Medicamentos' }},
-      { path: 'historias', component: HistoriaMedicaComponent, data: { title: 'Historias Médicas' }},
+      { path: 'historias', component: HistoriaComponent, data: { title: 'Historias' }},
       { path: 'especializaciones', component: EspecializacionComponent, data: { title: 'Especializaciones' }}
     ]
   },

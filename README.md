@@ -65,6 +65,41 @@ yarn start
 
 [Datta Able Angular Documentation](https://codedthemes.gitbook.io/datta-angular/) helps you with installation, deployment, and troubleshooting.
 
+### Gestion de citas
+
+La vista de citas permite crear y editar registros en un modal, seleccionar una mascota
+y un medico, e ingresar fecha, hora y motivo (entre 6 y 255 caracteres).
+Las citas nuevas se envian con estado `programada`, sin selector de estado.
+En edicion se conserva el estado actual y solo se puede cambiar a `cancelada`
+o `confirmada`. Las citas que ya estan canceladas no permiten editarse ni guardar
+actualizaciones. Una cita activa si puede cambiarse a cancelada.
+El boton "Ver" abre un modal de solo lectura con los datos disponibles
+de la cita, mascota, medico y cliente, incluso en citas canceladas. El modal solo
+incluye el boton "Cerrar". La tabla permite ordenar por
+columna, buscar por los datos visibles sin distinguir acentos y navegar en paginas
+de cinco registros. Los errores de carga y guardado se muestran en la vista.
+Los estados se muestran en amarillo (programada), rojo (cancelada), anaranjado
+(pendiente) o verde (confirmada y atendida); los demas estados usan un fondo neutro.
+La fecha final del modal se calcula automaticamente 15 minutos despues del inicio.
+El boton "Consultar medicos disponibles" consulta ese intervalo y carga el selector.
+Cambiar el inicio limpia la disponibilidad y el medico seleccionado. Al editar sin
+cambiar el horario se conserva el medico asignado. La cita sigue enviando su inicio
+en `fechaHora`; la fecha final se usa para consultar disponibilidad.
+La consulta GET a `/medico/listar-disponibles` envia `fechaInicio` y `fechaFin`
+como parametros en formato `yyyy-MM-ddTHH:mm:ss`, sin zona horaria ni conversion
+a UTC, compatibles con `LocalDateTime` del backend.
+
+### Historias medicas
+
+Cada anotacion nueva requiere descripcion, `diagnostico` y `observaciones`;
+ninguno puede contener solo espacios. Los textos se envian sin espacios en los
+extremos, junto con los identificadores de historia, cita y veterinario.
+La tabla muestra el diagnostico y las observaciones de la anotacion mas reciente
+y permite ordenar por ambos campos. La busqueda ignora mayusculas y acentos e
+incluye estos campos en todas las anotaciones, incluso las anteriores.
+El detalle muestra ambos campos en cada anotacion; los registros antiguos que
+no los incluyan se muestran como "No informado".
+
 ## Technology Stack
 
 - Bootstrap 5
