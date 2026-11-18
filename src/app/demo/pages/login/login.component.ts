@@ -88,10 +88,18 @@ export class LoginComponent {
       this.otpForm.markAllAsTouched();
       return;
     }
+    const usuarioId = this.authRs?.usuarioId;
+    if (usuarioId == null) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se encontró la sesión de autenticación. Inicia sesión nuevamente.'
+      });
+      return;
+    }
     this.cargando = true;
-    let tokenRq: TokenRq;
-    tokenRq = {
-      usuarioId: this.authRs?.usuarioId!,
+    const tokenRq: TokenRq = {
+      usuarioId,
       username: this.loginForm.value.username,
       token: this.otpForm.value.token
     };

@@ -101,10 +101,27 @@ export class CitaComponent {
         this.paginaActual = Math.min(this.paginaActual, this.totalPaginas || 1);
       },
       error: (err) => {
-        this.errorCitas = 'No fue posible cargar las citas.';
+        this.errorCitas = this.mensajeErrorCarga(err, 'las citas');
         console.error('Error al listar citas:', err);
       }
     });
+  }
+
+  /** Traduce fallos HTTP comunes para que se distinga una sesión inválida de un backend caído. */
+  private mensajeErrorCarga(error: { status?: number; error?: { mensaje?: string; message?: string } }, recurso: string): string {
+    if (error.status === 0) {
+      return `No fue posible conectar con el servidor para cargar ${recurso}. Verifica que el backend esté activo.`;
+    }
+    if (error.status === 401) {
+      return `La sesión venció o no es válida. Inicia sesión nuevamente para cargar ${recurso}.`;
+    }
+    if (error.status === 403) {
+      return `Tu rol no tiene permiso para consultar ${recurso}.`;
+    }
+    const detalle = error.error?.mensaje ?? error.error?.message;
+    return detalle
+      ? `No fue posible cargar ${recurso}: ${detalle}`
+      : `No fue posible cargar ${recurso} (HTTP ${error.status ?? 'desconocido'}).`;
   }
 
   listarMascotas(): void {

@@ -33,7 +33,7 @@ export class FormulaMedicaComponent {
   listFormulas: Formula[] = [];
   terminoBusqueda = '';
   paginaActual = 1;
-  readonly registrosPorPagina = 2;
+  readonly registrosPorPagina = 5;
   columnaOrden: ColumnaOrden = 'nombre';
   direccionOrden: 'asc' | 'desc' = 'asc';
 
@@ -41,6 +41,7 @@ export class FormulaMedicaComponent {
   listMedicamentos: Medicamento[] = [];
   cargandoMedicamentos = false;
   errorMedicamentos = '';
+  errorFormulas = '';
 
   // Formulario para crear o editar fórmula.
   form!: FormGroup;
@@ -118,19 +119,37 @@ export class FormulaMedicaComponent {
    * Metodo que permite listar las fórmulas médicas registradas en la base de datos y mostrarlas en la tabla.
    */
   listar() {
+    this.errorFormulas = '';
     this.formulaService.listar()
       .subscribe(
         {
           next: (data) => {
-            console.log(data);
-            this.listFormulas = data;
+            this.listFormulas = Array.isArray(data) ? data : [];
             this.paginaActual = 1;
           },
           error: (error) => {
+            this.errorFormulas = this.mensajeErrorCarga(error);
             console.error('Error al obtener las fórmulas médicas:', error);
           }
         }
       );
+  }
+
+  /** Explica los fallos de consulta para orientar la corrección de sesión, permisos o servidor. */
+  private mensajeErrorCarga(error: { status?: number; error?: { mensaje?: string; message?: string } }): string {
+    if (error.status === 0) {
+      return 'No fue posible conectar con el servidor para cargar las fórmulas. Verifica que el backend esté activo.';
+    }
+    if (error.status === 401) {
+      return 'La sesión venció o no es válida. Inicia sesión nuevamente para cargar las fórmulas.';
+    }
+    if (error.status === 403) {
+      return 'Tu rol no tiene permiso para consultar las fórmulas.';
+    }
+    const detalle = error.error?.mensaje ?? error.error?.message;
+    return detalle
+      ? `No fue posible cargar las fórmulas: ${detalle}`
+      : `No fue posible cargar las fórmulas (HTTP ${error.status ?? 'desconocido'}).`;
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
@@ -166,7 +185,7 @@ export class FormulaMedicaComponent {
       }
 
       const valores = [
-        formula.medicamento.nombre,
+        formula.medicamento?.nombre,
         formula.dosis,
         formula.duracion,
         formula.frecuencia,
@@ -195,7 +214,7 @@ export class FormulaMedicaComponent {
   private obtenerValorOrden(formula: Formula, columna: ColumnaOrden): string | number {
     switch (columna) {
       case 'nombre':
-        return formula.medicamento.nombre ?? '';
+        return formula.medicamento?.nombre ?? '';
       case 'dosis':
         return formula.dosis ?? '';
       case 'duracion':
@@ -203,7 +222,7 @@ export class FormulaMedicaComponent {
       case 'frecuencia':
         return formula.frecuencia ?? '';
       case 'medicamento':
-        return formula.medicamento.nombre ?? '';
+        return formula.medicamento?.nombre ?? '';
       case 'indicaciones':
         return formula.indicaciones ?? 0;
       case 'cliente':

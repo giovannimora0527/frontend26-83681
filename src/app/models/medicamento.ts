@@ -3,6 +3,14 @@ export class Medicamento {
 	nombre!: string;
 	descripcion?: string | null;
 	presentacion?: string | null;
+	tipoProducto?: string | null;
+	codigo?: string | null;
+	registroInvima?: string | null;
+	precioCompra?: number | null;
+	precioVenta?: number | null;
+	cantidadActual?: number | null;
+	stockMinimo?: number | null;
+	fechaProximoPedido?: Date | string | null;
 	fechaCompra?: Date | string;
 	fechaVence?: Date | string;
 	fechaCreacionRegistro?: Date | string;

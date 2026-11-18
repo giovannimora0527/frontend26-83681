@@ -122,10 +122,29 @@ export class HistoriaComponent {
       },
       error: (err) => {
         this.cargandoHistorias = false;
-        this.errorHistorias = 'No fue posible cargar las historias médicas.';
+        this.errorHistorias = this.mensajeErrorCarga(err);
         console.error('Error al listar historias médicas:', err);
       }
     });
+  }
+
+  /** Aclara si el fallo al consultar historias proviene de sesión, permisos o conexión. */
+  private mensajeErrorCarga(error: { status?: number; error?: { mensaje?: string; message?: string } }): string {
+    if (error.status === 0) {
+      return 'No fue posible conectar con el servidor para cargar las historias médicas. Verifica que el backend esté activo.';
+    }
+    if (error.status === 401) {
+      return 'La sesión venció o no es válida. Inicia sesión nuevamente para cargar las historias médicas.';
+    }
+    if (error.status === 403) {
+      return 'Tu rol no tiene permiso para consultar las historias médicas.';
+    }
+    if (error.status === 500) {
+      return 'El servidor no pudo consultar las historias médicas por un error en la base de datos. Debe corregirse el mapeo del estado del médico en el backend.';
+    }
+    const detalle = error.error?.mensaje ?? error.error?.message;
+    // Evita mostrar al usuario la consulta SQL completa que devuelve el backend cuando falla la base de datos.
+    return `No fue posible cargar las historias médicas${error.status ? ` (HTTP ${error.status})` : ''}${detalle && error.status !== 500 ? `: ${detalle}` : '.'}`;
   }
 
   get historiasFiltradas(): FilaHistoria[] {

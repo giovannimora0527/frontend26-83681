@@ -32,7 +32,7 @@
                                 <th class="text-center">Tipo de doc</th>
                                 <th class="text-center">Número de doc.</th>
                                 <th class="text-center">Estado</th>
-                                <th class="text-center">Acciones</th>
+                                <th class="text-center medico-acciones">Acciones</th>
                             </tr>
                         </thead>
                         <tbody *ngIf="listMedicos.length === 0">
@@ -57,10 +57,11 @@
                                     <span class="badge" [class.bg-success]="medico.estado === true"
                                         [class.bg-secondary]="medico.estado !== true">{{ obtenerEstado(medico) }}</span>
                                 </td>
-                                <td class="text-center">
-                                    <button class="btn btn-outline-info d-inline-flex 
-                                    align-items-center justify-content-center" (click)="abrirEdicion(medico)">
-                                        <i class="fa fa-edit"></i>&nbsp;Editar</button>
+                                <td class="text-center medico-acciones">
+                                    <button class="btn btn-sm btn-outline-info d-inline-flex align-items-center justify-content-center text-nowrap px-2"
+                                        (click)="abrirEdicion(medico)" aria-label="Editar médico">
+                                        <i class="fa fa-edit" aria-hidden="true"></i><span class="ms-1">Editar</span>
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>

@@ -17,7 +17,8 @@ import { authGuard } from './guards/auth.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
+    // La ruta principal abre el inicio; el guard redirige al login si no hay sesión.
+    redirectTo: 'inicio',
     pathMatch: 'full'
   },
   { path: 'login', component: LoginComponent, data: { title: 'Login' } },

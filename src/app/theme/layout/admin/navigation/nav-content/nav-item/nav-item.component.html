@@ -4,7 +4,8 @@
       <a
         class="nav-link"
         [target]="item().target ? '_blank' : '_self'"
-        [routerLink]="[item().url]"
+        [routerLink]="item().url"
+        [queryParams]="item().queryParams"
         [attr.aria-label]="item().title"
         [ngbTooltip]="item().title"
         #menuTooltip="ngbTooltip"

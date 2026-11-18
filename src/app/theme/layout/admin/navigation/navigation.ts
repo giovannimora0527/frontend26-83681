@@ -1,4 +1,4 @@
-import { getJwtMenus } from 'src/app/utils/jwt.util';
+import { getJwtMenus, getJwtPayload } from 'src/app/utils/jwt.util';
 
 export interface NavigationItem {
   id: string;
@@ -8,6 +8,8 @@ export interface NavigationItem {
   icon?: string;
   hidden?: boolean;
   url?: string;
+  /** Parámetros de ruta que el item comparte con su componente de destino. */
+  queryParams?: Record<string, string>;
   classes?: string;
   exactMatch?: boolean;
   external?: boolean;
@@ -80,6 +82,24 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       {
+        id: 'inventario',
+        title: 'Gestión de Inventario',
+        type: 'item',
+        url: '/inicio/medicamentos',
+        queryParams: { modulo: 'inventario' },
+        icon: 'bi bi-boxes',
+        classes: 'nav-item'
+      },
+      {
+        id: 'despacho',
+        title: 'Gestión de Despacho',
+        type: 'item',
+        url: '/inicio/medicamentos',
+        queryParams: { modulo: 'despacho' },
+        icon: 'bi bi-clipboard2-check',
+        classes: 'nav-item'
+      },
+      {
         id: 'medicos',
         title: 'Gestión de Medicos',
         type: 'item',
@@ -101,6 +121,19 @@ export const NavigationItems: NavigationItem[] = [
 ];
 
 export function getNavigationItems(): NavigationItem[] {
+  // El administrador puede navegar todos los módulos; el backend conserva la autorización de cada API.
+  try {
+    const rol = getJwtPayload()?.rol ?? '';
+    const rolNormalizado = rol.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s-]+/g, '_').toUpperCase();
+    if (rolNormalizado === 'ADMIN' || rolNormalizado === 'ADMINISTRADOR') {
+      return NavigationItems.map((item) => ({ ...item, children: item.children?.map((child) => ({ ...child })) }));
+    }
+  } catch (error) {
+    console.error('No fue posible obtener el perfil del token JWT', error);
+    return [];
+  }
+
+  // Los otros perfiles conservan los menús activos que entrega el backend en el JWT.
   let allowedCodes: Set<string>;
   try {
     allowedCodes = new Set(getJwtMenus().filter((menu) => menu.activo).map((menu) => menu.code));

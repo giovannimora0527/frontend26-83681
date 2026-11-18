@@ -109,7 +109,7 @@ export class MascotaComponent {
         return true;
       }
       if (termino === 'activo' || termino === 'true') {
-        return mascota.activo === true;
+        return mascota.activo !== false;
       }
       if (termino === 'inactivo' || termino === 'false') {
         return mascota.activo === false;
@@ -163,7 +163,8 @@ export class MascotaComponent {
   }
 
   obtenerEstado(mascota: Mascota): string {
-    return mascota.activo == null ? 'No informado' : mascota.activo ? 'Activo' : 'Inactivo';
+    // La API actual no serializa activo desde la entidad; los registros existentes usan activo=true en BD.
+    return mascota.activo === false ? 'Inactivo' : 'Activo';
   }
 
   ordenarPor(columna: ColumnaOrden): void {

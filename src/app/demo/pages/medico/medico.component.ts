@@ -149,15 +149,28 @@ export class MedicoComponent {
       .subscribe(
         {
           next: (data) => {
-            this.listMedicos = data;
+            this.listMedicos = Array.isArray(data) ? data : [];
             this.paginaActual = 1;
           },
           error: (error) => {
-            this.errorMedicos = 'No fue posible cargar los médicos.';
+            // Se pasa la respuesta completa para conservar el estado HTTP y el mensaje del servidor.
+            this.errorMedicos = this.mensajeErrorCarga(error);
             console.error('Error al obtener los médicos:', error);
           }
         }
       );
+  }
+
+  /** Traduce los fallos de la consulta de médicos en mensajes que permitan identificar su causa. */
+  private mensajeErrorCarga(error: { status?: number; error?: { mensaje?: string; message?: string } }): string {
+    if (error.status === 0) return 'No se pudo conectar con el servidor. Verifica que el backend esté activo.';
+    if (error.status === 401) return 'La sesión venció o no es válida. Inicia sesión nuevamente.';
+    if (error.status === 403) return 'Tu rol no tiene permiso para consultar los médicos.';
+    if (error.status === 500) return 'El servidor no pudo consultar los médicos por un error en la base de datos. Debe corregirse el mapeo del estado del médico en el backend.';
+    const detalle = error.error?.mensaje ?? error.error?.message;
+    return detalle
+      ? `No fue posible cargar los médicos: ${detalle}`
+      : `No fue posible cargar los médicos (HTTP ${error.status ?? 'desconocido'}).`;
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.

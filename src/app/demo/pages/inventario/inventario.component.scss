@@ -1,0 +1,235 @@
+/* Presentación aislada de la página de inventario. */
+.inventory-module {
+  display: grid;
+  gap: 1rem;
+  color: #243247;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.summary-grid article,
+.panel {
+  padding: 1rem 1.2rem;
+  border: 1px solid #e8edf3;
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 5px 22px #2338560a;
+}
+.summary-grid article span,
+.summary-grid article strong {
+  display: block;
+}
+.summary-grid article span {
+  color: #77849a;
+  font-size: 0.78rem;
+}
+.summary-grid article strong {
+  margin-top: 0.3rem;
+  font-size: 1.4rem;
+}
+.inventory-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow: auto;
+  border-bottom: 1px solid #e8edf3;
+}
+.inventory-tabs button {
+  padding: 0.7rem 0.9rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #68778e;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.inventory-tabs button.active {
+  border-bottom-color: #3677d5;
+  color: #3677d5;
+}
+.panel {
+  min-width: 0;
+}
+.panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.panel > header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.panel > header p {
+  margin: 0.3rem 0 0;
+  color: #77849a;
+  font-size: 0.82rem;
+}
+.panel > header > .btn {
+  flex: 0 0 auto;
+}
+.filters {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.filters input {
+  max-width: 500px;
+}
+.filters select {
+  max-width: 210px;
+}
+.panel .table {
+  margin: 0;
+  font-size: 0.81rem;
+}
+.panel .table th {
+  background: #f7f9fc;
+  color: #6e7b90;
+  font-size: 0.72rem;
+  white-space: normal;
+}
+.panel .table td,
+.panel .table th {
+  padding: 0.7rem;
+  border-color: #edf1f5;
+  vertical-align: middle;
+}
+.panel .table small {
+  font-size: 0.7rem;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  white-space: normal;
+}
+.empty {
+  padding: 2rem !important;
+  text-align: center;
+  color: #8491a3;
+}
+.pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  color: #8290a3;
+  font-size: 0.75rem;
+}
+.pager > div {
+  display: flex;
+  gap: 0.2rem;
+}
+.pager button {
+  min-width: 30px;
+}
+.file-input {
+  max-width: 600px;
+}
+.report-form {
+  display: flex;
+  align-items: end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.report-form label {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 150px;
+  color: #65748a;
+  font-size: 0.78rem;
+}
+.overlay {
+  position: fixed;
+  z-index: 1050;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 1rem;
+  background: #18253785;
+}
+.dialog {
+  width: min(100%, 760px);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 1.2rem;
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 20px 60px #0d1c3238;
+}
+.dialog header,
+.dialog footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.dialog header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.dialog header p {
+  margin: 0.25rem 0 0;
+  color: #77849a;
+  font-size: 0.8rem;
+}
+.dialog footer {
+  justify-content: flex-end;
+  margin: 1rem 0 0;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.form-grid label {
+  display: grid;
+  gap: 0.3rem;
+  color: #596981;
+  font-size: 0.76rem;
+}
+.span-two {
+  grid-column: 1/-1;
+}
+@media (max-width: 800px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .panel .table {
+    min-width: 0;
+  }
+}
+@media (max-width: 560px) {
+  .summary-grid {
+    gap: 0.5rem;
+  }
+  .summary-grid article {
+    padding: 0.7rem;
+  }
+  .filters,
+  .panel > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .filters select,
+  .filters input {
+    max-width: none;
+  }
+  .pager {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .span-two {
+    grid-column: auto;
+  }
+}

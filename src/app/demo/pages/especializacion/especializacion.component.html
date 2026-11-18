@@ -55,12 +55,12 @@
                         </thead>
                         <tbody *ngIf="listEspecializaciones.length === 0">
                             <tr>
-                                <td colspan="7" class="text-center">No hay especializaciones registradas</td>
+                                <td colspan="4" class="text-center">No hay especializaciones registradas</td>
                             </tr>
                         </tbody>
                         <tbody *ngIf="listEspecializaciones.length > 0 && especializacionesFiltradas.length === 0">
                             <tr>
-                                <td colspan="7" class="text-center">No se encontraron especializaciones</td>
+                                <td colspan="4" class="text-center">No se encontraron especializaciones</td>
                             </tr>
                         </tbody>
                         <tbody *ngIf="especializacionesFiltradas.length > 0">
@@ -79,7 +79,7 @@
                     </table>
                 </div>
             </div>
-            <nav *ngIf="totalPaginas > 1" aria-label="Paginación de especializaciones">
+            <nav *ngIf="listEspecializaciones.length > 0" aria-label="Paginación de especializaciones">
                 <ul class="pagination justify-content-end mb-0">
                     <li class="page-item" [class.disabled]="paginaActual === 1">
                         <button class="page-link" type="button" [disabled]="paginaActual === 1"

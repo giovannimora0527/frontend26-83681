@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CommonModule, formatDate } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { Especializacion } from 'src/app/models/especializacion';
@@ -60,7 +60,8 @@ export class EspecializacionComponent {
   listar() {
     this.especializacionService.listar().subscribe({
       next: (data) => {
-        this.listEspecializaciones = data;
+        this.listEspecializaciones = Array.isArray(data) ? data : [];
+        this.paginaActual = Math.min(this.paginaActual, this.totalPaginas || 1);
       },
       error: (err) => {
         console.error('Error al listar especializaciones', err);

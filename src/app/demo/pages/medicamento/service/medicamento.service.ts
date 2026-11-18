@@ -16,6 +16,7 @@ export class MedicamentoService {
   }
 
   listarMedicamentos(): Observable<Medicamento[]> {
-    return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
+    // Consume el resumen plano: el endpoint /listar serializa relaciones de lotes y movimientos recursivas.
+    return this.backendService.get(environment.apiUrlAuth, this.api, 'disponibilidad');
   }
 }

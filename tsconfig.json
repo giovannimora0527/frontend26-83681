@@ -1,4 +1,3 @@
-/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
   "compileOnSave": false,
   "compilerOptions": {
@@ -15,14 +14,18 @@
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "useDefineForClassFields": false,
-    "target": "ES2022", // this will auto target to latest by angular cli
+    "target": "ES2022",
     "module": "ES2022",
     "lib": [
-      "ES2022", // this will auto target to latest by angular cli
+      "ES2022",
       "dom"
+    ],
+    "types": [
+      "jasmine",
+      "node"
     ]
   },
   "angularCompilerOptions": {

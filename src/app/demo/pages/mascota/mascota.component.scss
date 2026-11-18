@@ -1,0 +1,5 @@
+/* Reserva espacio para la acción y evita que el texto del botón se parta en varias líneas. */
+.mascota-acciones {
+  width: 6rem;
+  min-width: 6rem;
+}
