@@ -31,6 +31,7 @@ describe('MascotaComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  /** Da acceso a la mascota seleccionada en el formulario. */
   function mascota(nombre: string, activo?: boolean): Mascota {
     return { nombreMascota: nombre, activo, raza: { especie: 'Felino', nombre: 'Gato' }, cliente: { nombres: 'Juan' } };
   }

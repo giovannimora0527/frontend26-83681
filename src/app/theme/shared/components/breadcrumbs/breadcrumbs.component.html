@@ -1,3 +1,4 @@
+<!-- Plantilla para mostrar la ruta de navegación visible. -->
 @for (breadcrumb of navigationList; track breadcrumb; let last = $last) {
   @if (last && breadcrumb.breadcrumbs !== false) {
     <div class="page-header">

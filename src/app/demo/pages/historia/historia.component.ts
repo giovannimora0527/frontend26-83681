@@ -16,9 +16,12 @@ import { Cita } from 'src/app/models/cita';
 import { HistoriaRq } from 'src/app/models/historia-rq';
 import { AnotacionHistoriaRq } from 'src/app/models/anotacion-historia-rq';
 
+/** Enumera las columnas por las que se puede ordenar la tabla. */
 type ColumnaOrden = 'fecha' | 'mascota' | 'cliente' | 'veterinario' | 'motivo' | 'diagnostico' | 'observaciones' | 'estado';
+/** Agrupa los datos que se presentan en una fila del historial clínico. */
 type FilaHistoria = Record<ColumnaOrden, string> & { fechaOrden: number; detalle: HistoriaMedica };
 
+/** Presenta la pantalla de historias clínicas y gestiona sus acciones. */
 @Component({
   selector: 'app-historia',
   imports: [CommonModule, NgbModalModule, ReactiveFormsModule],
@@ -69,6 +72,7 @@ export class HistoriaComponent {
   respuestaError = '';
   guardando = false;
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly historiaService: HistoriaService) {
     this.destroyRef.onDestroy(() => {
       this.modalDetalle?.dismiss();
@@ -77,22 +81,26 @@ export class HistoriaComponent {
     this.listarHistorias();
   }
 
+  /** Da acceso a las anotaciones que se están editando en el formulario. */
   get anotacionesForm() {
     return this.formAnotacion.controls.anotaciones;
   }
 
+  /** Agrega una fila al formulario para registrar otra anotación. */
   agregarAnotacion(): void {
     if (!this.guardando) {
       this.anotacionesForm.push(this.crearFilaAnotacion());
     }
   }
 
+  /** Retira del formulario la fila de anotación indicada. */
   quitarAnotacion(indice: number): void {
     if (!this.guardando && this.anotacionesForm.length > 1) {
       this.anotacionesForm.removeAt(indice);
     }
   }
 
+  /** Prepara los controles de una nueva anotación clínica. */
   private crearFilaAnotacion() {
     const fila = this.formBuilder.nonNullable.group({
       citaId: this.formBuilder.control<number | null>(null, Validators.required),
@@ -108,6 +116,7 @@ export class HistoriaComponent {
     return fila;
   }
 
+  /** Consulta las historias clínicas. */
   listarHistorias(): void {
     if (this.cargandoHistorias) {
       return;
@@ -147,6 +156,7 @@ export class HistoriaComponent {
     return `No fue posible cargar las historias médicas${error.status ? ` (HTTP ${error.status})` : ''}${detalle && error.status !== 500 ? `: ${detalle}` : '.'}`;
   }
 
+  /** Devuelve las historias clínicas que coinciden con la búsqueda actual. */
   get historiasFiltradas(): FilaHistoria[] {
     const termino = this.normalizarTexto(this.terminoBusqueda.trim());
     const filas = this.listHistorias.map((detalle): FilaHistoria => {
@@ -191,6 +201,7 @@ export class HistoriaComponent {
     });
   }
 
+  /** Cambia la columna de orden o invierte el sentido del orden actual. */
   ordenarPor(columna: ColumnaOrden): void {
     if (this.columnaOrden === columna) {
       this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
@@ -201,19 +212,23 @@ export class HistoriaComponent {
     this.paginaActual = 1;
   }
 
+  /** Devuelve las historias clínicas de la página visible. */
   get historiasPaginadas(): FilaHistoria[] {
     const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
     return this.historiasFiltradas.slice(inicio, inicio + this.registrosPorPagina);
   }
 
+  /** Calcula cuántas páginas se necesitan para mostrar el listado. */
   get totalPaginas(): number {
     return Math.ceil(this.historiasFiltradas.length / this.registrosPorPagina);
   }
 
+  /** Devuelve los números de página disponibles para el listado. */
   get paginas(): number[] {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
 
+  /** Aplica el texto de búsqueda y vuelve a la primera página. */
   actualizarBusqueda(event: Event): void {
     if (event.target instanceof HTMLInputElement) {
       this.terminoBusqueda = event.target.value;
@@ -221,12 +236,14 @@ export class HistoriaComponent {
     }
   }
 
+  /** Muestra la página seleccionada del listado. */
   cambiarPagina(pagina: number): void {
     if (pagina >= 1 && pagina <= this.totalPaginas) {
       this.paginaActual = pagina;
     }
   }
 
+  /** Muestra la información completa del registro seleccionado. */
   verDetalle(historia: HistoriaMedica, contenido: TemplateRef<unknown>): void {
     this.historiaDetalle = historia;
     this.modalDetalle = this.modalService.open(contenido, {
@@ -263,10 +280,12 @@ export class HistoriaComponent {
     return !!this.historiaAnotacion?.anotaciones.some(anotacion => anotacion.cita?.id === cita.id);
   }
 
+  /** Une los nombres y apellidos para mostrarlos en pantalla. */
   nombreCompleto(persona?: { nombres?: string; apellidos?: string } | null): string {
     return `${persona?.nombres ?? ''} ${persona?.apellidos ?? ''}`.trim() || 'No informado';
   }
 
+  /** Abre el formulario para registrar una historia clínica. */
   abrirNuevaHistoria(contenido: TemplateRef<unknown>): void {
     if (this.guardando) {
       return;
@@ -277,6 +296,7 @@ export class HistoriaComponent {
     this.cargarCatalogos(forkJoin({ mascotas: this.mascotaService.listarMascotas() }));
   }
 
+  /** Abre el formulario para agregar una anotación a la historia elegida. */
   abrirNuevaAnotacion(historia: HistoriaMedica, contenido: TemplateRef<unknown>): void {
     if (this.guardando) {
       return;
@@ -295,12 +315,14 @@ export class HistoriaComponent {
     this.abrirFormulario(contenido, 'formAnotacionTitulo');
   }
 
+  /** Cierra la ventana de edición y limpia la selección. */
   cerrarFormulario(): void {
     if (!this.guardando) {
       this.modalFormulario?.close();
     }
   }
 
+  /** Guarda la historia clínica. */
   guardarHistoria(): void {
     if (this.guardando) {
       return;
@@ -315,6 +337,7 @@ export class HistoriaComponent {
     this.enviar(this.historiaService.crearHistoria(solicitud), 'La historia médica fue creada correctamente.');
   }
 
+  /** Guarda la anotación clínica. */
   guardarAnotacion(): void {
     if (this.guardando) {
       return;
@@ -373,6 +396,7 @@ export class HistoriaComponent {
     });
   }
 
+  /** Abre el formulario que corresponda a la acción solicitada. */
   private abrirFormulario(contenido: TemplateRef<unknown>, titulo: string): void {
     this.respuestaError = '';
     const modal = this.modalService.open(contenido, {
@@ -390,6 +414,7 @@ export class HistoriaComponent {
     });
   }
 
+  /** Carga los catálogos. */
   private cargarCatalogos(peticion: Observable<{ mascotas?: Mascota[]; citas?: Cita[] }>): void {
     this.cargandoCatalogos = true;
     this.errorCatalogos = '';
@@ -408,6 +433,7 @@ export class HistoriaComponent {
     });
   }
 
+  /** Envía datos al servidor mediante el método HTTP solicitado. */
   private enviar(solicitud: Observable<unknown>, mensaje: string): void {
     this.guardando = true;
     this.respuestaError = '';
@@ -428,6 +454,7 @@ export class HistoriaComponent {
     });
   }
 
+  /** Prepara el texto para comparar búsquedas sin distinguir mayúsculas ni tildes. */
   private normalizarTexto(texto: string): string {
     return texto.toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }

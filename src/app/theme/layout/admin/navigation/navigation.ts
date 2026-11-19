@@ -1,5 +1,6 @@
 import { getJwtMenus, getJwtPayload } from 'src/app/utils/jwt.util';
 
+/** Define las propiedades de una opción o grupo del menú lateral. */
 export interface NavigationItem {
   id: string;
   title: string;
@@ -18,6 +19,7 @@ export interface NavigationItem {
 
   children?: NavigationItem[];
 }
+/** Define las opciones de navegación a las que se aplican los permisos de la sesión. */
 export const NavigationItems: NavigationItem[] = [
   {
     id: 'navigation',
@@ -75,6 +77,7 @@ export const NavigationItems: NavigationItem[] = [
       },
       {
         id: 'medicamentos',
+        exactMatch: true,
         title: 'Gestión de Medicamentos',
         type: 'item',
         url: '/inicio/medicamentos',
@@ -83,6 +86,7 @@ export const NavigationItems: NavigationItem[] = [
       },
       {
         id: 'inventario',
+        exactMatch: true,
         title: 'Gestión de Inventario',
         type: 'item',
         url: '/inicio/medicamentos',
@@ -92,6 +96,7 @@ export const NavigationItems: NavigationItem[] = [
       },
       {
         id: 'despacho',
+        exactMatch: true,
         title: 'Gestión de Despacho',
         type: 'item',
         url: '/inicio/medicamentos',
@@ -115,18 +120,62 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-users',
         classes: 'nav-item'
       },
-      /* ---------- Nuevos menus aqui -------------  */
+      {
+        id: 'calendario-medico',
+        title: 'Mi agenda (calendario)',
+        type: 'item',
+        url: '/inicio/calendario-medico',
+        icon: 'fa-solid fa-calendar-days',
+        classes: 'nav-item'
+      },
+      {
+        id: 'atencion-medica',
+        title: 'Atención médica',
+        type: 'item',
+        url: '/inicio/atencion-medica',
+        icon: 'fa-solid fa-stethoscope',
+        classes: 'nav-item'
+      },
+      {
+        id: 'tarifas',
+        title: 'Especialidades y tarifas',
+        type: 'item',
+        url: '/inicio/tarifas',
+        icon: 'fa-solid fa-tags',
+        classes: 'nav-item'
+      },
+      {
+        id: 'facturacion',
+        title: 'Facturación y pagos',
+        type: 'item',
+        url: '/inicio/facturacion',
+        icon: 'fa-solid fa-file-invoice-dollar',
+        classes: 'nav-item'
+      },
+      {
+        id: 'reportes',
+        title: 'Reportes PDF y Excel',
+        type: 'item',
+        url: '/inicio/reportes',
+        icon: 'fa-solid fa-chart-column',
+        classes: 'nav-item'
+      },
     ]
   },
 ];
 
+/** Construye el menú visible a partir del perfil y de las opciones autorizadas. */
 export function getNavigationItems(): NavigationItem[] {
   // El administrador puede navegar todos los módulos; el backend conserva la autorización de cada API.
   try {
     const rol = getJwtPayload()?.rol ?? '';
     const rolNormalizado = rol.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s-]+/g, '_').toUpperCase();
     if (rolNormalizado === 'ADMIN' || rolNormalizado === 'ADMINISTRADOR') {
-      return NavigationItems.map((item) => ({ ...item, children: item.children?.map((child) => ({ ...child })) }));
+      return NavigationItems.map((item) => ({
+        ...item,
+        children: item.children?.filter((child) => !['calendario-medico', 'atencion-medica', 'despacho'].includes(child.id))
+          .map((child) => ({ ...child }))
+      }));
     }
   } catch (error) {
     console.error('No fue posible obtener el perfil del token JWT', error);
@@ -137,15 +186,18 @@ export function getNavigationItems(): NavigationItem[] {
   let allowedCodes: Set<string>;
   try {
     allowedCodes = new Set(getJwtMenus().filter((menu) => menu.activo).map((menu) => menu.code));
+    if (allowedCodes.has('inventario-lotes')) allowedCodes.add('inventario');
   } catch (error) {
     console.error('No fue posible obtener los menus del token JWT', error);
     return [];
   }
 
+  /** Aplica los permisos a las opciones y sus grupos del menú. */
   const filterItems = (items: NavigationItem[]): NavigationItem[] =>
     items.flatMap((item) => {
       if (item.type === 'item') {
-        return allowedCodes.has(item.id) ? [{ ...item }] : [];
+        const agendaAsignada = allowedCodes.has('calendario-medico');
+        return allowedCodes.has(item.id) && !(item.id === 'cita' && agendaAsignada) ? [{ ...item }] : [];
       }
 
       const children = filterItems(item.children ?? []);

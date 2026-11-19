@@ -3,9 +3,14 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import Swal from 'sweetalert2';
+import { finalize, forkJoin } from 'rxjs';
+import { InventarioService } from '../inventario/service/inventario.service';
+import { getJwtPayload } from 'src/app/utils/jwt.util';
+import { MedicamentoInventario } from 'src/app/models/inventario.model';
 import { AsignacionLote, Despacho, FormulaPendiente, LoteDisponible, MedicamentoFormulado } from 'src/app/models/inventario.model';
 import { DespachoService } from './service/despacho.service';
 
+/** Guarda la cantidad propuesta para un lote y el máximo que se puede entregar. */
 type AsignacionUi = AsignacionLote & { numeroLote: string; maximo: number };
 
 /** Módulo independiente de cola, preparación FEFO y confirmación de dispensaciones. */
@@ -27,6 +32,11 @@ export class DespachoComponent implements OnInit {
   filtroDespachos = '';
   paginaPendientes = 1;
   filtro = '';
+  fechaGeneracion = '';
+  historialEstados: Record<string, unknown>[] = [];
+  productos: MedicamentoInventario[] = [];
+  historialMedicamento: Record<string, unknown>[] = [];
+  medicamentoHistorialId: number | null = null;
   cargando = false;
   guardando = false;
   error = '';
@@ -38,28 +48,37 @@ export class DespachoComponent implements OnInit {
   /** Despacho seleccionado para mostrar líneas de trazabilidad. */
   despachoSeleccionado: Despacho | null = null;
 
-  constructor(private readonly despachoService: DespachoService) {}
+  /** Recibe los servicios y prepara el estado inicial del componente. */
+  constructor(private readonly despachoService: DespachoService, private readonly inventario: InventarioService) {}
 
   /** Consulta la cola de dispensación al mostrar el módulo. */
   ngOnInit(): void {
     this.actualizar();
-    this.despachoService.listarDespachos().subscribe({ next: (data) => { this.despachos = data ?? []; }, error: () => { this.despachos = []; } });
+    this.inventario.listarInventarioParaConsulta().subscribe({
+      next: (productos) => this.productos = productos,
+      error: (err: HttpErrorResponse) => this.error = this.mensajeError(err)
+    });
   }
 
   /** Recarga la cola usando el filtro textual opcional del endpoint. */
   actualizar(): void {
     this.cargando = true;
     this.error = '';
-    this.despachoService.listarPendientes(this.filtro.trim()).subscribe({
+    this.despachoService.listarPendientes(this.filtro.trim(), this.fechaGeneracion).subscribe({
       next: (data) => { this.pendientes = data ?? []; this.paginaPendientes = 1; this.cargando = false; },
       error: (err: HttpErrorResponse) => { this.error = this.mensajeError(err); this.cargando = false; }
     });
+    this.despachoService.listarDespachos().subscribe({
+      next: (data) => { this.despachos = data ?? []; this.paginaDespachos = 1; },
+      error: (err: HttpErrorResponse) => this.error = this.mensajeError(err)
+    });
+    this.consultarHistorialMedicamento(this.medicamentoHistorialId);
   }
 
   /** Filtra localmente la cola por fórmula, propietario, mascota o profesional. */
   get pendientesFiltrados(): FormulaPendiente[] {
     const term = this.normalizar(this.filtro);
-    return this.pendientes.filter((item) => !term || [item.numeroFormula, item.propietarioNombre, item.mascotaNombre, item.medicoNombre].some((value) => this.normalizar(String(value ?? '')).includes(term)));
+    return this.pendientes.filter((item) => !term || [item.formulaId, item.numeroFormula, item.propietarioNombre, item.mascotaNombre].some((value) => this.normalizar(String(value ?? '')).includes(term)));
   }
 
   /** Presenta solo las fórmulas de la página seleccionada. */
@@ -91,7 +110,7 @@ export class DespachoComponent implements OnInit {
 
   /** Inicia el despacho una vez que las cantidades asignadas cumplen lo pendiente. */
   iniciarPreparacion(): void {
-    if (!this.formula || !this.puedeConfirmar) return;
+    if (!this.formula || this.guardando) return;
     this.guardando = true;
     this.despachoService.preparar(this.formula.formulaId).subscribe({
       next: (despacho) => { this.despacho = despacho; this.guardando = false; },
@@ -105,9 +124,16 @@ export class DespachoComponent implements OnInit {
     const lineasValidas = this.formula.medicamentos.every((med) => {
       const rows = this.asignaciones[med.formulaDetalleId] ?? [];
       const total = rows.reduce((sum, row) => sum + Number(row.cantidadEntregada || 0), 0);
-      return total <= med.cantidadPendiente && rows.every((row) => row.cantidadEntregada >= 0 && row.cantidadEntregada <= row.maximo);
+      return total <= Math.min(med.cantidadPendiente, med.cantidadDisponible) &&
+        rows.every((row) => Number.isInteger(row.cantidadEntregada) && row.cantidadEntregada >= 0 && row.cantidadEntregada <= row.maximo);
     });
-    return lineasValidas && Object.values(this.asignaciones).flat().some((row) => row.cantidadEntregada > 0);
+    return lineasValidas && (this.sinExistencias || Object.values(this.asignaciones).flat().some((row) => row.cantidadEntregada > 0));
+  }
+
+  /** Indica si quedan unidades por entregar y ningún producto pendiente tiene stock dispensable. */
+  get sinExistencias(): boolean {
+    return !!this.formula?.medicamentos.some((med) => med.cantidadPendiente > 0) &&
+      this.formula.medicamentos.every((med) => med.cantidadPendiente === 0 || med.cantidadDisponible === 0);
   }
 
   /** Confirma la entrega seleccionada; el backend descuenta existencias y genera trazabilidad. */
@@ -115,21 +141,47 @@ export class DespachoComponent implements OnInit {
     if (!this.despacho || !this.puedeConfirmar || this.guardando) return;
     const detalles = Object.values(this.asignaciones).flat().filter((row) => row.cantidadEntregada > 0)
       .map(({ formulaDetalleId, loteId, cantidadEntregada }) => ({ formulaDetalleId, loteId, cantidadEntregada }));
-    Swal.fire({ title: '¿Confirmar entrega?', text: 'La confirmación registra la salida de cada lote.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Confirmar', cancelButtonText: 'Volver' }).then((result) => {
-      if (!result.isConfirmed || !this.despacho) return;
-      this.guardando = true;
-      this.despachoService.confirmar(this.despacho.id, detalles).subscribe({
-        next: () => { this.guardando = false; this.formula = null; this.despacho = null; this.actualizar(); Swal.fire('Despacho confirmado', 'La salida quedó registrada.', 'success'); },
-        error: (err: HttpErrorResponse) => { this.guardando = false; Swal.fire('No se pudo confirmar', this.mensajeError(err), 'error'); }
-      });
+    const despachoId = this.despacho.id;
+    const registro = 'entrega-pendiente-' + getJwtPayload()?.sub + '-' + despachoId;
+    const anterior = sessionStorage.getItem(registro);
+    this.guardando = true;
+    const titulo = anterior ? '¿Reintentar la confirmación anterior?' :
+      this.sinExistencias ? '¿Registrar falta de existencias?' : '¿Confirmar entrega?';
+    Swal.fire({ title: titulo, icon: 'warning', showCancelButton: true, confirmButtonText: 'Confirmar', cancelButtonText: 'Volver' }).then((result) => {
+      if (!result.isConfirmed) { this.guardando = false; return; }
+      if (anterior) {
+        const reintento = JSON.parse(anterior) as { clave: string; detalles: AsignacionLote[] };
+        this.enviarConfirmacion(despachoId, registro, reintento.clave, reintento.detalles);
+        return;
+      }
+      const clave = globalThis.crypto?.randomUUID?.() ?? Date.now() + '-' + Math.random().toString(36).slice(2);
+      sessionStorage.setItem(registro, JSON.stringify({ clave, detalles }));
+      this.enviarConfirmacion(despachoId, registro, clave, detalles);
+    });
+  }
+
+  /** Envía la entrega y conserva el intento si la respuesta del servidor es incierta. */
+  private enviarConfirmacion(id: number, registro: string, clave: string, detalles: AsignacionLote[]): void {
+    this.despachoService.confirmar(id, detalles, clave).pipe(finalize(() => this.guardando = false)).subscribe({
+      next: (despacho) => {
+        sessionStorage.removeItem(registro);
+        this.cerrarPreparacion();
+        this.actualizar();
+        if (despacho.numeroComprobante && detalles.length) this.descargarComprobante(despacho);
+        if (!detalles.length) Swal.fire('Pendiente por disponibilidad', 'El despacho quedó registrado sin salidas de inventario.', 'info');
+      },
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 400 || err.status === 422) sessionStorage.removeItem(registro);
+        Swal.fire('No se pudo confirmar', this.mensajeError(err), 'error');
+      }
     });
   }
 
   /** Distribuye automáticamente una línea en lotes elegibles siguiendo prioridad FEFO. */
   private asignarFefo(med: MedicamentoFormulado): AsignacionUi[] {
-    let pendiente = med.cantidadPendiente;
+    let pendiente = Math.min(med.cantidadPendiente, med.cantidadDisponible);
     const lotes = [...med.lotes].filter((lote) => lote.seleccionable && !lote.vencido && lote.cantidadDisponible > 0)
-      .sort((a, b) => Number(b.recomendadoFefo) - Number(a.recomendadoFefo) || a.fechaVencimiento.localeCompare(b.fechaVencimiento));
+      .sort((a, b) => (a.fechaVencimiento ?? '9999').localeCompare(b.fechaVencimiento ?? '9999') || a.loteId - b.loteId);
     const salida: AsignacionUi[] = [];
     for (const lote of lotes) {
       if (pendiente <= 0) break;
@@ -166,7 +218,58 @@ export class DespachoComponent implements OnInit {
   verDetalle(item: Despacho): void {
     this.despachoSeleccionado = item;
     this.paginaDetalle = 1;
-    this.despachoService.detalle(item.id).subscribe({ next: (data) => { this.detalle = data ?? []; }, error: (err: HttpErrorResponse) => Swal.fire('No fue posible consultar el detalle', this.mensajeError(err), 'error') });
+    this.detalle = [];
+    this.historialEstados = [];
+    forkJoin({ detalle: this.despachoService.detalle(item.id), estados: this.despachoService.historialEstados(item.id) }).subscribe({
+      next: ({ detalle, estados }) => {
+        if (this.despachoSeleccionado?.id !== item.id) return;
+        this.detalle = detalle;
+        this.historialEstados = estados;
+      },
+      error: (err: HttpErrorResponse) => Swal.fire('No fue posible consultar el detalle', this.mensajeError(err), 'error')
+    });
+  }
+
+  /** Consulta las dispensaciones y movimientos vinculados al medicamento seleccionado. */
+  consultarHistorialMedicamento(id: number | null): void {
+    this.medicamentoHistorialId = id;
+    this.historialMedicamento = [];
+    if (id === null) return;
+    this.despachoService.historialMedicamento(id).subscribe({
+      next: (historial) => { if (this.medicamentoHistorialId === id) this.historialMedicamento = historial; },
+      error: (err: HttpErrorResponse) => Swal.fire('No fue posible consultar las dispensaciones', this.mensajeError(err), 'error')
+    });
+  }
+
+  /** Descarga el comprobante PDF de la entrega seleccionada. */
+  descargarComprobante(item: Despacho): void {
+    this.despachoService.comprobante(item.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = item.numeroDespacho + '.pdf';
+        enlace.click();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+      },
+      error: (err: HttpErrorResponse) => Swal.fire('No fue posible descargar el comprobante', this.mensajeError(err), 'error')
+    });
+  }
+
+  /** Solicita una justificación y ejecuta la cancelación o reversión del despacho. */
+  cancelarDespacho(item: Despacho): void {
+    Swal.fire({
+      title: 'Cancelar despacho', input: 'textarea', inputLabel: 'Motivo de la cancelación',
+      showCancelButton: true, confirmButtonText: 'Cancelar despacho', cancelButtonText: 'Volver',
+      inputValidator: (valor) => valor.trim() ? undefined : 'Escribe una justificación.'
+    }).then(({ isConfirmed, value }) => {
+      if (!isConfirmed || this.guardando) return;
+      this.guardando = true;
+      this.despachoService.cancelar(item.id, String(value).trim()).pipe(finalize(() => this.guardando = false)).subscribe({
+        next: () => { this.cerrarDetalle(); this.actualizar(); },
+        error: (err: HttpErrorResponse) => Swal.fire('No se pudo cancelar', this.mensajeError(err), 'error')
+      });
+    });
   }
 
   /** Cierra el detalle y libera la selección. */

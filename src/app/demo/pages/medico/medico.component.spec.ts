@@ -41,6 +41,7 @@ describe('MedicoComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  /** Carga los datos iniciales que se muestran al abrir el formulario. */
   function completarFormulario(): void {
     component.form.setValue({
       nombres: ' Carlos ', apellidos: ' Martinez ', tipoDocumento: 'CC',

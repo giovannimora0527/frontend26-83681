@@ -1,3 +1,4 @@
+// Inicia Angular con las rutas y los servicios del entorno seleccionado.
 import { enableProdMode, importProvidersFrom } from '@angular/core';
 
 import { environment } from './environments/environment';

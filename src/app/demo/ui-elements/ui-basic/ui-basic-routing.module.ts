@@ -33,6 +33,7 @@ const routes: Routes = [
   }
 ];
 
+/** Define las rutas de las vistas de demostración. */
 @NgModule({
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]

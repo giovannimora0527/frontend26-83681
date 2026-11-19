@@ -6,6 +6,7 @@ import { animate, AUTO_STYLE, state, style, transition, trigger } from '@angular
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { CommonModule } from '@angular/common';
 
+/** Presenta un bloque reutilizable con encabezado y contenido. */
 @Component({
   selector: 'app-card',
   standalone: true,
@@ -67,6 +68,7 @@ export class CardComponent implements OnInit {
   cardRemove: string;
 
   // constructor
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor() {
     this.fullIcon = 'icon-maximize';
     this.isAnimating = false;
@@ -77,6 +79,7 @@ export class CardComponent implements OnInit {
   }
 
   // life cycle event
+  /** Prepara la pantalla al abrirse y carga los datos que necesita. */
   ngOnInit() {
     if (!this.options || this.hidHeader || this.customHeader) {
       this.collapsedCard = 'false';
@@ -84,6 +87,7 @@ export class CardComponent implements OnInit {
   }
 
   // public method
+  /** Alterna la tarjeta entre su tamaño normal y la vista ampliada. */
   fullCardToggle(element: HTMLElement, animation: string, status: boolean) {
     animation = this.cardClass === 'full-card' ? 'zoomOut' : 'zoomIn';
     this.fullIcon = this.cardClass === 'full-card' ? 'icon-maximize' : 'icon-minimize';
@@ -103,11 +107,13 @@ export class CardComponent implements OnInit {
     }, 500);
   }
 
+  /** Expande o contrae la tarjeta. */
   collapsedCardToggle() {
     this.collapsedCard = this.collapsedCard === 'collapsed' ? 'expanded' : 'collapsed';
     this.collapsedIcon = this.collapsedCard === 'collapsed' ? 'icon-plus' : 'icon-minus';
   }
 
+  /** Activa la indicación de recarga de la tarjeta. */
   cardRefresh() {
     this.loadCard = true;
     this.cardClass = 'card-load';
@@ -117,6 +123,7 @@ export class CardComponent implements OnInit {
     }, 3000);
   }
 
+  /** Oculta la tarjeta de la vista. */
   cardRemoveAction() {
     this.cardRemove = this.cardRemove === 'closed' ? 'open' : 'closed';
   }

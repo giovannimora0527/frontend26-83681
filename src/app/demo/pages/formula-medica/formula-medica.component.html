@@ -1,3 +1,4 @@
+<!-- Plantilla para mostrar las fórmulas médicas. -->
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
@@ -7,7 +8,7 @@
                         (input)="actualizarBusqueda($event)" />
                 </div>
                 <div class="col col-md-3 text-end">
-                    <button type="button" class="btn btn-outline-primary" (click)="nuevaFormula('C')">
+                    <button *ngIf="puedeFormular" type="button" class="btn btn-outline-primary" (click)="nuevaFormula('C')">
                         <i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Nueva fórmula
                     </button>
                 </div>
@@ -101,15 +102,16 @@
                         </tbody>
                         <tbody *ngIf="formulasFiltradas.length > 0">
                             <tr *ngFor="let formula of formulasPaginadas">
-                                <td class="text-center">{{ formula.medicamento?.nombre }}</td>
-                                <td class="text-center">{{ formula.dosis }}</td>
-                                <td class="text-center">{{ formula.duracion }}</td>
-                                <td class="text-center">{{ formula.frecuencia }}</td>
+                                <td class="text-center">{{ (formula.detalles?.length ?? 0) > 1 ? formula.detalles.length + ' medicamentos' : formula.medicamento?.nombre }}</td>
+                                <td class="text-center">{{ (formula.detalles?.length ?? 0) > 1 ? 'Ver detalle' : formula.dosis }}</td>
+                                <td class="text-center">{{ (formula.detalles?.length ?? 0) > 1 ? '—' : formula.duracion }}</td>
+                                <td class="text-center">{{ (formula.detalles?.length ?? 0) > 1 ? '—' : formula.frecuencia }}</td>
                                 <td class="text-center">{{ formula.indicaciones }}</td>
                                 <td class="text-center">{{ formula.cita?.cliente?.nombres }} {{ formula.cita?.cliente?.apellidos }}</td>
                                 <td class="text-center">{{ formula.fechaCreacionRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
                                 <td class="text-center">
-                                    <button type="button" class="btn btn-outline-info" (click)="abrirEdicion(formula)"
+                                    <button type="button" class="btn btn-outline-primary me-2" (click)="verDetalle(formula)">Ver detalle</button>
+                                    <button *ngIf="puedeEditar(formula)" type="button" class="btn btn-outline-info" (click)="abrirEdicion(formula)"
                                         ngbTooltip="Editar fórmula" tooltipClass="tooltip-info" triggers="hover focus"
                                         placement="top" container="body">
                                         <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;Editar
@@ -143,8 +145,46 @@
 
 
 
-<!-- Modal -->
-<div class="modal fade" id="modalCrearFormula" tabindex="-1" aria-labelledby="modalCrearFormulaLabel"
+<div class="modal fade" id="modalDetalleFormula" tabindex="-1" aria-labelledby="modalDetalleFormulaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="modalDetalleFormulaLabel">Fórmula {{ formulaDetalle?.numeroFormula || formulaDetalle?.id }}</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar detalle"></button>
+            </div>
+            @if (formulaDetalle; as formula) {
+                <div class="modal-body">
+                    <p><strong>Mascota</strong> {{ formula.cita?.mascota?.nombreMascota || 'No informada' }}</p>
+                    @if (formula.indicaciones) {
+                        <p><strong>Indicaciones generales</strong> {{ formula.indicaciones }}</p>
+                    }
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead><tr>
+                                <th scope="col">Medicamento</th><th scope="col">Cantidad</th><th scope="col">Dosis</th>
+                                <th scope="col">Frecuencia</th><th scope="col">Duración</th><th scope="col">Vía</th><th scope="col">Indicaciones especiales</th>
+                            </tr></thead>
+                            <tbody>
+                                @for (linea of formula.detalles ?? []; track linea.id) {
+                                    <tr>
+                                        <td>{{ linea.medicamentoNombre || ('Medicamento ' + linea.medicamentoId) }}</td>
+                                        <td>{{ linea.cantidadPrescrita }}</td><td>{{ linea.dosis }}</td><td>{{ linea.frecuencia }}</td>
+                                        <td>{{ linea.duracionTratamiento }}</td><td>{{ linea.viaAdministracion }}</td>
+                                        <td>{{ linea.indicaciones || '—' }}</td>
+                                    </tr>
+                                } @empty {
+                                    <tr><td colspan="7">El servidor no devolvió líneas para esta fórmula.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div *ngIf="puedeFormular" class="modal fade" id="modalCrearFormula" tabindex="-1" aria-labelledby="modalCrearFormulaLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -208,6 +248,14 @@
                             <div class="text-danger" *ngIf="f['duracion'].touched && f['duracion'].invalid">
                                 Ingresa la duración.
                             </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="viaFormula" class="form-label">Vía de administración</label>
+                            <input id="viaFormula" class="form-control" formControlName="viaAdministracion" maxlength="50" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cantidadFormula" class="form-label">Cantidad prescrita</label>
+                            <input id="cantidadFormula" class="form-control" type="number" min="1" step="1" formControlName="cantidadPrescrita" required>
                         </div>
                         <div class="col-12">
                             <label for="indicaciones" class="form-label">Indicaciones</label>

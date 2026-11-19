@@ -12,10 +12,19 @@ import { RazaService } from './service/raza.service';
 import { ClienteService } from '../cliente/service/cliente.service';
 import { Cliente } from 'src/app/models/cliente';
 
+/** Enumera las columnas por las que se puede ordenar la tabla. */
 type ColumnaOrden = 'nombre' | 'especie' | 'raza' | 'edad' | 'cliente' | 'fechaRegistro' | 'estado';
-type ModalBootstrap = { show(): void; hide(): void };
+/** Define las acciones que usa la pantalla para abrir y cerrar una ventana. */
+type ModalBootstrap = {
+  /** Abre la ventana. */
+  show(): void;
+  /** Cierra la ventana. */
+  hide(): void;
+};
+/** Describe dónde se encuentra Bootstrap en la ventana del navegador. */
 type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => ModalBootstrap } };
 
+/** Presenta la pantalla de mascotas y gestiona sus acciones. */
 @Component({
   selector: 'app-mascota',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, NgbTooltipModule],
@@ -46,6 +55,7 @@ export class MascotaComponent {
   enviando = false;
   respuestaError = '';
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly mascotaService: MascotaService,
     private readonly razaService: RazaService,
     private readonly clienteService: ClienteService,
@@ -56,6 +66,7 @@ export class MascotaComponent {
     this.listarClientes();
   }
 
+  /** Consulta los clientes. */
   listarClientes() {
     this.clienteService.listarClientes()
       .subscribe({
@@ -84,6 +95,7 @@ export class MascotaComponent {
   }
 
   // Metodo ue permite inicializar el formulario con sus controles y validaciones.
+  /** Prepara los campos del formulario y sus validaciones. */
   inicializarFormulario() {
     this.form = this.formBuilder.group({
       nombreMascota: ['', Validators.required],
@@ -94,6 +106,7 @@ export class MascotaComponent {
   }
 
   // Obtiene los controles del formulario para facilitar el acceso a sus propiedades y métodos.
+  /** Da acceso a los controles del formulario para consultar su valor y sus errores. */
   get f(): { [key: string]: AbstractControl } {
     return this.form.controls;
   }
@@ -109,7 +122,7 @@ export class MascotaComponent {
         return true;
       }
       if (termino === 'activo' || termino === 'true') {
-        return mascota.activo !== false;
+        return mascota.activo === true;
       }
       if (termino === 'inactivo' || termino === 'false') {
         return mascota.activo === false;
@@ -143,6 +156,7 @@ export class MascotaComponent {
     });
   }
 
+  /** Obtiene el valor de la columna que se usa para ordenar cada fila. */
   private obtenerValorOrden(mascota: Mascota, columna: ColumnaOrden): string | number {
     switch (columna) {
       case 'nombre':
@@ -162,11 +176,14 @@ export class MascotaComponent {
     }
   }
 
+  /** Devuelve el estado que se usa para presentar el registro. */
   obtenerEstado(mascota: Mascota): string {
-    // La API actual no serializa activo desde la entidad; los registros existentes usan activo=true en BD.
-    return mascota.activo === false ? 'Inactivo' : 'Activo';
+    if (mascota.activo === true) return 'Activo';
+    if (mascota.activo === false) return 'Inactivo';
+    return 'No informado';
   }
 
+  /** Cambia la columna de orden o invierte el sentido del orden actual. */
   ordenarPor(columna: ColumnaOrden): void {
     if (this.columnaOrden === columna) {
       this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
@@ -177,15 +194,18 @@ export class MascotaComponent {
     this.paginaActual = 1;
   }
 
+  /** Devuelve las mascotas de la página visible. */
   get mascotasPaginadas(): Mascota[] {
     const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
     return this.mascotasFiltradas.slice(inicio, inicio + this.registrosPorPagina);
   }
 
+  /** Calcula cuántas páginas se necesitan para mostrar el listado. */
   get totalPaginas(): number {
     return Math.ceil(this.mascotasFiltradas.length / this.registrosPorPagina);
   }
 
+  /** Devuelve los números de página disponibles para el listado. */
   get paginas(): number[] {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
@@ -210,12 +230,14 @@ export class MascotaComponent {
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
+  /** Aplica el texto de búsqueda y vuelve a la primera página. */
   actualizarBusqueda(event: Event) {
     this.terminoBusqueda = (event.target as HTMLInputElement).value;
     this.paginaActual = 1;
   }
 
   // Cambia paginacion.
+  /** Muestra la página seleccionada del listado. */
   cambiarPagina(pagina: number) {
     if (pagina >= 1 && pagina <= this.totalPaginas) {
       this.paginaActual = pagina;
@@ -223,6 +245,7 @@ export class MascotaComponent {
   }
 
   // Metodo privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
+  /** Prepara el texto para comparar búsquedas sin distinguir mayúsculas ni tildes. */
   private normalizarTexto(texto: string): string {
     return texto
       .toLocaleLowerCase()
@@ -230,12 +253,14 @@ export class MascotaComponent {
       .replace(/[\u0300-\u036f]/g, '');
   }
 
+  /** Comprueba si dos opciones representan la misma raza. */
   compararRazas(razaA: Raza | null, razaB: Raza | null): boolean {
     return razaA === razaB || (
       razaA?.nombre === razaB?.nombre && razaA?.especie === razaB?.especie
     );
   }
 
+  /** Comprueba si dos opciones representan al mismo propietario. */
   compararClientes(clienteA: Cliente | null, clienteB: Cliente | null): boolean {
     return clienteA === clienteB || (
       clienteA?.tipoDocumento === clienteB?.tipoDocumento && clienteA?.numeroDocumento === clienteB?.numeroDocumento
@@ -255,6 +280,7 @@ export class MascotaComponent {
     this.openModal(modo);
   }
 
+  /** Restablece los campos y la selección del formulario. */
   resetFormulario() {
     this.form.reset();
     this.form.markAsPristine();
@@ -262,6 +288,7 @@ export class MascotaComponent {
     this.respuestaError = '';
   }
 
+  /** Abre el formulario con los datos del registro que se quiere modificar. */
   abrirEdicion(mascota: Mascota) {
     this.mascotaSelected = mascota;
     this.modoFormulario = 'E';
@@ -318,6 +345,7 @@ export class MascotaComponent {
     });
   }
 
+  /** Obtiene el mensaje que devuelve el servidor para mostrarlo en pantalla. */
   private obtenerMensajeRespuesta(respuesta: unknown, mensajePredeterminado: string): string {
     if (respuesta && typeof respuesta === 'object') {
       const cuerpo = respuesta as { mensaje?: unknown; message?: unknown };
@@ -329,6 +357,7 @@ export class MascotaComponent {
     return mensajePredeterminado;
   }
 
+  /** Cierra la ventana indicada. */
   closeModal() {
     if (this.modalInstance) {
       this.modalInstance.hide();
@@ -336,6 +365,7 @@ export class MascotaComponent {
     this.resetFormulario();
   }
 
+  /** Abre la ventana indicada. */
   openModal(modo: string) {
     this.titleModal = modo === 'C' ? 'Crear Mascota' : 'Editar Mascota';
     this.titleBoton = modo === 'C' ? 'Guardar Mascota' : 'Actualizar Mascota';

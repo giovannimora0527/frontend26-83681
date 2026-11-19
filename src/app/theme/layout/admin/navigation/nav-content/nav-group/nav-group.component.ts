@@ -8,6 +8,7 @@ import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { NavItemComponent } from '../nav-item/nav-item.component';
 import { NavCollapseComponent } from '../nav-collapse/nav-collapse.component';
 
+/** Agrupa las opciones del menú que se muestran juntas. */
 @Component({
   selector: 'app-nav-group',
   imports: [SharedModule, NavItemComponent, NavCollapseComponent],
@@ -21,6 +22,7 @@ export class NavGroupComponent implements OnInit {
   readonly item = input<NavigationItem>(undefined);
 
   // life cycle event
+  /** Prepara la pantalla al abrirse y carga los datos que necesita. */
   ngOnInit() {
     // at reload time active and trigger link
     let current_url = this.location.path();

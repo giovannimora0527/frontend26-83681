@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 
+/** Presenta el pie de página compartido de la aplicación. */
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',

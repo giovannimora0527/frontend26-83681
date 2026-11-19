@@ -9,10 +9,19 @@ import Swal from 'sweetalert2';
 
 import { EspecializacionService } from './service/especializacion.service';
 
+/** Enumera las columnas por las que se puede ordenar la tabla. */
 type ColumnaOrden = 'nombre' | 'descripcion' | 'codigoEspecializacion';
-type ModalBootstrap = { show(): void; hide(): void };
+/** Define las acciones que usa la pantalla para abrir y cerrar una ventana. */
+type ModalBootstrap = {
+  /** Abre la ventana. */
+  show(): void;
+  /** Cierra la ventana. */
+  hide(): void;
+};
+/** Describe dónde se encuentra Bootstrap en la ventana del navegador. */
 type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => ModalBootstrap } };
 
+/** Presenta la pantalla de especialidades veterinarias y gestiona sus acciones. */
 @Component({
   selector: 'app-especializacion',
   imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule],
@@ -41,6 +50,7 @@ export class EspecializacionComponent {
   enviando = false;
   respuestaError = '';
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly especializacionService: EspecializacionService,
     private readonly formBuilder: FormBuilder
   ) {
@@ -49,6 +59,7 @@ export class EspecializacionComponent {
   }
 
   // Metodo ue permite inicializar el formulario con sus controles y validaciones.
+  /** Prepara los campos del formulario y sus validaciones. */
   inicializarFormulario() {
     this.form = this.formBuilder.group({
       nombre: ['', Validators.required],
@@ -57,6 +68,7 @@ export class EspecializacionComponent {
     });
   }
 
+  /** Solicita el listado que muestra este módulo. */
   listar() {
     this.especializacionService.listar().subscribe({
       next: (data) => {
@@ -70,6 +82,7 @@ export class EspecializacionComponent {
   }
 
   // Obtiene los controles del formulario para facilitar el acceso a sus propiedades y métodos.
+  /** Da acceso a los controles del formulario para consultar su valor y sus errores. */
   get f(): { [key: string]: AbstractControl } {
     return this.form.controls;
   }
@@ -107,6 +120,7 @@ export class EspecializacionComponent {
     });
   }
 
+  /** Obtiene el valor de la columna que se usa para ordenar cada fila. */
   private obtenerValorOrden(especializacion: Especializacion, columna: ColumnaOrden): string | number {
     switch (columna) {
       case 'nombre':
@@ -118,6 +132,7 @@ export class EspecializacionComponent {
     }
   }
 
+  /** Cambia la columna de orden o invierte el sentido del orden actual. */
   ordenarPor(columna: ColumnaOrden): void {
     if (this.columnaOrden === columna) {
       this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
@@ -128,26 +143,31 @@ export class EspecializacionComponent {
     this.paginaActual = 1;
   }
 
+  /** Devuelve las especialidades de la página visible. */
   get especializacionesPaginadas(): Especializacion[] {
     const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
     return this.especializacionesFiltradas.slice(inicio, inicio + this.registrosPorPagina);
   }
 
+  /** Calcula cuántas páginas se necesitan para mostrar el listado. */
   get totalPaginas(): number {
     return Math.ceil(this.especializacionesFiltradas.length / this.registrosPorPagina);
   }
 
+  /** Devuelve los números de página disponibles para el listado. */
   get paginas(): number[] {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
+  /** Aplica el texto de búsqueda y vuelve a la primera página. */
   actualizarBusqueda(event: Event) {
     this.terminoBusqueda = (event.target as HTMLInputElement).value;
     this.paginaActual = 1;
   }
 
   // Cambia paginacion.
+  /** Muestra la página seleccionada del listado. */
   cambiarPagina(pagina: number) {
     if (pagina >= 1 && pagina <= this.totalPaginas) {
       this.paginaActual = pagina;
@@ -155,6 +175,7 @@ export class EspecializacionComponent {
   }
 
   // Metodo privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
+  /** Prepara el texto para comparar búsquedas sin distinguir mayúsculas ni tildes. */
   private normalizarTexto(texto: string): string {
     return texto
       .toLocaleLowerCase()
@@ -175,6 +196,7 @@ export class EspecializacionComponent {
     this.openModal(modo);
   }
 
+  /** Restablece los campos y la selección del formulario. */
   resetFormulario() {
     this.form.reset();
     this.form.markAsPristine();
@@ -182,6 +204,7 @@ export class EspecializacionComponent {
     this.respuestaError = '';
   }
 
+  /** Abre el formulario con los datos del registro que se quiere modificar. */
   abrirEdicion(especializacion: Especializacion) {
     this.especializacionSelected = especializacion;
     this.modoFormulario = 'E';
@@ -236,6 +259,7 @@ export class EspecializacionComponent {
     });
   }
 
+  /** Obtiene el mensaje que devuelve el servidor para mostrarlo en pantalla. */
   private obtenerMensajeRespuesta(respuesta: unknown, mensajePredeterminado: string): string {
     if (respuesta && typeof respuesta === 'object') {
       const cuerpo = respuesta as { mensaje?: unknown; message?: unknown };
@@ -247,6 +271,7 @@ export class EspecializacionComponent {
     return mensajePredeterminado;
   }
 
+  /** Cierra la ventana indicada. */
   closeModal() {
     if (this.modalInstance) {
       this.modalInstance.hide();
@@ -254,6 +279,7 @@ export class EspecializacionComponent {
     this.resetFormulario();
   }
 
+  /** Abre la ventana indicada. */
   openModal(modo: string) {
     this.titleModal = modo === 'C' ? 'Crear Especialización' : 'Editar Especialización';
     this.titleBoton = modo === 'C' ? 'Guardar Especialización' : 'Actualizar Especialización';

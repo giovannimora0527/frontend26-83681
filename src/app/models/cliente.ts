@@ -1,3 +1,4 @@
+/** Representa al propietario que recibe los servicios de la clínica. */
 export class Cliente {
    id?: number;
    tipoDocumento?: string;

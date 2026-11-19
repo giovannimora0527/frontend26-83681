@@ -1,3 +1,4 @@
+/** Define los datos enviados al servidor para el veterinario. */
 export class MedicoRq {
     id?: number;
     tipoDocumento!: string;

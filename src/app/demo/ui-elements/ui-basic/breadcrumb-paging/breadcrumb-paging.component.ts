@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 
+/** Muestra ejemplos de rutas de navegación y paginación. */
 @Component({
   selector: 'app-breadcrumb-paging',
   standalone: true,

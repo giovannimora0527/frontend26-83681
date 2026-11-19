@@ -14,6 +14,7 @@ describe('JWT utilities', () => {
   let payload: JwtPayload;
   let previousToken: string | null;
 
+  /** Guarda un token de ejemplo para las pruebas. */
   function storePayload(value: unknown): void {
     const bytes = new TextEncoder().encode(JSON.stringify(value));
     const encoded = btoa(String.fromCharCode(...bytes))

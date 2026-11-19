@@ -113,6 +113,11 @@
         </form>
       }
 
+      @if (swaggerUrl) {
+        <p class="text-center small mb-2">
+          <a [href]="swaggerUrl" target="_blank" rel="noopener noreferrer">Documentación de API (Swagger UI)</a>
+        </p>
+      }
       <p class="login-footer text-center small mb-0">
         © Clínica Veterinaria Uniminuto
       </p>   

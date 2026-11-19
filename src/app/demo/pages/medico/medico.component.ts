@@ -12,6 +12,7 @@ import { MedicoRq } from 'src/app/models/medico-rq';
 import { Especializacion } from 'src/app/models/especializacion';
 import { EspecializacionService } from '../especializacion/service/especializacion.service';
 
+/** Presenta la pantalla de veterinarios y gestiona sus acciones. */
 @Component({
   selector: 'app-medico',
   imports: [CommonModule, ReactiveFormsModule],
@@ -65,6 +66,7 @@ export class MedicoComponent {
   paginaActual = 1;
   readonly registrosPorPagina = 5;
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly medicoService: MedicoService,
     private readonly especializacionService: EspecializacionService) {
     this.destroyRef.onDestroy(() => this.modalInstance?.dispose());
@@ -72,6 +74,7 @@ export class MedicoComponent {
     this.listarEspecializaciones();
   }
 
+  /** Consulta el catálogo de especialidades veterinarias. */
   listarEspecializaciones(): void {
     this.cargandoEspecializaciones = true;
     this.errorEspecializaciones = '';
@@ -122,19 +125,23 @@ export class MedicoComponent {
     });
   }
 
+  /** Devuelve el estado que se usa para presentar el registro. */
   obtenerEstado(medico: Medico): string {
     return medico.estado == null ? 'No informado' : medico.estado ? 'Activo' : 'Inactivo';
   }
 
+  /** Devuelve los veterinarios que se muestran en la página actual. */
   get medicoPaginados(): Medico[] {
     const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
     return this.medicoFiltrados.slice(inicio, inicio + this.registrosPorPagina);
   }
 
+  /** Calcula cuántas páginas se necesitan para mostrar el listado. */
   get totalPaginas(): number {
     return Math.ceil(this.medicoFiltrados.length / this.registrosPorPagina);
   }
 
+  /** Devuelve los números de página disponibles para el listado. */
   get paginas(): number[] {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
@@ -174,12 +181,14 @@ export class MedicoComponent {
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
+  /** Aplica el texto de búsqueda y vuelve a la primera página. */
   actualizarBusqueda(event: Event) {
     this.terminoBusqueda = (event.target as HTMLInputElement).value;
     this.paginaActual = 1;
   }
 
   // Cambia paginacion.
+  /** Muestra la página seleccionada del listado. */
   cambiarPagina(pagina: number) {
     if (pagina >= 1 && pagina <= this.totalPaginas) {
       this.paginaActual = pagina;
@@ -187,6 +196,7 @@ export class MedicoComponent {
   }
 
   // Metodo privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
+  /** Prepara el texto para comparar búsquedas sin distinguir mayúsculas ni tildes. */
   private normalizarTexto(texto: string): string {
     return texto
       .toLocaleLowerCase()
@@ -195,6 +205,7 @@ export class MedicoComponent {
   }
 
   // Evento para abrir el modal de crear o editar medicos, dependiendo del modo recibido.
+  /** Prepara el formulario para registrar un veterinario. */
   nuevoMedico(modo: string) {
     if (this.enviando) {
       return;
@@ -207,6 +218,7 @@ export class MedicoComponent {
     this.openModal(modo);
   }
 
+  /** Abre el formulario con los datos del registro que se quiere modificar. */
   abrirEdicion(medico: Medico) {
     if (this.enviando) {
       return;
@@ -227,6 +239,7 @@ export class MedicoComponent {
     this.openModal(this.modoFormulario);
   }
 
+  /** Cierra la ventana indicada. */
   closeModal() {
     if (this.enviando) {
       return;
@@ -236,6 +249,7 @@ export class MedicoComponent {
     }
   }
 
+  /** Guarda el veterinario. */
   guardarMedico(): void {
     if (this.enviando) {
       return;
@@ -288,6 +302,7 @@ export class MedicoComponent {
     });
   }
 
+  /** Abre la ventana indicada. */
   openModal(modo: string) {
     this.titleModal = modo === 'C' ? 'Crear Médico' : 'Editar Médico';
     this.titleBoton = modo === 'C' ? 'Guardar Médico' : 'Actualizar Médico';

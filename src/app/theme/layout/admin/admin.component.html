@@ -1,3 +1,4 @@
+<!-- Plantilla para mostrar el área de trabajo de los usuarios autenticados. -->
 <app-navigation class="pcoded-navbar" [ngClass]="{
     'navbar-collapsed': navCollapsed,
     'mob-open': navCollapsedMob
@@ -15,6 +16,9 @@
               <div class="clinic-home__intro">
                 <span class="clinic-home__eyebrow">Clinica Veterinaria Uniminuto</span>
                 <h1 id="clinic-home-title">Bienvenido a tu espacio de gestión</h1>
+                @if (swaggerUrl) {
+                  <a [href]="swaggerUrl" target="_blank" rel="noopener noreferrer">Documentación de API (Swagger)</a>
+                }
                 <p>
                   Organiza la atención, el seguimiento y el cuidado de nuestras mascotas desde un solo lugar.
 

@@ -5,6 +5,7 @@ import { provideRouter, withEnabledBlockingInitialNavigation, withHashLocation, 
 import { routes } from './app-routing.module';
 import { HeadersInterceptor } from "./interceptors/headers.interceptor";
 
+/** Declara los servicios y proveedores de Angular que usa la aplicación al iniciar. */
 export const appConfig: ApplicationConfig = {
     providers: [
       provideRouter(routes,

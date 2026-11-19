@@ -1,6 +1,7 @@
 import { Cliente } from "./cliente";
 import { Raza } from "./raza";
 
+/** Representa a un paciente de la clínica y su relación con el propietario. */
 export class Mascota {
     mascotaId?: number;
     nombreMascota?: string;

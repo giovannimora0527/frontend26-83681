@@ -13,9 +13,12 @@ import { Cita } from 'src/app/models/cita';
 import { Medicamento } from 'src/app/models/medicamento';
 import Swal from 'sweetalert2';
 import { MedicamentoService } from '../medicamento/service/medicamento.service';
+import { perfilClinica, perfilesClinica } from '../gestion-clinica/clinica-api.service';
 
+/** Enumera las columnas por las que se puede ordenar la tabla. */
 type ColumnaOrden = 'nombre' | 'medicamento' | 'dosis' | 'duracion' | 'frecuencia' | 'indicaciones' | 'cliente' | 'fechaCreacionRegistro';
 
+/** Presenta la pantalla de fórmulas médicas y gestiona sus acciones. */
 @Component({
   selector: 'app-formula-medica',
   imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule],
@@ -23,6 +26,9 @@ type ColumnaOrden = 'nombre' | 'medicamento' | 'dosis' | 'duracion' | 'frecuenci
   styleUrl: './formula-medica.component.scss'
 })
 export class FormulaMedicaComponent {
+  readonly puedeFormular = perfilesClinica.medicos.includes(perfilClinica());
+  formulaDetalle: Formula | null = null;
+  private modalDetalle?: Modal;
   // Variables para el modal.
   modalInstance: Modal | null = null;
   titleModal: string = "";
@@ -50,6 +56,7 @@ export class FormulaMedicaComponent {
   respuestaError = '';
 
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(
     private readonly formulaService: FormulaService,
     private readonly medicamentoService: MedicamentoService,
@@ -58,10 +65,13 @@ export class FormulaMedicaComponent {
   ) {
     this.inicializarFormulario();
     this.listar();
-    this.listarCitas();
-    this.listarMedicamentos();
+    if (this.puedeFormular) {
+      this.listarCitas();
+      this.listarMedicamentos();
+    }
   }
 
+  /** Prepara los campos del formulario y sus validaciones. */
   inicializarFormulario(): void {
     this.form = this.formBuilder.group({
       cita: [null, Validators.required],
@@ -69,14 +79,18 @@ export class FormulaMedicaComponent {
       dosis: ['', Validators.required],
       frecuencia: ['', Validators.required],
       duracion: ['', Validators.required],
+      viaAdministracion: ['', [Validators.required, Validators.maxLength(50)]],
+      cantidadPrescrita: [1, [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
       indicaciones: ['']
     });
   }
 
+  /** Da acceso a los controles del formulario para consultar su valor y sus errores. */
   get f(): { [key: string]: AbstractControl } {
     return this.form.controls;
   }
 
+  /** Consulta las citas. */
   listarCitas(): void {
     this.citaService.listarCitas().subscribe({
       next: (data) => this.listCitas = data,
@@ -84,6 +98,7 @@ export class FormulaMedicaComponent {
     });
   }
 
+  /** Consulta los medicamentos. */
   listarMedicamentos(): void {
     this.cargandoMedicamentos = true;
     this.errorMedicamentos = '';
@@ -107,10 +122,12 @@ export class FormulaMedicaComponent {
     });
   }
 
+  /** Comprueba si dos opciones identifican la misma cita. */
   compararCitas(citaA: Cita | null, citaB: Cita | null): boolean {
     return citaA === citaB || citaA?.id === citaB?.id;
   }
 
+  /** Comprueba si dos opciones identifican el mismo medicamento. */
   compararMedicamentos(medicamentoA: Medicamento | null, medicamentoB: Medicamento | null): boolean {
     return medicamentoA === medicamentoB || medicamentoA?.id === medicamentoB?.id;
   }
@@ -153,12 +170,14 @@ export class FormulaMedicaComponent {
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
+  /** Aplica el texto de búsqueda y vuelve a la primera página. */
   actualizarBusqueda(event: Event) {
     this.terminoBusqueda = (event.target as HTMLInputElement).value;
     this.paginaActual = 1;
   }
 
   // Cambia paginacion.
+  /** Muestra la página seleccionada del listado. */
   cambiarPagina(pagina: number) {
     if (pagina >= 1 && pagina <= this.totalPaginas) {
       this.paginaActual = pagina;
@@ -166,6 +185,7 @@ export class FormulaMedicaComponent {
   }
 
   // Metodo privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
+  /** Prepara el texto para comparar búsquedas sin distinguir mayúsculas ni tildes. */
   private normalizarTexto(texto: string): string {
     return texto
       .toLocaleLowerCase()
@@ -185,6 +205,11 @@ export class FormulaMedicaComponent {
       }
 
       const valores = [
+        formula.numeroFormula,
+        ...(formula.detalles ?? []).flatMap((linea) => [
+          linea.medicamentoNombre, linea.dosis, linea.frecuencia, linea.duracionTratamiento,
+          linea.viaAdministracion, linea.indicaciones
+        ]),
         formula.medicamento?.nombre,
         formula.dosis,
         formula.duracion,
@@ -211,6 +236,7 @@ export class FormulaMedicaComponent {
     });
   }
 
+  /** Obtiene el valor de la columna que se usa para ordenar cada fila. */
   private obtenerValorOrden(formula: Formula, columna: ColumnaOrden): string | number {
     switch (columna) {
       case 'nombre':
@@ -232,6 +258,7 @@ export class FormulaMedicaComponent {
     }
   }
 
+  /** Cambia la columna de orden o invierte el sentido del orden actual. */
   ordenarPor(columna: ColumnaOrden): void {
     if (this.columnaOrden === columna) {
       this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
@@ -242,15 +269,18 @@ export class FormulaMedicaComponent {
     this.paginaActual = 1;
   }
 
+  /** Selecciona las fórmulas que se muestran en la página actual. */
   get formulasPaginadas(): Formula[] {
     const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
     return this.formulasFiltradas.slice(inicio, inicio + this.registrosPorPagina);
   }
 
+  /** Calcula cuántas páginas se necesitan para mostrar el listado. */
   get totalPaginas(): number {
     return Math.ceil(this.formulasFiltradas.length / this.registrosPorPagina);
   }
 
+  /** Devuelve los números de página disponibles para el listado. */
   get paginas(): number[] {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
@@ -262,6 +292,7 @@ export class FormulaMedicaComponent {
 
   // Evento para abrir el modal de crear o editar formula, dependiendo del modo recibido.
   nuevaFormula(modo: string) {
+    if (!this.puedeFormular) return;
     this.titleModal = modo === 'C' ? 'Crear fórmula médica' : 'Editar fórmula médica';
     this.modoFormulario = modo;
     this.formulaSelected = null;
@@ -269,14 +300,33 @@ export class FormulaMedicaComponent {
     this.openModal(modo);
   }
 
+  /** Restablece los campos y la selección del formulario. */
   resetFormulario() {
-    this.form.reset();
+    this.form.reset({ cantidadPrescrita: 1 });
     this.form.markAsPristine();
     this.form.markAsUntouched();
     this.respuestaError = '';
   }
 
+  /** Muestra la información completa del registro seleccionado. */
+  verDetalle(formula: Formula) {
+    this.formulaDetalle = formula;
+    const elemento = document.getElementById('modalDetalleFormula');
+    if (!elemento) return;
+    this.modalDetalle ??= new Modal(elemento);
+    this.modalDetalle.show();
+  }
+
+  /** Indica si la sesión actual tiene permiso para editar el registro. */
+  puedeEditar(formula: Formula): boolean {
+    return this.puedeFormular && (formula.detalles?.length ?? 0) <= 1
+      && ['PROGRAMADA', 'CONFIRMADA'].includes(formula.cita?.estado)
+      && formula.activo === true && formula.estado === 'VIGENTE' && !formula.cantidadDispensada;
+  }
+
+  /** Abre el formulario con los datos del registro que se quiere modificar. */
   abrirEdicion(formula: Formula) {
+    if (!this.puedeEditar(formula)) return;
     this.formulaSelected = formula;
     this.modoFormulario = 'E';
     this.form.patchValue({
@@ -285,6 +335,8 @@ export class FormulaMedicaComponent {
       dosis: formula.dosis ?? null,
       duracion: formula.duracion,
       frecuencia: formula.frecuencia,
+      viaAdministracion: formula.viaAdministracion ?? '',
+      cantidadPrescrita: formula.cantidadPrescrita ?? 1,
       indicaciones: formula.indicaciones ?? ''
     });
     this.openModal(this.modoFormulario);
@@ -295,6 +347,7 @@ export class FormulaMedicaComponent {
    * @returns Acción realizada sobre la formula (crear o actualizar).
    */
   guardarFormula() {
+    if (!this.puedeFormular || (this.formulaSelected && !this.puedeEditar(this.formulaSelected))) return;
     if (this.form.invalid || this.enviando) {
       this.form.markAllAsTouched();
       return;
@@ -307,6 +360,8 @@ export class FormulaMedicaComponent {
       indicaciones: valores.indicaciones,
       frecuencia: valores.frecuencia,
       duracion: valores.duracion,
+      viaAdministracion: valores.viaAdministracion.trim(),
+      cantidadPrescrita: valores.cantidadPrescrita,
       cita: valores.cita,
       medicamento: valores.medicamento,      
       citaId: valores.cita?.id,
@@ -338,6 +393,7 @@ export class FormulaMedicaComponent {
     });
   }
 
+  /** Obtiene el mensaje que devuelve el servidor para mostrarlo en pantalla. */
   private obtenerMensajeRespuesta(respuesta: unknown, mensajePredeterminado: string): string {
     if (respuesta && typeof respuesta === 'object') {
       const cuerpo = respuesta as { mensaje?: unknown; message?: unknown };
@@ -349,6 +405,7 @@ export class FormulaMedicaComponent {
     return mensajePredeterminado;
   }
 
+  /** Cierra la ventana indicada. */
   closeModal() {
     if (this.modalInstance) {
       this.modalInstance.hide();
@@ -356,6 +413,7 @@ export class FormulaMedicaComponent {
     this.resetFormulario();
   }
 
+  /** Abre la ventana indicada. */
   openModal(modo: string) {
     this.titleModal = modo === 'C' ? 'Crear fórmula médica' : 'Editar fórmula médica';
     this.titleBoton = modo === 'C' ? 'Guardar fórmula' : 'Actualizar fórmula';

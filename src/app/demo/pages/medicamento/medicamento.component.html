@@ -11,7 +11,7 @@
     <nav class="module-tabs" aria-label="Módulos de medicamentos e inventario">
       <button type="button" [class.active]="moduloActual === 'medicamentos'" (click)="seleccionarModulo('medicamentos')"><i class="bi bi-capsule"></i> Medicamentos</button>
       <button *ngIf="esAdmin || esDespacho" type="button" [class.active]="moduloActual === 'inventario'" (click)="seleccionarModulo('inventario')"><i class="bi bi-boxes"></i> Inventario</button>
-      <button *ngIf="esAdmin || esDespacho" type="button" [class.active]="moduloActual === 'despacho'" (click)="seleccionarModulo('despacho')"><i class="bi bi-clipboard2-check"></i> Despacho</button>
+      <button *ngIf="esDespacho" type="button" [class.active]="moduloActual === 'despacho'" (click)="seleccionarModulo('despacho')"><i class="bi bi-clipboard2-check"></i> Despacho</button>
     </nav>
 
     <!-- Cada vista se implementa y mantiene en su carpeta de dominio. -->
@@ -29,7 +29,7 @@
       <!-- Paginación local con ocho medicamentos por página. -->
       <footer class="pager"><span>{{ medicamentosFiltrados.length }} medicamentos · página {{ paginaMedicamentos }} de {{ paginasMedicamentos.length }}</span><div><button class="btn btn-sm btn-light" type="button" (click)="cambiarPaginaMedicamentos(paginaMedicamentos - 1)" [disabled]="paginaMedicamentos === 1">Anterior</button><button *ngFor="let pagina of paginasMedicamentos" class="btn btn-sm" [class.btn-primary]="pagina === paginaMedicamentos" [class.btn-light]="pagina !== paginaMedicamentos" type="button" (click)="cambiarPaginaMedicamentos(pagina)">{{ pagina }}</button><button class="btn btn-sm btn-light" type="button" (click)="cambiarPaginaMedicamentos(paginaMedicamentos + 1)" [disabled]="paginaMedicamentos === paginasMedicamentos.length">Siguiente</button></div></footer>
     </section>
-    <app-inventario *ngIf="moduloActual === 'inventario'"></app-inventario>
-    <app-despacho *ngIf="moduloActual === 'despacho'"></app-despacho>
+    <app-inventario *ngIf="moduloActual === 'inventario' && (esAdmin || esDespacho)"></app-inventario>
+    <app-despacho *ngIf="moduloActual === 'despacho' && esDespacho"></app-despacho>
   </ng-container>
 </div>

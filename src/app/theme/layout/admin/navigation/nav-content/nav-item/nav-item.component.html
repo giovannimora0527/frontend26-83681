@@ -1,6 +1,8 @@
+<!-- Plantilla para mostrar una opción de menú. -->
 @if (!item().hidden) {
   @if (item().url && !item().external) {
-    <li [ngClass]="item().classes" [routerLinkActive]="['active']">
+    <li [ngClass]="item().classes" [routerLinkActive]="['active']"
+        [routerLinkActiveOptions]="{ exact: item().exactMatch === true }">
       <a
         class="nav-link"
         [target]="item().target ? '_blank' : '_self'"

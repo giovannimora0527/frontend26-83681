@@ -6,6 +6,7 @@ import { UsuarioActualizacion, UsuarioService } from './service/usuario.service'
 import { getJwtPayload } from 'src/app/utils/jwt.util';
 import Swal from 'sweetalert2';
 
+/** Presenta la pantalla de usuarios y gestiona sus acciones. */
 @Component({
   selector: 'app-usuario',
   imports: [CommonModule, FormsModule],
@@ -24,6 +25,7 @@ export class UsuarioComponent {
   readonly esAdministrador = this.normalizar(getJwtPayload()?.rol ?? '') === 'administrador'
     || this.normalizar(getJwtPayload()?.rol ?? '') === 'admin';
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly usuarioService: UsuarioService) {
     this.listar();
   }
@@ -60,23 +62,28 @@ export class UsuarioComponent {
     return this.usuariosFiltrados.slice(inicio, inicio + this.tamanoPagina);
   }
 
+  /** Devuelve los números de página disponibles para el listado. */
   get paginas(): number[] {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
 
+  /** Calcula cuántas páginas se necesitan para mostrar el listado. */
   get totalPaginas(): number {
     return Math.ceil(this.usuariosFiltrados.length / this.tamanoPagina);
   }
 
+  /** Actualiza el filtro de texto y reinicia el listado. */
   cambiarBusqueda(valor: string): void {
     this.busqueda = valor;
     this.paginaActual = 1;
   }
 
+  /** Muestra la página seleccionada del listado. */
   cambiarPagina(pagina: number): void {
     if (pagina >= 1 && pagina <= this.totalPaginas) this.paginaActual = pagina;
   }
 
+  /** Devuelve el estado que se usa para presentar el registro. */
   obtenerEstado(usuario: Usuario): string {
     return usuario.activo === false ? 'Inactivo' : 'Activo';
   }
@@ -143,10 +150,12 @@ export class UsuarioComponent {
     return perfiles[rolNormalizado] ?? null;
   }
 
+  /** Prepara el texto para compararlo de forma uniforme. */
   private normalizar(valor: string): string {
     return valor.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
 
+  /** Obtiene el mensaje del servidor o devuelve un texto de respaldo. */
   private mensajeError(status?: number): string {
     if (status === 0) return 'No se pudo conectar con el servidor. Verifica que el backend esté activo.';
     if (status === 401) return 'La sesión venció o no es válida. Inicia sesión nuevamente.';

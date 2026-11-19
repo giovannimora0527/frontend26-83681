@@ -8,6 +8,7 @@ import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { NavLeftComponent } from './nav-left/nav-left.component';
 import { NavRightComponent } from './nav-right/nav-right.component';
 
+/** Organiza los controles de la barra superior. */
 @Component({
   selector: 'app-nav-bar',
   imports: [SharedModule, NavLeftComponent, NavRightComponent, RouterModule, CommonModule],
@@ -23,6 +24,7 @@ export class NavBarComponent {
   collapseStyle: string;
 
   // constructor
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor() {
     this.navCollapsedMob = false;
     this.headerStyle = '';
@@ -31,6 +33,7 @@ export class NavBarComponent {
   }
 
   // public method
+  /** Alterna la opción de navegación en pantallas pequeñas. */
   toggleMobOption() {
     this.menuClass = !this.menuClass;
     this.headerStyle = this.menuClass ? 'none' : '';
@@ -38,12 +41,14 @@ export class NavBarComponent {
   }
 
   // this is for eslint rule
+  /** Atiende la tecla usada para controlar la navegación. */
   handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       this.closeMenu();
     }
   }
 
+  /** Cierra el menú de navegación abierto. */
   closeMenu() {
       document.querySelector<HTMLElement>('app-navigation.pcoded-navbar')?.classList.remove('mob-open');
   }

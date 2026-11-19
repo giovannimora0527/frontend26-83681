@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 // project import
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 
+/** Presenta el identificador visual de la aplicación en el menú. */
 @Component({
   selector: 'app-nav-logo',
   imports: [SharedModule, RouterModule],
@@ -18,6 +19,7 @@ export class NavLogoComponent {
   windowWidth = window.innerWidth;
 
   // public method
+  /** Abre o cierra el grupo seleccionado del menú. */
   navCollapse() {
     if (this.windowWidth >= 992) {
       this.navCollapsed = !this.navCollapsed;

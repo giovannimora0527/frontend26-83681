@@ -3,6 +3,7 @@ import { Historia } from './historia';
 import { Cita } from './cita';
 import { Formula } from './formula';
 
+/** Define los datos que utiliza la aplicación para representar la anotación clínica. */
 export class AnotacionHistoria {
     id!: number;
     descripcion!: string;

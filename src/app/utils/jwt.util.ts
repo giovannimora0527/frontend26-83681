@@ -1,3 +1,4 @@
+/** Define los datos de identidad y permisos que se leen de la sesión. */
 export interface JwtPayload {
   sub: string;
   username: string;
@@ -8,6 +9,7 @@ export interface JwtPayload {
   exp: number;
 }
 
+/** Describe las opciones del menú autorizadas en la sesión. */
 export interface JwtMenu {
   activo: boolean;
   code: string;
@@ -19,6 +21,7 @@ export interface JwtMenu {
   url: string;
 }
 
+/** Decodifica el token de la sesión y comprueba que contenga los datos esperados. */
 export function getJwtPayload(): JwtPayload | null {
   const token = sessionStorage.getItem('token');
   if (token === null) {
@@ -58,6 +61,7 @@ export function getJwtPayload(): JwtPayload | null {
   };
 }
 
+/** Lee las opciones del menú guardadas en el token de la sesión. */
 export function getJwtMenus(): JwtMenu[] {
   const payload = getJwtPayload();
   if (payload === null) {
@@ -71,10 +75,12 @@ export function getJwtMenus(): JwtMenu[] {
   return menus;
 }
 
+/** Comprueba que el valor sea un objeto apto para leer sus propiedades. */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** Comprueba que la opción del token tenga los campos necesarios para el menú. */
 function isJwtMenu(value: unknown): value is JwtMenu {
   return (
     isRecord(value) &&

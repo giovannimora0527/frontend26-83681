@@ -1,3 +1,4 @@
+/** Define los datos enviados al servidor para la anotación clínica. */
 export interface AnotacionHistoriaRq {
     id?: number;
     historiaId: number;

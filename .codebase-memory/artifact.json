@@ -1,11 +1,12 @@
 {
     "schema_version": 2,
-    "commit": "fca5f672b12c54155efd3259fe6da8a43ce7e20a",
-    "indexed_at": "2026-11-17T21:46:49Z",
-    "project": "C-Users-Acer-Documents-Proyecto-Programacion-frontend26-83681",
-    "nodes": 2225,
-    "edges": 4019,
-    "original_size": 10158080,
-    "compressed_size": 1499094,
-    "compression_level": 3
+    "commit": "dba50fac54d232caf2f8b6636d56d0030fffa852",
+    "indexed_at": "2026-11-19T01:44:02Z",
+    "project": "C-Users-Acer-OneDrive-uniminuto.edu-5to-Semestre-Programacic3b3n-web-Proyectos-frontend26-83681",
+    "nodes": 2773,
+    "edges": 6183,
+    "original_size": 14811136,
+    "compressed_size": 1907350,
+    "compression_level": 3,
+    "reconcile_basis": "git-clean-head"
 }
