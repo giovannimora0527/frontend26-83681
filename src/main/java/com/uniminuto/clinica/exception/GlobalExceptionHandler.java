@@ -6,9 +6,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/** Prepara las respuestas de error que recibe el cliente. */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /** Devuelve la información sobre la solicitud rechazada. */
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequest(
             BadRequestException ex) {
@@ -24,6 +26,7 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    /** Prepara la respuesta cuando ocurre un error inesperado. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         ErrorResponse error = new ErrorResponse(

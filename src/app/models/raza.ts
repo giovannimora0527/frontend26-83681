@@ -1,3 +1,4 @@
+/** Identifica una raza del catálogo de pacientes. */
 export class Raza {
     razaId?: number;
     nombre?: string;

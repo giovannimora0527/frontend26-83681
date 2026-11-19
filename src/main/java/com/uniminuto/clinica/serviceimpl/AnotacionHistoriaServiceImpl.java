@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+/** Implementa las operaciones relacionadas con una anotación del historial clínico. */
 @Service
 public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
 
@@ -35,6 +36,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
 
 
 
+    /** Registra una nueva anotación en la historia clínica. */
     @Override
     public MiRespuestaRS crearAnotacionHistoria(AnotacionHistoriaRq anotacionHistoriaRq) {
         this.validarAnotacionHistoria(anotacionHistoriaRq);
@@ -75,6 +77,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
         return rta;
     }
 
+    /** Comprueba los datos requeridos para guardar la anotación. */
     private void validarAnotacionHistoria(AnotacionHistoriaRq anotacionHistoriaRq) throws BadRequestException {
         if (anotacionHistoriaRq == null) {
             throw new BadRequestException("La anotación de historia clínica es obligatoria");

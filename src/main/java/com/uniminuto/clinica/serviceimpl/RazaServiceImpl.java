@@ -13,12 +13,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/** Implementa las operaciones relacionadas con una raza. */
 @Service
 public class RazaServiceImpl implements RazaService {
 
     @Autowired
     private RazaRepository razaRepository;
 
+    /** Registra una nueva raza en el catálogo. */
     @Override
     public MiRespuestaRS crearRazaNueva(RazaRq razaRq) throws BadRequestException {
 
@@ -41,12 +43,14 @@ public class RazaServiceImpl implements RazaService {
         return respuesta;
     }
 
+    /** Consulta el catálogo de razas. */
     @Override
     public List<Raza> listarRazas() throws BadRequestException {
         return razaRepository.findAll().stream().sorted((r1, r2) -> r1.getNombre().compareToIgnoreCase(r2
                 .getNombre())).toList();
     }
 
+    /** Comprueba los datos requeridos para guardar la raza. */
     private void validarRazaRq(RazaRq razaRq) throws BadRequestException {
         if (razaRq.getNombre() == null || razaRq.getNombre().isEmpty()) {
             throw new BadRequestException("El nombre de la raza es obligatorio.");

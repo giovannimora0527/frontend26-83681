@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una raza. */
 @Entity
 @Table(name = "raza")
 @Data

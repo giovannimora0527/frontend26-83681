@@ -26,17 +26,20 @@ describe('CitaComponent', () => {
     motivo: 'Control general', estado: 'Pendiente'
   };
 
+  /** Carga los datos iniciales que se muestran al abrir el formulario. */
   function completarFormulario(): void {
     component.form.setValue({
-      fechaHora: '2026-10-15T10:30', mascota, medico, motivo: 'Control general', estado: 'Pendiente'
+      fechaHora: '2026-10-15T10:30', mascota, motivo: 'Control general', estado: 'Pendiente',
+      duracionMinutos: 30, motivoCancelacion: '', medico
     });
   }
 
   beforeEach(async () => {
-    citaService = jasmine.createSpyObj<CitaService>('CitaService', ['listarCitas', 'guardarCita', 'actualizarCita']);
+    citaService = jasmine.createSpyObj<CitaService>('CitaService', ['listarCitas', 'guardarCita', 'actualizarCita', 'listarCitasPorMascota']);
     mascotaService = jasmine.createSpyObj<MascotaService>('MascotaService', ['listarMascotas']);
     medicoService = jasmine.createSpyObj<MedicoService>('MedicoService', ['listar', 'listarMedicosDisponiblesPorFecha']);
     citaService.listarCitas.and.returnValue(of([cita]));
+    citaService.listarCitasPorMascota.and.returnValue(of([{ ...cita, motivo: 'Cita anterior' }]));
     citaService.guardarCita.and.returnValue(of(cita));
     citaService.actualizarCita.and.returnValue(of(cita));
     mascotaService.listarMascotas.and.returnValue(of([mascota]));
@@ -157,7 +160,7 @@ describe('CitaComponent', () => {
     completarFormulario();
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     expect(citaService.guardarCita).toHaveBeenCalledWith(jasmine.objectContaining({
-      mascotaId: 7, medicoId: 3, fechaHora: '2026-10-15T10:30', motivo: 'Control general', estado: 'programada'
+      mascotaId: 7, medicoId: 3, fechaHora: '2026-10-15T10:30', motivo: 'Control general', estado: 'PROGRAMADA', duracionMinutos: 30
     }));
     expect(citaService.listarCitas).toHaveBeenCalledTimes(2);
     expect(component.enviando).toBeFalse();
@@ -184,7 +187,7 @@ describe('CitaComponent', () => {
   it('preserves the current status but only offers cancelada and confirmada as changes', () => {
     spyOn(component, 'openModal');
     spyOn(Swal, 'fire');
-    for (const estado of [' PROGRAMADA ', 'pendiente', 'atendida', 'confirmada']) {
+    for (const estado of [' PROGRAMADA ', 'pendiente', 'confirmada']) {
       component.abrirEdicion({ ...cita, estado });
       fixture.detectChanges();
       const selector: HTMLSelectElement = fixture.nativeElement.querySelector('#citaEstado');
@@ -198,24 +201,32 @@ describe('CitaComponent', () => {
       const selector: HTMLSelectElement = fixture.nativeElement.querySelector('#citaEstado');
       selector.value = estado;
       selector.dispatchEvent(new Event('change'));
+      if (estado === 'cancelada') {
+        component.guardarCita();
+        expect(citaService.actualizarCita).not.toHaveBeenCalled();
+        component.form.controls['motivoCancelacion'].setValue('  Solicitada por el propietario  ');
+      }
       component.guardarCita();
-      expect(citaService.actualizarCita).toHaveBeenCalledWith(jasmine.objectContaining({ id: cita.id, estado }));
+      expect(citaService.actualizarCita).toHaveBeenCalledWith(jasmine.objectContaining({
+        id: cita.id, estado: estado.toUpperCase(),
+        motivoCancelacion: estado === 'cancelada' ? 'Solicitada por el propietario' : undefined
+      }));
     }
   });
 
   it('identifies cancelled appointments and rejects attempts to edit them', () => {
     const abrir = spyOn(component, 'openModal');
     const aviso = spyOn(Swal, 'fire');
-    for (const estado of ['cancelada', 'CANCELADA', ' Cancelada ']) {
+    for (const estado of ['cancelada', 'CANCELADA', ' Cancelada ', 'ATENDIDA', 'NO_ASISTIDA']) {
       const cancelada = { ...cita, estado };
       component.listEspecializaciones = [cancelada];
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('.btn-outline-info').getAttribute('aria-label'))
-        .toBe('No se puede editar una cita cancelada');
+        .toBe('No se puede editar una cita cerrada');
       component.abrirEdicion(cancelada);
     }
     expect(abrir).not.toHaveBeenCalled();
-    expect(aviso).toHaveBeenCalledWith('Cita cancelada', 'No se puede editar una cita cancelada.', 'warning');
+    expect(aviso).toHaveBeenCalledWith('Cita cerrada', 'No se puede editar una cita cerrada.', 'warning');
   });
 
   it('opens the details of each row including cancelled appointments without changing the form', () => {
@@ -235,7 +246,7 @@ describe('CitaComponent', () => {
     expect(component.citaSelected).toBeNull();
   });
 
-  it('shows appointment, pet, doctor and client data in a read-only modal with only a close button', () => {
+  it('shows read-only appointment details and opens the history for the selected pet', () => {
     const ocultar = jasmine.createSpy('hide');
     component.modalDetalleInstance = { show: jasmine.createSpy('show'), hide: ocultar };
     component.verCita({
@@ -250,8 +261,11 @@ describe('CitaComponent', () => {
       expect(modal.textContent).withContext(texto).toContain(texto);
     }
     expect(modal.querySelectorAll('input, select, textarea, form').length).toBe(0);
-    expect(modal.querySelectorAll('button').length).toBe(1);
-    const cerrar = modal.querySelector('button');
+    modal.querySelector<HTMLButtonElement>('.modal-body button')?.click();
+    fixture.detectChanges();
+    expect(citaService.listarCitasPorMascota).toHaveBeenCalledWith(7);
+    expect(modal.textContent).toContain('Cita anterior');
+    const cerrar = modal.querySelector<HTMLButtonElement>('.modal-footer button');
     expect(cerrar?.textContent?.trim()).toBe('Cerrar');
     cerrar?.click();
     expect(ocultar).toHaveBeenCalled();
@@ -284,7 +298,7 @@ describe('CitaComponent', () => {
     expect(component.enviando).toBeFalse();
     expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBeTrue();
     expect(fixture.nativeElement.querySelector('.modal-body [role="alert"]').textContent)
-      .toContain('No se puede actualizar una cita cancelada.');
+      .toContain('No se puede actualizar una cita cerrada.');
   });
 
   it('blocks duplicate requests while saving', () => {
@@ -326,21 +340,22 @@ describe('CitaComponent', () => {
     expect(component.cargandoMedicos).toBeFalse();
     expect(fixture.nativeElement.textContent).toContain('No fue posible cargar las mascotas.');
     expect(fixture.nativeElement.textContent).toContain('No fue posible cargar los médicos disponibles.');
-    expect(fixture.nativeElement.textContent).toContain('No fue posible cargar las citas.');
+    expect(fixture.nativeElement.textContent).toContain('No fue posible cargar las citas (HTTP desconocido).');
   });
 
-  it('calculates a read-only end exactly fifteen minutes later, including day and year changes', () => {
+  it('calculates a read-only end using the chosen duration, including day and year changes', () => {
+    component.form.controls['duracionMinutos'].setValue(20);
     for (const [inicio, fin] of [
-      ['2026-10-15T10:30', '2026-10-15T10:45'],
-      ['2026-10-31T23:50', '2026-11-01T00:05'],
-      ['2026-12-31T23:50', '2027-01-01T00:05']
+      ['2026-10-15T10:30', '2026-10-15T10:50'],
+      ['2026-10-31T23:50', '2026-11-01T00:10'],
+      ['2026-12-31T23:50', '2027-01-01T00:10']
     ]) {
       component.form.controls['fechaHora'].setValue(inicio);
       fixture.detectChanges();
       const entrada: HTMLInputElement = fixture.nativeElement.querySelector('#citaFechaFin');
       expect(entrada.readOnly).toBeTrue();
       expect(entrada.value).toBe(fin);
-      expect(component.fechaFin?.getTime()).toBe(new Date(inicio).getTime() + 900000);
+      expect(component.fechaFin?.getTime()).toBe(new Date(inicio).getTime() + 1200000);
     }
   });
 
@@ -351,9 +366,9 @@ describe('CitaComponent', () => {
     entrada.dispatchEvent(new Event('input'));
     fixture.detectChanges();
     fixture.nativeElement.querySelector('#consultarMedicos').click();
-    expect(consultar).toHaveBeenCalledWith(new Date(2026, 9, 15, 10, 30), new Date(2026, 9, 15, 10, 45));
+    expect(consultar).toHaveBeenCalledWith(new Date(2026, 9, 15, 10, 30), new Date(2026, 9, 15, 11, 0));
     expect(medicoService.listarMedicosDisponiblesPorFecha).toHaveBeenCalledWith(
-      new Date(2026, 9, 15, 10, 30), new Date(2026, 9, 15, 10, 45)
+      new Date(2026, 9, 15, 10, 30), new Date(2026, 9, 15, 11, 0), undefined, undefined
     );
     expect(component.listMedicos).toEqual([medico]);
     expect(component.disponibilidadConsultada).toBeTrue();

@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/** Representa un veterinario. */
 @Entity
 @Table(name = "medico")
 @Data

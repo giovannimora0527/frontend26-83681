@@ -9,6 +9,7 @@ import { MedicamentoService } from './service/medicamento.service';
 import { Medicamento } from 'src/app/models/medicamento';
 import { getJwtPayload } from 'src/app/utils/jwt.util';
 
+/** Identifica la sección de medicamentos, inventario o despacho que está abierta. */
 type ModuloClinica = 'medicamentos' | 'inventario' | 'despacho';
 
 /** Contenedor de navegación local para los tres módulos asignados a inventario. */
@@ -40,6 +41,7 @@ export class MedicamentoComponent implements OnInit, OnDestroy {
   /** Conserva la suscripción a query params para permitir enlaces directos desde el sidebar. */
   private querySubscription?: Subscription;
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly route: ActivatedRoute, private readonly router: Router, private readonly medicamentoService: MedicamentoService) {}
 
   /** Selecciona el submódulo solicitado en el enlace del sidebar. */
@@ -47,7 +49,7 @@ export class MedicamentoComponent implements OnInit, OnDestroy {
     if (this.autorizado) this.listarMedicamentos();
     this.querySubscription = this.route.queryParamMap.subscribe((params) => {
       const modulo = params.get('modulo');
-      this.moduloActual = modulo === 'inventario' || modulo === 'despacho' ? modulo : 'medicamentos';
+      this.moduloActual = modulo === 'despacho' && this.esDespacho ? 'despacho' : modulo === 'inventario' && (this.esAdmin || this.esDespacho) ? 'inventario' : 'medicamentos';
     });
   }
 

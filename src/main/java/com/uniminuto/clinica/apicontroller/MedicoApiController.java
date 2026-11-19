@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/** Atiende las peticiones relacionadas con un veterinario. */
 @RestController
 public class MedicoApiController implements MedicoApi {
 
@@ -17,16 +18,19 @@ public class MedicoApiController implements MedicoApi {
     private MedicoService medicoService;
 
 
+    /** Devuelve los veterinarios disponibles para el listado. */
     @Override
     public ResponseEntity<List<Medico>> getMedicos() throws BadRequestException {
         return ResponseEntity.ok(this.medicoService.listarMedicos());
     }
 
+    /** Busca el veterinario que coincide con el criterio indicado. */
     @Override
     public ResponseEntity<Medico> buscarMedico(String tipoDocumento, String numeroDocumento) throws BadRequestException {
         return ResponseEntity.ok(this.medicoService.buscarMedico(tipoDocumento, numeroDocumento));
     }
 
+    /** Busca un veterinario por su registro profesional. */
     @Override
     public ResponseEntity<Medico> buscarMedicoPorRegistroProfesional(String registroProfesional) throws BadRequestException {
         return ResponseEntity.ok(this.medicoService.buscarMedicoPorRegistroProfesional(registroProfesional));

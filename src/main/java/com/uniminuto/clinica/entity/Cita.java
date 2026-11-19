@@ -12,6 +12,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una cita veterinaria. */
 @Entity
 @Table(name = "cita")
 @Data

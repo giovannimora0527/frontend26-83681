@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/** Implementa las operaciones relacionadas con una mascota. */
 @Service
 public class MascotaServiceImpl implements MascotaService {
 
@@ -32,6 +33,7 @@ public class MascotaServiceImpl implements MascotaService {
     @Autowired
     private RazaRepository razaRepository;
 
+    /** Consulta las mascotas registradas. */
     @Override
     public List<Mascota> listarMascotas() {
         List<Mascota> mascotas = mascotaRepository.findAll();
@@ -41,6 +43,7 @@ public class MascotaServiceImpl implements MascotaService {
         return mascotas;
     }
 
+    /** Consulta las mascotas en el orden indicado. */
     @Override
     public List<Mascota> listarMascotasOrdenado(boolean ascendente) {
         List<Mascota> mascotas;
@@ -52,11 +55,13 @@ public class MascotaServiceImpl implements MascotaService {
         return mascotas;
     }
 
+    /** Busca las mascotas por el nombre indicado. */
     @Override
     public Optional<Mascota> findByNombreMascota(String nombreMascota) {
         return Optional.ofNullable(mascotaRepository.findByNombreMascota(nombreMascota));
     }
 
+    /** Consulta las mascotas asociadas al propietario. */
     @Override
     public List<Mascota> buscarMascotasPorCliente(Long clienteId) throws BadRequestException {
 
@@ -76,6 +81,7 @@ public class MascotaServiceImpl implements MascotaService {
                 .findByClienteOrderByNombreMascotaAsc(optCliente.get());
     }
 
+    /** Consulta las mascotas asociadas a la raza. */
     @Override
     public List<Mascota> buscarMascotasPorRaza(Integer razaId) throws BadRequestException {
 
@@ -98,6 +104,7 @@ public class MascotaServiceImpl implements MascotaService {
                 .findByRazaOrderByNombreMascotaAsc(optRaza.get());
     }
 
+    /** Registra los datos de una nueva mascota. */
     @Override
     public MiRespuestaRS guardarMascota(MascotaRq mascotaRq) throws BadRequestException {
         // Paso 1. Validar que el objeto mascotaRq no sea nulo
@@ -141,6 +148,7 @@ public class MascotaServiceImpl implements MascotaService {
         return respuesta;
     }
 
+    /** Comprueba los datos requeridos para guardar la mascota. */
     private void validarMascotaRq(MascotaRq mascotaRq) throws BadRequestException {
         if (mascotaRq == null) {
             throw new BadRequestException("El objeto de entrada no puede ser nulo");
@@ -156,6 +164,7 @@ public class MascotaServiceImpl implements MascotaService {
         }
     }
 
+    /** Guarda los cambios de la mascota indicada. */
     @Override
     public MiRespuestaRS actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
         // Paso 1. Validar que el objeto mascotaRq no sea nulo

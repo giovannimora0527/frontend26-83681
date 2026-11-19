@@ -8,6 +8,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { NavigationItem } from '../../navigation';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 
+/** Presenta una opción del menú y el enlace que la abre. */
 @Component({
   selector: 'app-nav-item',
   imports: [SharedModule, RouterModule],
@@ -24,12 +25,14 @@ export class NavItemComponent {
   // constructor
 
   // public method
+  /** Muestra la ayuda visual asociada a la opción del menú. */
   showMenuTooltip(tooltip: NgbTooltip) {
     if (window.matchMedia('(min-width: 992px)').matches && this.element.nativeElement.closest('.pcoded-navbar.navbar-collapsed')) {
       tooltip.open();
     }
   }
 
+  /** Cierra otros grupos de navegación al cambiar la selección. */
   closeOtherMenu(event: MouseEvent) {
     const ele = event.target as HTMLElement;
     if (ele !== null && ele !== undefined) {

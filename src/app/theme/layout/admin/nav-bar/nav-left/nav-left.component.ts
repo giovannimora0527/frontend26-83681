@@ -8,6 +8,7 @@ import { NavSearchComponent } from './nav-search/nav-search.component';
 //
 import screenfull from 'screenfull';
 
+/** Contiene los controles del lado izquierdo de la barra superior. */
 @Component({
   selector: 'app-nav-left',
   imports: [SharedModule],
@@ -18,6 +19,7 @@ export class NavLeftComponent implements OnInit, OnDestroy {
   screenFull = true;
 
   // life cycle hook
+  /** Prepara la pantalla al abrirse y carga los datos que necesita. */
   ngOnInit() {
     if (screenfull.isEnabled) {
       this.screenFull = screenfull.isFullscreen; // Initialize based on current fullscreen state
@@ -27,6 +29,7 @@ export class NavLeftComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Libera los recursos que se usaron mientras la pantalla estaba abierta. */
   ngOnDestroy() {
     if (screenfull.isEnabled) {
       screenfull.off('change', () => {
@@ -35,6 +38,7 @@ export class NavLeftComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Activa o desactiva la vista de pantalla completa. */
   toggleFullscreen() {
     if (screenfull.isEnabled) {
       screenfull.toggle().then(() => {

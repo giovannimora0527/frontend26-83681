@@ -20,6 +20,7 @@ describe('HistoriaComponent', () => {
   let mascotaService: jasmine.SpyObj<MascotaService>;
   let citaService: jasmine.SpyObj<CitaService>;
 
+  /** Envía el formulario para registrar la historia clínica. */
   function crearHistoria(id: number, nombre = `Mascota ${id}`): HistoriaMedica {
     return {
       historia: {
@@ -35,6 +36,7 @@ describe('HistoriaComponent', () => {
     };
   }
 
+  /** Envía los datos de la anotación que se quiere agregar. */
   function crearAnotacion(historia: HistoriaMedica, fecha: string, descripcion: string): AnotacionHistoria {
     return {
       id: 1,
@@ -296,6 +298,7 @@ describe('HistoriaComponent', () => {
       '2026-02-03 10:00 - Sin médico (PROGRAMADA)'
     ]);
     expect(document.querySelector('#anotacion-cita-0')?.textContent).not.toContain('Sin cita asociada');
+    /** Selecciona los veterinarios que se muestran en el formulario. */
     const medicosVisibles = () => Array.from(document.querySelectorAll<HTMLOptionElement>('#anotacion-medico-0 option:not([disabled])'))
       .map(opcion => opcion.textContent?.replace(/\s+/g, ' ').trim());
     expect(medicosVisibles()).toEqual([]);

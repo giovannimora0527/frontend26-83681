@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Contiene los datos enviados para registrar o editar una cuenta. */
 @Data
 public class UsuarioRq {
     /*

@@ -109,8 +109,8 @@
                                 </td>
                                 <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
                                 <td class="text-center">
-                                    <span class="badge" [class.bg-success]="mascota.activo !== false"
-                                        [class.bg-secondary]="mascota.activo === false">{{ obtenerEstado(mascota) }}</span>
+                                    <span class="badge" [class.bg-success]="mascota.activo === true"
+                                        [class.bg-secondary]="mascota.activo !== true">{{ obtenerEstado(mascota) }}</span>
                                 </td>
                                 <td class="text-center mascota-acciones">
                                     <button class="btn btn-sm btn-outline-info d-inline-flex align-items-center justify-content-center text-nowrap px-2" (click)="abrirEdicion(mascota)"

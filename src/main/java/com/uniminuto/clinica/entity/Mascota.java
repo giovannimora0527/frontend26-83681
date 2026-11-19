@@ -12,6 +12,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una mascota. */
 @Entity
 @Table(name = "mascota")
 @Data

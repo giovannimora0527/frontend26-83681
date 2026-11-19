@@ -1,0 +1,60 @@
+<h1 class="h3">Reportes</h1>
+@if (error) { <p role="alert" class="alert alert-danger">{{ error }}</p> }
+<!-- Filtros para generar el reporte según su tipo. -->
+<form class="card card-body mb-3" #filtros="ngForm" (ngSubmit)="consultar()">
+  <fieldset [disabled]="cargando" class="row g-2 align-items-end">
+    <label class="col-md-4">Reporte <select class="form-select" name="tipo" [(ngModel)]="tipo">
+      <option value="financieros">Financiero</option>
+      @if (admin) { <option value="medicos">Gestión médica</option> }
+    </select></label>
+    <label class="col-md-4">Desde <input class="form-control" type="date" name="inicio" [(ngModel)]="inicio" required></label>
+    <label class="col-md-4">Hasta <input class="form-control" type="date" name="fin" [(ngModel)]="fin" required></label>
+    <label class="col-md-4">Veterinario <select class="form-select" name="medico" [(ngModel)]="medicoId">
+      <option [ngValue]="null">Todos</option>
+      @for (medico of medicos; track medico.id) { <option [ngValue]="medico.id">{{ medico.nombres }} {{ medico.apellidos }}</option> }
+    </select></label>
+    <label class="col-md-4">Especialidad <select class="form-select" name="especialidad" [(ngModel)]="especializacionId">
+      <option [ngValue]="null">Todas</option>
+      @for (especialidad of especialidades; track especialidad.id) { <option [ngValue]="especialidad.id">{{ especialidad.nombre }}</option> }
+    </select></label>
+    @if (tipo === 'financieros') {
+      <label class="col-md-4">Agrupar por <select class="form-select" name="periodo" [(ngModel)]="periodo">
+        <option value="dia">Día</option><option value="mes">Mes</option><option value="anio">Año</option>
+      </select></label>
+    }
+    <div class="col-12"><button class="btn btn-primary" [disabled]="filtros.invalid || inicio > fin">Generar vista previa</button></div>
+  </fieldset>
+</form>
+@if (cargando) { <p role="status">Consultando reporte…</p> }
+@if (resultado; as reporte) {
+  <!-- Vista previa y descargas asociadas a los filtros consultados. -->
+  <section class="card card-body">
+    <h2 class="h5">{{ reporte.titulo }}</h2>
+    <p>Generado {{ reporte.generado | date:'medium' }}</p>
+    @if (vistaDesactualizada) {
+      <p class="alert alert-warning" role="status">Los filtros cambiaron. Genera una nueva vista previa para descargar el reporte actualizado.</p>
+    }
+    @if (consulta?.ruta === 'reportes/medicos') {
+      <p>
+        Los indicadores de citas se cuentan por fecha agendada. Las pendientes incluyen las programadas y las
+        confirmadas. La columna «De ellas, confirmadas» muestra ese subconjunto.
+        Las consultas realizadas y las mascotas atendidas se cuentan por fecha de atención. Para las citas antiguas
+        sin fecha de atención se usa la fecha agendada.
+      </p>
+    }
+    <div class="table-responsive">
+      <table class="table table-sm table-striped">
+        <thead><tr>@for (columna of reporte.columnas; track $index) { <th scope="col">{{ columna }}</th> }</tr></thead>
+        <tbody>
+          @for (fila of reporte.filas; track $index) {
+            <tr>@for (columna of reporte.columnas; track $index) { <td>{{ fila[$index] }}</td> }</tr>
+          } @empty { <tr><td [attr.colspan]="reporte.columnas.length">Sin resultados para los filtros consultados.</td></tr> }
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary" [disabled]="vistaDesactualizada" (click)="exportar('pdf')">Descargar PDF</button>
+      <button class="btn btn-outline-primary" [disabled]="vistaDesactualizada" (click)="exportar('excel')">Descargar Excel</button>
+    </div>
+  </section>
+}

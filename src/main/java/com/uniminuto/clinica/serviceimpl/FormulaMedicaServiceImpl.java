@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/** Implementa las operaciones relacionadas con una fórmula médica. */
 @Service
 public class FormulaMedicaServiceImpl implements FormulaMedicaService {
 
@@ -15,6 +16,7 @@ public class FormulaMedicaServiceImpl implements FormulaMedicaService {
     private FormulaMedicaRepository formulaMedicaRepository;
 
 
+    /** Consulta las fórmulas en el orden usado para el listado. */
     @Override
     public List<FormulaMedica> listarFormulasOrdenadas(boolean asc) {
         return asc? formulaMedicaRepository.findAllByOrderByFechaCreacionRegistroAsc()

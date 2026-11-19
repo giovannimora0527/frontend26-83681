@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/** Atiende las peticiones relacionadas con una cuenta de usuario. */
 @RestController
 public class UsuarioApiController implements UsuarioApi {
 
@@ -19,16 +20,19 @@ public class UsuarioApiController implements UsuarioApi {
     private UsuarioService usuarioService;
 
 
+    /** Consulta las cuentas registradas. */
     @Override
     public ResponseEntity<List<UsuarioRs>> getUsuarios() throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.obtenerUsuariosOrdenados());
     }
 
+    /** Guarda la cuenta de usuario. */
     @Override
     public ResponseEntity<MiRespuestaRS> guardar(UsuarioRq usuarioRq) throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.crearUsuario(usuarioRq));
     }
 
+    /** Guarda los cambios de la cuenta de usuario. */
     @Override
     public ResponseEntity<MiRespuestaRS> actualizar(UsuarioRq usuarioRq) throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.actualizarUsuario(usuarioRq));

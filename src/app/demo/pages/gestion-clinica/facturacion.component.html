@@ -1,0 +1,103 @@
+<h1 class="h3">Facturación y pagos</h1>
+@if (error) { <p class="alert alert-danger" role="alert">{{ error }}</p> }
+@if (aviso) { <p class="alert alert-success" role="status">{{ aviso }}</p> }
+<!-- Consulta de facturas con filtros por propietario y mascota. -->
+<section class="card card-body mb-3">
+  <h2 class="h5">Historial de facturación</h2>
+  <form (ngSubmit)="historial()" class="row g-2 align-items-end">
+    <label class="col-md-5">Propietario <select class="form-select" name="cliente" [(ngModel)]="clienteId" (change)="mascotaId = null; cambiarFiltros()" [disabled]="ocupado">
+      <option [ngValue]="null">Seleccionar propietario</option>
+      @for (cliente of clientes; track cliente.id) { <option [ngValue]="cliente.id">{{ cliente.nombres }} {{ cliente.apellidos }} · {{ cliente.numeroDocumento }}</option> }
+    </select></label>
+    <label class="col-md-5">Mascota <select class="form-select" name="mascota" [(ngModel)]="mascotaId" (change)="cambiarFiltros()" [disabled]="ocupado">
+      <option [ngValue]="null">Seleccionar mascota</option>
+      @for (mascota of mascotasVisibles; track mascota.mascotaId) { <option [ngValue]="mascota.mascotaId">{{ mascota.nombreMascota }} · {{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}</option> }
+    </select></label>
+    <div class="col-md-2"><button class="btn btn-outline-primary" [disabled]="(!clienteId && !mascotaId) || ocupado">Consultar</button></div>
+  </form>
+  @if (facturas) {
+    <div class="table-responsive mt-3"><table class="table table-sm">
+      <thead><tr><th>Factura</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Pagado</th><th>Acciones</th></tr></thead>
+      <tbody>@for (factura of facturas; track factura.id) {
+        <tr><td>{{ factura.numero }}</td><td>{{ factura.fecha | date:'short' }}</td><td>{{ etiquetaEstado(factura.estado) }}</td>
+          <td>{{ factura.total | currency:'COP' }}</td><td>{{ factura.pagado | currency:'COP' }}</td>
+          <td><button class="btn btn-sm btn-outline-primary me-1" (click)="abrir(factura)" [disabled]="ocupado">Detalle</button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="pdf(factura.id)">PDF</button></td></tr>
+      } @empty { <tr><td colspan="6">Sin facturas para estos filtros.</td></tr> }</tbody>
+    </table></div>
+  }
+</section>
+<!-- Selección de la cita y validación previa a la emisión. -->
+<form class="card card-body mb-3" #emision="ngForm" (ngSubmit)="emitir()">
+  <h2 class="h5">Emitir factura</h2>
+  <fieldset [disabled]="ocupado" class="row g-2 align-items-end">
+    <label class="col-md-6">Cita atendida <select class="form-select" name="cita" [ngModel]="citaId"
+        (ngModelChange)="consultarEmision($event)" required>
+      <option [ngValue]="null">Seleccionar</option>
+      @for (cita of citasVisibles; track cita.id) { <option [ngValue]="cita.id">{{ cita.fechaHora | date:'short' }} · {{ cita.mascota?.nombreMascota }} · {{ cita.cliente?.nombres }} {{ cita.cliente?.apellidos }}</option> }
+    </select></label>
+    @if (admin) {
+      <label class="col-md-3">Descuento autorizado <input type="number" class="form-control" name="descuento" min="0" step="0.01" [(ngModel)]="descuento.monto"></label>
+      <label class="col-md-3">Motivo del descuento <input class="form-control" name="motivo" [(ngModel)]="descuento.motivo" [required]="!!descuento.monto"></label>
+    }
+    @if (cargandoEmision) { <p class="col-12 mb-0" role="status">Comprobando si la cita puede facturarse…</p> }
+    @if (estadoEmision; as estado) {
+      <p class="col-12 mb-0" role="status">{{ estado.disponible ? 'Lista para facturar.' : estado.motivo }}</p>
+    }
+    @if (errorEmision) {
+      <div class="col-12">
+        <p class="mb-1" role="alert">No se pudo comprobar la cita. {{ errorEmision }}</p>
+        <button type="button" class="btn btn-outline-secondary" (click)="consultarEmision(citaId)">Reintentar</button>
+      </div>
+    }
+    <div class="col-12"><button class="btn btn-primary" [disabled]="emision.invalid || ocupado || !estadoEmision?.disponible">Generar factura</button></div>
+  </fieldset>
+</form>
+@if (seleccion; as factura) {
+  <!-- Detalle de la factura, sus pagos y las acciones permitidas por su estado. -->
+  <section class="card card-body">
+    <h2 class="h5">Factura {{ factura.numero }}</h2>
+    <p>{{ etiquetaEstado(factura.estado) }} · Saldo {{ saldo | currency:'COP' }}</p>
+    <h3 class="h6">Pagos y devoluciones</h3>
+    @if (cargandoPagos) { <p role="status">Consultando pagos…</p> }
+    @if (errorPagos) {
+      <p role="alert">No se pudieron cargar los pagos. {{ errorPagos }}</p>
+      <button type="button" class="btn btn-outline-secondary align-self-start mb-3" (click)="cargarPagos()">Reintentar</button>
+    }
+    @if (pagosConsultados) {
+    <div class="table-responsive"><table class="table table-sm">
+      <thead><tr><th>Fecha</th><th>Método</th><th>Monto</th><th>Observación</th><th>Devolución</th></tr></thead>
+      <tbody>@for (item of pagos; track item.id) {
+        <tr><td>{{ item.fecha | date:'short' }}</td><td>{{ item.metodo }}</td><td>{{ item.monto | currency:'COP' }}</td>
+          <td>{{ item.observacion }}</td><td>{{ item.referenciaDevolucion }}
+          @if (admin && !item.referenciaDevolucion && factura.estado !== 'ANULADA') {
+            <button class="btn btn-sm btn-outline-secondary" [disabled]="ocupado" (click)="devolucionId = item.id; referencia = ''">Registrar devolución</button>
+          }</td></tr>
+      } @empty { <tr><td colspan="5">Sin pagos registrados.</td></tr> }</tbody>
+    </table></div>
+    }
+    @if (admitePagos) {
+      <form #pagoForm="ngForm" (ngSubmit)="pagar()" class="row g-2 align-items-end mb-3">
+        <label class="col-md-3">Monto <input class="form-control" type="number" min="0.01" [max]="saldo" step="0.01" name="monto" [(ngModel)]="pago.monto" required></label>
+        <label class="col-md-3">Método <select class="form-select" name="metodo" [(ngModel)]="pago.metodo">
+          @for (metodo of metodos; track metodo) { <option [value]="metodo">{{ metodo }}</option> }
+        </select></label>
+        <label class="col-md-4">Observación <input class="form-control" name="observacion" [(ngModel)]="pago.observacion"></label>
+        <div class="col-md-2"><button class="btn btn-primary" [disabled]="pagoForm.invalid || ocupado">Registrar pago</button></div>
+      </form>
+    }
+    @if (admin && devolucionId) {
+      <form (ngSubmit)="devolver()" class="d-flex flex-wrap align-items-end gap-2 mb-3">
+        <label>Referencia de devolución <input class="form-control" name="referencia" [(ngModel)]="referencia" required></label>
+        <button class="btn btn-outline-danger" [disabled]="!referencia.trim() || ocupado">Confirmar devolución</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="devolucionId = null">Cancelar</button>
+      </form>
+    }
+    @if (admin && factura.estado !== 'ANULADA' && factura.pagado === 0) {
+      <form (ngSubmit)="anular()" class="d-flex flex-wrap align-items-end gap-2">
+        <label>Motivo de anulación <input class="form-control" name="motivo" [(ngModel)]="motivoAnulacion" required></label>
+        <button class="btn btn-outline-danger" [disabled]="!motivoAnulacion.trim() || ocupado">Anular factura</button>
+      </form>
+    }
+  </section>
+}

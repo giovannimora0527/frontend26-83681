@@ -9,9 +9,12 @@ import { AuthService } from './service/auth.service';
 import { AuthRs } from 'src/app/models/auth-rs';
 import { TokenRq } from 'src/app/models/token-rq';
 import { LoginRs } from 'src/app/models/login-rs';
+import { environment } from 'src/environments/environment';
 
+/** Enumera las pantallas del proceso de inicio de sesión. */
 type Paso = 'credenciales' | 'otp' | 'recuperar';
 
+/** Presenta la pantalla de inicio de sesión y gestiona sus acciones. */
 @Component({
   selector: 'app-login',
   imports: [CommonModule, ReactiveFormsModule],
@@ -19,6 +22,8 @@ type Paso = 'credenciales' | 'otp' | 'recuperar';
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
+  /** Enlace a la documentación de la API en el entorno de desarrollo. */
+  readonly swaggerUrl = environment.swaggerUrl;
   anio: string = "2026";
   paso: Paso = 'credenciales';
   cargando = false;
@@ -30,6 +35,7 @@ export class LoginComponent {
   recuperarForm: FormGroup;
   authRs?: AuthRs;
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -47,6 +53,7 @@ export class LoginComponent {
     });
   }
 
+  /** Envía las credenciales para solicitar el código de acceso. */
   login(): void {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
@@ -115,10 +122,12 @@ export class LoginComponent {
       });
   }
 
+  /** Repite la solicitud de inicio de sesión para pedir un nuevo código. */
   reenviarCodigo(): void {
     this.login();
   }
 
+  /** Solicita el envío de un correo para recuperar el acceso. */
   recuperarPassword(): void {
     if (this.recuperarForm.invalid) {
       this.recuperarForm.markAllAsTouched();
@@ -139,6 +148,7 @@ export class LoginComponent {
     });
   }
 
+  /** Limita el código de verificación a seis letras o números. */
   soloAlfanumericos(event: Event): void {
     const input = event.target as HTMLInputElement;
     const limpio = input.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 6);
@@ -147,6 +157,7 @@ export class LoginComponent {
     }
   }
 
+  /** Cambia el paso visible del formulario de inicio de sesión. */
   irA(paso: Paso): void {
     this.paso = paso;
     if (paso === 'credenciales') {
@@ -155,11 +166,13 @@ export class LoginComponent {
     }
   }
 
+  /** Indica si el control ya fue usado y tiene errores que deben mostrarse. */
   campoInvalido(form: FormGroup, campo: string): boolean {
     const control = form.get(campo);
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
+  /** Finaliza la carga y muestra el mensaje de error de la petición. */
   private manejarError(err: HttpErrorResponse, mensaje: string): void {
     this.cargando = false;
     Swal.fire({

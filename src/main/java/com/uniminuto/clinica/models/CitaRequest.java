@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Contiene los datos para solicitar una cita. */
 @Data
 public class CitaRequest {
 

@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Contiene los datos enviados para gestionar una cita veterinaria. */
 @Data
 public class CitaRq {
 

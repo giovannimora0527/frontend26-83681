@@ -6,10 +6,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/** Permite consultar y guardar los datos relacionados con un veterinario. */
 @Repository
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
 
+    /** Busca el registro por el tipo y el número de documento. */
     Optional<Medico> findByTipoDocumentoAndNumeroDocumento(String tipoDocumento, String numeroDocumento);
 
+    /** Busca el veterinario por su registro profesional. */
     Optional<Medico> findByRegistroProfesional(String registroProfesional);
 }

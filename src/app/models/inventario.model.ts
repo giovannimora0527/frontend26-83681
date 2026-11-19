@@ -11,6 +11,8 @@ export interface MedicamentoInventario {
   precioVenta: number;
   cantidadActual: number;
   stockMinimo: number;
+  fechaCompra?: string | null;
+  fechaVence?: string | null;
   fechaProximoPedido?: string | null;
 }
 
@@ -35,6 +37,7 @@ export interface MovimientoInventario {
   cantidad: number;
   fechaMovimiento: string;
   usuarioId?: number | null;
+  usuarioNombre?: string | null;
   formulaId?: number | null;
   despachoId?: number | null;
   observacion?: string | null;
@@ -49,6 +52,7 @@ export interface FormulaPendiente {
   propietarioNombre?: string;
   mascotaNombre?: string;
   estadoDespacho?: string;
+  indicaciones?: string;
   medicamentos: MedicamentoFormulado[];
 }
 
@@ -76,7 +80,7 @@ export interface LoteDisponible {
   loteId: number;
   numeroLote: string;
   cantidadDisponible: number;
-  fechaVencimiento: string;
+  fechaVencimiento: string | null;
   vencido: boolean;
   proximoAVencer: boolean;
   recomendadoFefo: boolean;
@@ -100,6 +104,11 @@ export interface Despacho {
   mascotaId?: number | null;
   fechaDespacho?: string | null;
   estado: string;
+  numeroFormula?: string;
+  propietarioNombre?: string;
+  mascotaNombre?: string;
+  medicoNombre?: string;
+  usuarioDespachoNombre?: string;
   observacion?: string | null;
 }
 
@@ -113,3 +122,28 @@ export interface RespuestaApi {
 
 /** Estados derivados del stock actual y del mínimo configurado para el producto. */
 export type EstadoInventario = 'AGOTADO' | 'BAJO' | 'DISPONIBLE';
+
+/** Contiene el tipo de informe y el rango de fechas consultado. */
+export interface FiltrosInformeInventario {
+  tipo: string;
+  desde: string;
+  hasta: string;
+}
+
+/** Reúne las existencias, los lotes, los movimientos y sus totales. */
+export interface InformeInventario {
+  generado: string;
+  tipo: string;
+  desde: string | null;
+  hasta: string | null;
+  moneda: string;
+  secciones: { nombre: string; columnas: string[]; filas: (string | number | boolean | null)[][] }[];
+  totales: {
+    existenciasRegistradas: number;
+    disponiblesParaDispensar: number;
+    valorCosto: number;
+    valorPotencialVenta: number;
+    entradas: number;
+    salidas: number;
+  };
+}

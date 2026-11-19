@@ -9,11 +9,13 @@ public class BadRequestException extends RuntimeException {
 
     private final HttpStatus status;
 
+    /** Prepara los datos necesarios para usar esta clase. */
     public BadRequestException(String message) {
         super(message);
         this.status = HttpStatus.BAD_REQUEST;
     }
 
+    /** Devuelve el estado HTTP asociado al error. */
     public HttpStatus getStatus() {
         return status;
     }

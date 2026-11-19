@@ -1,6 +1,7 @@
 // angular import
 import { Component } from '@angular/core';
 
+/** Representa el panel de configuración visual. */
 @Component({
   selector: 'app-configuration',
   templateUrl: './configuration.component.html',

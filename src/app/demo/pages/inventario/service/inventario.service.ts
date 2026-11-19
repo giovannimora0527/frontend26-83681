@@ -1,19 +1,40 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import {
+  FiltrosInformeInventario,
+  InformeInventario,
   InventarioLote,
   MedicamentoInventario,
   MovimientoInventario,
   RespuestaApi
 } from 'src/app/models/inventario.model';
 
+/** Contiene los datos enviados al registrar un lote. */
+export interface RegistroLote {
+  medicamentoId: number;
+  numeroLote: string;
+  cantidad: number;
+  precioCompraLote: number;
+  fechaVencimiento: string | null;
+}
+
+/** Contiene las filas válidas y los errores que devuelve la carga masiva. */
+export interface ResultadoCarga {
+  cargaId: number;
+  registrosValidos?: number;
+  registrosImportados?: number;
+  errores: { fila: number; motivo: string }[];
+  registros?: Record<string, string>[];
+}
+
 /** Acceso HTTP a los endpoints de catálogo, lotes, cargas masivas e inventario clínico. */
 @Injectable({ providedIn: 'root' })
 export class InventarioService {
   private readonly baseUrl = environment.apiUrlAuth;
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly http: HttpClient) {}
 
   /** Consulta el catálogo de productos; la vista limita las filas visibles con paginación. */
@@ -41,43 +62,66 @@ export class InventarioService {
     return this.get('/inventario-lote/listar');
   }
 
-  /** Registra un lote y su movimiento de entrada asociado. */
-  crearLote(datos: { medicamentoId: number; numeroLote: string; cantidad: number; precioCompraLote: number; fechaVencimiento: string }): Observable<RespuestaApi> {
-    return this.http.post<RespuestaApi>(`${this.baseUrl}/inventario-lote/guardar`, datos, { headers: this.headers() });
-  }
-
-  /** Actualiza metadatos de lote sin modificar directamente su saldo. */
-  actualizarLote(id: number, datos: { medicamentoId: number; numeroLote: string; precioCompraLote: number; fechaVencimiento: string; activo: boolean }): Observable<RespuestaApi> {
-    return this.http.post<RespuestaApi>(`${this.baseUrl}/inventario-lote/actualizar/${id}`, datos, { headers: this.headers() });
+  /** Guarda el lote. */
+  guardarLote(lote: RegistroLote): Observable<RespuestaApi> {
+    return this.http.post<RespuestaApi>(this.baseUrl + '/inventario-lote/guardar', lote, { headers: this.headers() });
   }
 
   /** Lee el historial de movimientos para la tabla de trazabilidad. */
-  listarMovimientos(): Observable<MovimientoInventario[]> {
-    return this.get('/movimiento-inventario/listar');
+  listarMovimientos(medicamentoId: number | null = null): Observable<MovimientoInventario[]> {
+    if (medicamentoId !== null) return this.get(`/medicamento/${medicamentoId}/movimientos`);
+
+    return this.get<Array<MovimientoInventario & {
+      medicamento?: { id: number };
+      lote?: { id: number };
+      formula?: { id: number };
+      despacho?: { id: number };
+      usuario?: { id: number; username?: string };
+    }>>('/movimiento-inventario/listar').pipe(map((movimientos) => (movimientos ?? []).map((movimiento) => ({
+      ...movimiento,
+      medicamentoId: movimiento.medicamentoId ?? movimiento.medicamento?.id,
+      loteId: movimiento.loteId ?? movimiento.lote?.id,
+      formulaId: movimiento.formulaId ?? movimiento.formula?.id,
+      despachoId: movimiento.despachoId ?? movimiento.despacho?.id,
+      usuarioId: movimiento.usuarioId ?? movimiento.usuario?.id,
+      usuarioNombre: movimiento.usuarioNombre ?? movimiento.usuario?.username
+    }))));
   }
 
   /** Envía un archivo CSV/XLSX para validar su estructura y sus filas. */
-  previsualizarCarga(archivo: File): Observable<Record<string, unknown>> {
+  previsualizarCarga(archivo: File): Observable<ResultadoCarga> {
     const formData = new FormData();
     formData.append('archivo', archivo);
-    return this.http.post<Record<string, unknown>>(`${this.baseUrl}/inventario/carga-masiva/previsualizar`, formData, {
+    return this.http.post<ResultadoCarga>(`${this.baseUrl}/inventario/carga-masiva/previsualizar`, formData, {
       headers: new HttpHeaders({ Authorization: `Bearer ${sessionStorage.getItem('token') ?? ''}` })
     });
   }
 
   /** Confirma la importación de los registros válidos de una previsualización. */
-  confirmarCarga(cargaId: number): Observable<RespuestaApi> {
-    return this.http.post<RespuestaApi>(`${this.baseUrl}/inventario/carga-masiva/${cargaId}/confirmar`, {}, { headers: this.headers() });
+  confirmarCarga(cargaId: number): Observable<ResultadoCarga> {
+    return this.http.post<ResultadoCarga>(`${this.baseUrl}/inventario/carga-masiva/${cargaId}/confirmar`, {}, { headers: this.headers() });
   }
 
-  /** Descarga el Excel de inventario con tipo y rango de fechas opcionales. */
-  exportarInforme(tipo: string, desde?: string, hasta?: string): Observable<Blob> {
+  /** Genera la vista previa del informe de inventario con el tipo y las fechas indicados. */
+  consultarInforme(filtros: FiltrosInformeInventario): Observable<InformeInventario> {
+    return this.http.get<InformeInventario>(`${this.baseUrl}/medicamento/informes`, {
+      headers: this.headers(), params: this.parametrosInforme(filtros)
+    });
+  }
+
+  /** Descarga el informe de inventario en el formato y con los filtros solicitados. */
+  exportarInforme(formato: 'pdf' | 'excel', filtros: FiltrosInformeInventario): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/medicamento/informes/exportar-${formato}`, {
+      headers: this.headers(), params: this.parametrosInforme(filtros), responseType: 'blob'
+    });
+  }
+
+  /** Convierte el tipo y las fechas del informe en parámetros de la ruta. */
+  private parametrosInforme({ tipo, desde, hasta }: FiltrosInformeInventario): HttpParams {
     let params = new HttpParams().set('tipo', tipo);
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
-    return this.http.get(`${this.baseUrl}/medicamento/informes/exportar-excel`, {
-      headers: this.headers(), params, responseType: 'blob'
-    });
+    return params;
   }
 
   /** Ejecuta una lectura autenticada contra una ruta del backend. */

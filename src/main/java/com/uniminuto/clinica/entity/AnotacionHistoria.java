@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una anotación del historial clínico. */
 @Entity
 @Table(name = "anotacion_historia")
 @Data

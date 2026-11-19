@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+/** Define las operaciones HTTP relacionadas con una fórmula médica. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/formula-medica")
 public interface FormulaMedicaApi {

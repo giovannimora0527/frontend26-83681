@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+/** Define las operaciones HTTP relacionadas con un veterinario. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/medico")
 public interface MedicoApi {

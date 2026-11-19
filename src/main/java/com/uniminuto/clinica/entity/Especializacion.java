@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/** Representa una especialidad veterinaria. */
 @Entity
 @Data
 @Table(name = "especializacion")

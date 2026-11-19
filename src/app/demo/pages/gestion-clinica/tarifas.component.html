@@ -1,0 +1,86 @@
+<h1 class="h3">Especialidades y tarifas</h1>
+@if (error) { <p class="alert alert-danger" role="alert">{{ error }}</p> }
+@if (aviso) { <p class="alert alert-success" role="status">{{ aviso }}</p> }
+<section class="card card-body">
+  <h2 class="h5">Especialidades</h2>
+  <!-- Formulario para registrar o editar una especialidad. -->
+  <form #especialidadForm="ngForm" (ngSubmit)="guardarEspecialidad()" class="row g-2 align-items-end mb-3">
+    <label class="col-md-4">Nombre <input class="form-control" name="nombre" [(ngModel)]="especialidad.nombre" required maxlength="100"></label>
+    <label class="col-md-3">Código <input class="form-control" name="codigo" [(ngModel)]="especialidad.codigoEspecializacion" required maxlength="10"></label>
+    <label class="col-md-5">Descripción <input class="form-control" name="descripcion" [(ngModel)]="especialidad.descripcion" required></label>
+    <label class="col-12"><input type="checkbox" class="form-check-input me-1" name="activa" [(ngModel)]="especialidad.activo"> Activa</label>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary" [disabled]="especialidadForm.invalid || ocupado">{{ especialidad.id ? 'Actualizar especialidad' : 'Crear especialidad' }}</button>
+      @if (especialidad.id) { <button type="button" class="btn btn-outline-secondary" (click)="especialidad = nuevaEspecialidad()">Cancelar edición</button> }
+    </div>
+  </form>
+  <div class="table-responsive"><table class="table table-sm">
+    <thead><tr><th>Nombre</th><th>Código</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>@for (item of especialidades; track item.id) {
+      <tr><td>{{ item.nombre }}</td><td>{{ item.codigoEspecializacion }}</td><td>{{ item.activo ? 'Activa' : 'Inactiva' }}</td>
+        <td><button class="btn btn-sm btn-outline-primary" (click)="editarEspecialidad(item)">Editar {{ item.nombre }}</button></td></tr>
+    }</tbody>
+  </table></div>
+</section>
+<section class="card card-body">
+  <h2 class="h5">Tarifas por servicio</h2>
+  <p class="text-muted">Para cada servicio y especialidad se aplica la tarifa activa con la fecha de vigencia más reciente que ya haya comenzado. Si coinciden las fechas, se aplica el último registro creado.</p>
+  <!-- Configuración del servicio, su precio y la fecha de vigencia. -->
+  <form #tarifaForm="ngForm" (ngSubmit)="guardarTarifa()" class="row g-2 align-items-end mb-3">
+    <label class="col-md-4">Servicio <input class="form-control" name="servicio" [(ngModel)]="tarifa.nombreServicio" required maxlength="150"></label>
+    <label class="col-md-4">Especialidad <select class="form-select" name="especialidad" [(ngModel)]="tarifa.especializacionId">
+      <option [ngValue]="null">General</option>
+      @for (item of especialidades; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }
+    </select></label>
+    <label class="col-md-4">Valor base <input class="form-control" type="number" name="valor" min="0" step="0.01" [(ngModel)]="tarifa.valorBase" required></label>
+    <label class="col-md-4">IVA % <input class="form-control" type="number" name="iva" min="0" max="100" step="0.01" [(ngModel)]="tarifa.ivaPorcentaje" required></label>
+    <label class="col-md-4">Vigencia <input class="form-control" type="date" name="vigencia" [(ngModel)]="tarifa.fechaVigencia" required></label>
+    <label class="col-md-4"><input type="checkbox" class="form-check-input me-1" name="activa" [(ngModel)]="tarifa.activo"> Activa</label>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary" [disabled]="tarifaForm.invalid || ocupado">{{ tarifa.id ? 'Actualizar tarifa' : 'Crear tarifa' }}</button>
+      @if (tarifa.id) { <button type="button" class="btn btn-outline-secondary" (click)="tarifa = nuevaTarifa()">Cancelar edición</button> }
+    </div>
+  </form>
+  <label class="mb-2">Filtrar por especialidad <select class="form-select" [(ngModel)]="filtro" (change)="cargarTarifas()">
+    <option [ngValue]="null">Todas</option>
+    @for (item of especialidades; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }
+  </select></label>
+  <div class="table-responsive"><table class="table table-sm">
+    <thead><tr><th>Servicio</th><th>Valor base</th><th>IVA</th><th>Vigencia</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>@for (item of tarifas; track item.id) {
+      <tr><td>{{ item.nombreServicio }}</td><td>{{ item.valorBase | currency:'COP' }}</td><td>{{ item.ivaPorcentaje }}%</td>
+        <td>{{ item.fechaVigencia }}</td><td>{{ item.activo ? 'Activa' : 'Inactiva' }}</td><td>
+        <button class="btn btn-sm btn-outline-primary me-1" (click)="editarTarifa(item)">Editar</button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="historial(item)">Historial</button></td></tr>
+    }</tbody>
+  </table></div>
+  @if (cambios) {
+    <h3 class="h6">Historial de {{ tarifaHistorial }}</h3>
+    <ul>@for (cambio of cambios; track cambio.id) {
+      <li>{{ cambio.fechaCambio | date:'short' }} · {{ cambio.campo }} · {{ cambio.valorAnterior }} → {{ cambio.valorNuevo }} · Usuario {{ cambio.usuarioId }}</li>
+    } @empty { <li>Sin cambios registrados.</li> }</ul>
+  }
+</section>
+<!-- Consulta y actualización del IVA de un medicamento. -->
+<form class="card card-body" #ivaForm="ngForm" (ngSubmit)="guardarIva()">
+  <h2 class="h5">IVA de medicamentos</h2>
+  <div class="row g-2 align-items-end">
+    <label class="col-md-6">Medicamento <select class="form-select" name="producto" [ngModel]="impuesto.id"
+        (ngModelChange)="consultarIva($event)" [disabled]="ocupado" required>
+      <option [ngValue]="null">Seleccionar</option>
+      @for (item of medicamentos; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }
+    </select></label>
+    <label class="col-md-3">Nuevo IVA % <input class="form-control" type="number" name="iva" min="0" max="100" step="0.01"
+        [(ngModel)]="impuesto.ivaPorcentaje" [disabled]="!ivaConsultado || ocupado" required></label>
+    <div class="col-md-3"><button class="btn btn-primary" [disabled]="ivaForm.invalid || !ivaConsultado || ocupado">Guardar IVA</button></div>
+  </div>
+  @if (cargandoIva) { <p class="mt-2 mb-0" role="status">Consultando IVA vigente…</p> }
+  @if (ivaConsultado) {
+    <p class="mt-2 mb-0" role="status">
+      @if (ivaVigente !== null) { IVA vigente: {{ ivaVigente }} %. }
+      @else { Este medicamento aún no tiene un IVA configurado. }
+    </p>
+  } @else if (impuesto.id && !cargandoIva) {
+    <button type="button" class="btn btn-outline-secondary align-self-start mt-2" (click)="consultarIva(impuesto.id)">Reintentar consulta de IVA</button>
+  }
+</form>

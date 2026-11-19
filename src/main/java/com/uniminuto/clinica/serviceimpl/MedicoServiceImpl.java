@@ -10,17 +10,20 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+/** Implementa las operaciones relacionadas con un veterinario. */
 @Service
 public class MedicoServiceImpl implements MedicoService {
 
     @Autowired
     private  MedicoRepository medicoRepository;
 
+    /** Consulta los veterinarios registrados. */
     @Override
     public List<Medico> listarMedicos() {
         return medicoRepository.findAll();
     }
 
+    /** Busca el veterinario que coincide con el criterio indicado. */
     @Override
     public Medico buscarMedico(String tipoDocumento, String numeroDocumento) throws BadRequestException {
         if (numeroDocumento == null || numeroDocumento.isEmpty()) {
@@ -38,6 +41,7 @@ public class MedicoServiceImpl implements MedicoService {
         return medico.get();
     }
 
+    /** Busca un veterinario por su registro profesional. */
     @Override
     public Medico buscarMedicoPorRegistroProfesional(String registroProfesional) throws BadRequestException {
         if (registroProfesional == null || registroProfesional.isEmpty()) {

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+/** Atiende las peticiones relacionadas con una anotación del historial clínico. */
 @RestController
 public class AnotacionHistoriaApiController implements AnotacionHistoriaApi {
 
@@ -16,6 +17,7 @@ public class AnotacionHistoriaApiController implements AnotacionHistoriaApi {
     private AnotacionHistoriaService anotacionHistoriaService;
 
 
+    /** Registra una nueva anotación en la historia clínica. */
     @Override
     public ResponseEntity<MiRespuestaRS> crearAnotacionHistoria(AnotacionHistoriaRq anotacionHistoria) throws BadRequestException {
         return ResponseEntity.ok(anotacionHistoriaService.crearAnotacionHistoria(anotacionHistoria));

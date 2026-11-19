@@ -13,14 +13,17 @@ export interface UsuarioActualizacion {
   activo: boolean;
 }
 
+/** Conecta la aplicación con las operaciones de usuarios del servidor. */
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioService {
   private api = `usuario`;
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private backendService: BackendService) { }
 
+  /** Consulta la lista de usuarios. */
   getUsuarios(): Observable<Usuario[]> {
     return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
   }

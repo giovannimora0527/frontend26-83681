@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** Agrupa las operaciones HTTP de gestión de usuarios. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/usuario")
 public interface UsuarioApi {

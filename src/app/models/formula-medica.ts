@@ -3,6 +3,7 @@ import { Cita } from "./cita";
 import { Medicamento } from "./medicamento";
 
 
+/** Define los datos que utiliza la aplicación para representar la fórmula médica. */
 export class FormulaMedica {
     id?: number;
     citaId?: number;    

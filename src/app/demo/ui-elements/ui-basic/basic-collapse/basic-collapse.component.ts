@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
 // project import
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 
+/** Muestra ejemplos de secciones expandibles. */
 @Component({
   selector: 'app-basic-collapse',
   standalone: true,

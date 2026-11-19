@@ -1,3 +1,4 @@
+/** Representa una cuenta de usuario y su perfil. */
 export class Usuario {
     id?: number;
     username?: string;

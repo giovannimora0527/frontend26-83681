@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+/** Representa un propietario de mascotas. */
 @Entity
 @Table(name = "cliente")
 @Data

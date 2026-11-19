@@ -1,3 +1,4 @@
+/** Enumera las variantes de animación disponibles para el indicador de carga. */
 export const Spinkit = {
   skChasingDots: 'sk-chasing-dots',
   skCubeGrid: 'sk-cube-grid',

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/** Permite consultar y guardar los datos relacionados con una anotación del historial clínico. */
 @Repository
 public interface AnotacionHistoriaRepository extends JpaRepository<AnotacionHistoria, Long> {
 

@@ -1,3 +1,4 @@
+<!-- Plantilla para mostrar la gestión de citas. -->
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
@@ -100,7 +101,8 @@
                                 <button type="button"
                                     class="btn btn-outline-info d-inline-flex align-items-center justify-content-center"
                                     (click)="abrirEdicion(cita)"
-                                    [attr.aria-label]="esCitaCancelada(cita) ? 'No se puede editar una cita cancelada' : 'Editar cita'"
+                                    [disabled]="esCitaCerrada(cita)"
+                                    [attr.aria-label]="esCitaCerrada(cita) ? 'No se puede editar una cita cerrada' : 'Editar cita'"
                                     ngbTooltip="Editar" tooltipClass="tooltip-info" triggers="hover focus"
                                     placement="top" container="body">
                                     <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;Editar
@@ -146,7 +148,7 @@
                     <dt class="col-sm-4">Fecha y hora de inicio</dt>
                     <dd class="col-sm-8">{{ (cita.fechaHora | date:'yyyy-MM-dd HH:mm') || 'No registrada' }}</dd>
                     <dt class="col-sm-4">Duración</dt>
-                    <dd class="col-sm-8">15 minutos</dd>
+                    <dd class="col-sm-8">{{ cita.duracionMinutos == null ? 'No registrada' : cita.duracionMinutos + ' minutos' }}</dd>
                     <dt class="col-sm-4">Estado</dt>
                     <dd class="col-sm-8">
                         <span class="badge estado-cita" [attr.data-estado]="(cita.estado || '').trim() | lowercase">
@@ -158,6 +160,19 @@
                 </dl>
                 <hr>
                 <h2 class="h6">Datos de la mascota</h2>
+                @if (cita.mascota?.mascotaId ?? cita.mascotaId; as mascotaId) {
+                  <button type="button" class="btn btn-outline-secondary mb-2" (click)="consultarHistorial(mascotaId)"
+                    [disabled]="cargandoHistorial">Historial de citas</button>
+                  @if (cargandoHistorial) { <p role="status">Consultando historial…</p> }
+                  @if (errorHistorial) { <p role="alert">{{ errorHistorial }}</p> }
+                  @if (historial) {
+                    <ul>
+                      @for (registro of historial; track registro.id) {
+                        <li>{{ registro.fechaHora | date:'dd/MM/yyyy HH:mm' }} · {{ registro.estado }} · {{ registro.motivo }}</li>
+                      } @empty { <li>Sin citas registradas.</li> }
+                    </ul>
+                  }
+                }
                 <dl class="row">
                     <dt class="col-sm-4">Nombre</dt>
                     <dd class="col-sm-8">{{ cita.mascota?.nombreMascota || cita.mascota?.nombre || 'No registrado' }}</dd>
@@ -263,12 +278,16 @@
                             <input id="citaFechaFin" type="datetime-local" class="form-control" readonly
                                 [value]="fechaFin ? (fechaFin | date:'yyyy-MM-dd\'T\'HH:mm') : ''"
                                 aria-describedby="citaDuracion">
-                            <div id="citaDuracion" class="form-text">Se calcula automáticamente: 15 minutos después del
-                                inicio.</div>
+                            <div id="citaDuracion" class="form-text">Se calcula a partir de la duración indicada.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="citaDuracionMinutos" class="form-label">Duración en minutos</label>
+                            <input id="citaDuracionMinutos" type="number" min="1" step="1" class="form-control"
+                                formControlName="duracionMinutos">
                         </div>
                         <div class="col-12">
                             <button id="consultarMedicos" type="button" class="btn btn-outline-primary"
-                                [disabled]="!fechaInicio || cargandoMedicos || enviando"
+                                [disabled]="!fechaInicio || !fechaFin || cargandoMedicos || enviando"
                                 (click)="consultarMedicosDisponibles()">
                                 {{ cargandoMedicos ? 'Consultando médicos...' : 'Consultar médicos disponibles' }}
                             </button>
@@ -320,6 +339,12 @@
                                 Selecciona el estado de la cita.
                             </div>
                         </div>
+                        @if (modoFormulario === 'E' && f['estado'].value === 'cancelada') {
+                          <div class="col-12">
+                            <label for="citaMotivoCancelacion" class="form-label">Motivo de cancelación</label>
+                            <textarea id="citaMotivoCancelacion" class="form-control" formControlName="motivoCancelacion"></textarea>
+                          </div>
+                        }
                         <div class="col-12">
                             <label for="citaMotivo" class="form-label">Motivo</label>
                             <textarea id="citaMotivo" class="form-control" rows="3" formControlName="motivo"
@@ -337,8 +362,8 @@
                     <button type="button" class="btn btn-secondary" [disabled]="enviando"
                         (click)="closeModal()">Cerrar</button>
                     <button type="submit" class="btn btn-primary"
-                        [disabled]="enviando || (modoFormulario === 'E' && esCitaCancelada(citaSelected))"
-                        [attr.aria-label]="esCitaCancelada(citaSelected) ? 'No se puede editar una cita cancelada' : 'Editar cita'">
+                        [disabled]="enviando || (modoFormulario === 'E' && esCitaCerrada(citaSelected))"
+                        [attr.aria-label]="esCitaCerrada(citaSelected) ? 'No se puede editar una cita cerrada' : 'Editar cita'">
                         {{ enviando ? 'Enviando...' : titleBoton }}
                     </button>
                 </div>

@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+/** Agrupa las operaciones HTTP del catálogo de propietarios. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/cliente")
 public interface ClienteApi {
 
+    /** Consulta los propietarios registrados. */
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -21,6 +23,7 @@ public interface ClienteApi {
             throws BadRequestException;
 
 
+    /** Consulta los propietarios que coinciden con el número de documento. */
     @GetMapping(value = "/buscar-by-numero-documento",
             produces = {"application/json"},
             consumes = {"application/json"})

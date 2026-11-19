@@ -8,12 +8,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/** Implementa las operaciones relacionadas con la prescripción médica. */
 @Service
 public class FormulaServiceImpl implements FormulaService {
 
     @Autowired
     private FormulaMedicaRepository formulaMedicaRepository;
 
+    /** Consulta las fórmulas médicas registradas. */
     @Override
     public List<FormulaMedica> findAllFormulas() {
         return formulaMedicaRepository.findAllByOrderByFechaCreacionRegistroDesc();

@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/** Implementa las operaciones relacionadas con una cita veterinaria. */
 @Service
 public class CitaServiceImpl implements CitaService {
 
@@ -33,11 +34,13 @@ public class CitaServiceImpl implements CitaService {
     private MedicoRepository medicoRepository;
 
 
+    /** Consulta las citas registradas. */
     @Override
     public List<Cita> listarCitas() throws BadRequestException {
         return citaRepository.findAll();
     }
 
+    /** Consulta las citas entre la fecha inicial y la final. */
     @Override
     public List<Cita> listarCitasRango(LocalDateTime fechaInicio, LocalDateTime fechaFin)
             throws BadRequestException {
@@ -48,6 +51,7 @@ public class CitaServiceImpl implements CitaService {
         return citas;
     }
 
+    /** Comprueba que las fechas recibidas formen un intervalo válido. */
     private void validarFechas(LocalDateTime fechaInicio, LocalDateTime fechaFin) throws BadRequestException {
         if (fechaInicio == null || fechaFin == null) {
             throw new BadRequestException("Las fechas no pueden ser nulas");
@@ -57,6 +61,7 @@ public class CitaServiceImpl implements CitaService {
         }
     }
 
+    /** Guarda los cambios de la cita indicada. */
     @Override
     public MiRespuestaRS actualizarCita(CitaRq citaRq) throws BadRequestException {
         this.validarCita(citaRq);
@@ -104,6 +109,7 @@ public class CitaServiceImpl implements CitaService {
         return rta;
     }
 
+    /** Registra los datos y el horario de una nueva cita. */
     @Override
     public MiRespuestaRS crearCita(CitaRq citaRq) throws BadRequestException {
         this.validarCita(citaRq);
@@ -159,6 +165,7 @@ public class CitaServiceImpl implements CitaService {
         return rta;
     }
 
+    /** Comprueba que la fecha permita programar una cita. */
     private boolean sePuedeAgendarCitaXFecha(Cita cita) {
         LocalDateTime fechaHoraCita = cita.getFechaHora();
         LocalDateTime fechaHoraCitaMas30Min = fechaHoraCita.plusMinutes(15);
@@ -168,6 +175,7 @@ public class CitaServiceImpl implements CitaService {
                 || !cita.getEstado().equals(ESTADO_PROGRAMADA);
     }
 
+    /** Comprueba los datos requeridos para registrar o editar una cita. */
     private void validarCita(CitaRq citaRq) throws BadRequestException {
         if (citaRq == null) {
             throw new BadRequestException("La cita no puede ser nula");

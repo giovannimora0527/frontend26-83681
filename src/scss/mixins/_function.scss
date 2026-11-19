@@ -1,3 +1,4 @@
+// Elige un color de texto claro u oscuro según el fondo.
 @function color-yiq($color) {
   $r: red($color);
   $g: green($color);
@@ -9,9 +10,11 @@
     @return $yiq-light-color;
   }
 }
+// Busca un color en la paleta del tema.
 @function theme-color($key: 'primary') {
   @return map-get($theme-colors, $key);
 }
+// Aclara u oscurece un color del tema según el nivel recibido.
 @function theme-color-level($color-name: 'primary', $level: 0) {
   $color: theme-color($color-name);
   $color-base: if($level > 0, $yiq-dark-color, $yiq-light-color);

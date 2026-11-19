@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 
+/** Muestra ejemplos de botones de la interfaz. */
 @Component({
   selector: 'app-basic-button',
   standalone: true,

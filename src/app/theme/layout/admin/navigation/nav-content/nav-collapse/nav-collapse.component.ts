@@ -9,6 +9,7 @@ import { NavigationItem } from '../../navigation';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { NavItemComponent } from '../nav-item/nav-item.component';
 
+/** Muestra una opción del menú con elementos que se pueden expandir. */
 @Component({
   selector: 'app-nav-collapse',
   imports: [SharedModule, NavItemComponent, RouterModule, CommonModule],
@@ -30,6 +31,7 @@ export class NavCollapseComponent {
   visible = false;
 
   // public method
+  /** Abre o cierra el grupo seleccionado del menú. */
   navCollapse(e: MouseEvent) {
     this.visible = !this.visible;
     let parent = e.target as HTMLElement;

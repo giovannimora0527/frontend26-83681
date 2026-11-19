@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/** Define las operaciones HTTP relacionadas con una cita veterinaria. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/cita")
 public interface CitaApi {

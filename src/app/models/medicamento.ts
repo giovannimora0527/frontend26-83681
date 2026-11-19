@@ -1,3 +1,4 @@
+/** Representa un producto del catálogo de medicamentos. */
 export class Medicamento {
 	id!: number;
 	nombre!: string;

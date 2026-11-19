@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 
+/** Muestra ejemplos de pestañas y navegación por opciones. */
 @Component({
   selector: 'app-basic-tabs-pills',
   standalone: true,

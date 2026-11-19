@@ -3,7 +3,8 @@ import { getNavigationItems, NavigationItems } from './navigation';
 describe('getNavigationItems', () => {
   let previousToken: string | null;
 
-  function storeMenus(codes: string[], inactiveCodes: string[] = []): void {
+  /** Prepara un menú de ejemplo para las pruebas de navegación. */
+  function storeMenus(codes: string[], inactiveCodes: string[] = [], rol = 'Recepcion'): void {
     const menus = codes.map((code, index) => ({
       activo: !inactiveCodes.includes(code),
       code,
@@ -18,7 +19,7 @@ describe('getNavigationItems', () => {
       sub: '1',
       username: 'test',
       email: 'test@example.com',
-      rol: 'Administrador',
+      rol,
       menus: JSON.stringify(menus),
       iat: 1793066869,
       exp: 1793070469
@@ -82,7 +83,27 @@ describe('getNavigationItems', () => {
     const log = spyOn(console, 'error');
     sessionStorage.setItem('token', 'invalid');
     expect(getNavigationItems()).toEqual([]);
-    expect(log).toHaveBeenCalledWith('No fue posible obtener los menus del token JWT', jasmine.any(Error));
+    expect(log).toHaveBeenCalledWith('No fue posible obtener el perfil del token JWT', jasmine.any(Error));
+  });
+
+  it('shows the personal agenda and attendance to a veterinarian instead of the appointments list', () => {
+    storeMenus(['cita', 'calendario-medico', 'atencion-medica'], [], 'Medico');
+    expect(getNavigationItems()[0].children?.map((item) => item.id)).toEqual(['calendario-medico', 'atencion-medica']);
+  });
+
+  it('shows administration the original appointments list, billing and reports', () => {
+    storeMenus(['calendario-medico', 'atencion-medica'], [], 'Administrador');
+    const codes = getNavigationItems()[0].children?.map((item) => item.id) ?? [];
+    expect(codes).toEqual(jasmine.arrayContaining(['cita', 'tarifas', 'facturacion', 'reportes']));
+    expect(codes).not.toContain('calendario-medico');
+    expect(codes).not.toContain('atencion-medica');
+  });
+
+  it('links the inventory menu from the SQL catalog to the existing inventory view', () => {
+    storeMenus(['inventario-lotes', 'despacho'], [], 'DESPACHO_MEDICO');
+    const links = getNavigationItems()[0].children ?? [];
+    expect(links.map((item) => item.id)).toEqual(['inventario', 'despacho']);
+    expect(links[0].queryParams).toEqual({ modulo: 'inventario' });
   });
 
   it('filters nested collapses and removes empty ones without mutating them', () => {

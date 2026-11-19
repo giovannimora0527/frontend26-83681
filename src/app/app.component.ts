@@ -6,6 +6,7 @@ import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SpinnerComponent } from './theme/shared/components/spinner/spinner.component';
 import { FooterComponent } from './theme/shared/components/footer/footer.component';
 
+/** Contiene la vista raíz de la aplicación Angular. */
 @Component({
   selector: 'app-root',
   imports: [SpinnerComponent, FooterComponent, RouterModule],
@@ -18,6 +19,7 @@ export class AppComponent implements OnInit {
   title = 'Clínica Veterinaria Uniminuto';
 
   // life cycle hook
+  /** Prepara la pantalla al abrirse y carga los datos que necesita. */
   ngOnInit() {
     this.router.events.subscribe((evt) => {
       if (!(evt instanceof NavigationEnd)) {

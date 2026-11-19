@@ -1,0 +1,144 @@
+<!-- Vista de citas del veterinario por día, semana o mes. -->
+<h1 class="h3">Mi agenda</h1>
+@if (error) { <p class="alert alert-danger" role="alert">{{ error }}</p> }
+<div role="status">
+  @if (aviso) { <p class="alert alert-success">{{ aviso }}</p> }
+</div>
+<div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+  <label>Fecha <input class="form-control" type="date" [(ngModel)]="fecha" (change)="cargar()"></label>
+  <label>Vista <select class="form-select" [(ngModel)]="vista" (change)="cargar()">
+    @for (opcion of vistas; track opcion) { <option [value]="opcion">{{ opcion === 'dia' ? 'Día' : (opcion | titlecase) }}</option> }
+  </select></label>
+  <label>Estado <select class="form-select" [(ngModel)]="filtro"><option value="">Todos</option>
+    @for (estado of estados; track estado) { <option [value]="estado">{{ etiquetaEstado(estado) }}</option> }
+  </select></label>
+  <button class="btn btn-outline-secondary" (click)="mover(-1)">Anterior</button>
+  <button class="btn btn-outline-secondary" (click)="mover(1)">Siguiente</button>
+  <button class="btn btn-primary" (click)="editar('nuevo')">Nueva cita</button>
+</div>
+@if (cargando) { <p role="status">Consultando agenda…</p> }
+@if (!cargando && dias.length && !error) {
+  <ul class="list-inline mb-3" aria-label="Resumen de citas del intervalo">
+    @for (estado of estados; track estado) {
+      <li class="list-inline-item mb-1"><span class="badge bg-{{ color(estado) }}">{{ etiquetaEstado(estado) }} {{ totalPorEstado(estado) }}</span></li>
+    }
+  </ul>
+}
+<div class="agenda mb-4" [class.agenda-semanal]="vista !== 'dia'">
+  @for (dia of dias; track dia; let primero = $first) {
+    <section class="dia rounded border bg-white p-2" [class.inicio-mes]="primero && vista === 'mes'" [style.--dia-inicial]="diaInicial">
+      <h2 class="h6">{{ mostrarDia(dia) }}</h2>
+      @for (cita of citasDelDia(dia); track cita.id) {
+        <button class="btn btn-outline-{{ color(cita.estado) }} btn-sm w-100 text-start mb-1"
+          [attr.aria-expanded]="seleccion?.id === cita.id" (click)="abrir(cita, $event)" [disabled]="guardando">
+          {{ cita.inicio.slice(11,16) }} {{ cita.mascota }}<br>{{ etiquetaEstado(cita.estado) }}
+        </button>
+      }
+    </section>
+  }
+</div>
+@if (seleccion; as cita) {
+  <!-- Detalle de la cita y acciones disponibles según su estado. -->
+  <section class="card card-body mb-3" aria-labelledby="titulo-detalle-cita">
+    <div class="d-flex align-items-start justify-content-between gap-2">
+      <h2 #tituloDetalle tabindex="-1" id="titulo-detalle-cita" class="h5">Detalle de la cita</h2>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cerrarDetalle()" [disabled]="guardando">Cerrar detalle</button>
+    </div>
+    <dl class="row mb-3">
+      <dt class="col-sm-3">Paciente</dt><dd class="col-sm-9">{{ cita.mascota }}</dd>
+      <dt class="col-sm-3">Propietario</dt><dd class="col-sm-9">{{ cita.propietario }}</dd>
+      <dt class="col-sm-3">Especie</dt><dd class="col-sm-9">{{ cita.especieMascota || 'No informada' }}</dd>
+      <dt class="col-sm-3">Raza</dt><dd class="col-sm-9">{{ cita.razaMascota || 'No informada' }}</dd>
+      <dt class="col-sm-3">Edad</dt><dd class="col-sm-9">{{ cita.edadMascota ?? 'No informada' }}</dd>
+      <dt class="col-sm-3">Inicio</dt><dd class="col-sm-9">{{ mostrarHora(cita.inicio) }} (hora de Bogotá)</dd>
+      <dt class="col-sm-3">Fin</dt><dd class="col-sm-9">{{ mostrarHora(cita.fin) }} (hora de Bogotá)</dd>
+      <dt class="col-sm-3">Estado</dt><dd class="col-sm-9">{{ etiquetaEstado(cita.estado) }}</dd>
+      <dt class="col-sm-3">Motivo</dt><dd class="col-sm-9">{{ cita.motivo }}</dd>
+    </dl>
+    <div class="d-flex flex-wrap gap-2">
+      @if (cita.estado === 'PROGRAMADA' || cita.estado === 'CONFIRMADA') {
+        <button class="btn btn-outline-primary" (click)="editar('editar')">Editar</button>
+        <button class="btn btn-outline-primary" (click)="editar('reprogramar')">Reprogramar</button>
+        <a class="btn btn-primary" [routerLink]="['/inicio/atencion-medica', cita.id]">Atender cita</a>
+      }
+      @if (cita.estado === 'ATENDIDA') {
+        <a class="btn btn-outline-primary" [routerLink]="['/inicio/atencion-medica', cita.id]">Consultar atención</a>
+      }
+      <button class="btn btn-outline-secondary" (click)="consultarHistorial(cita.mascotaId)">Historial de citas</button>
+    </div>
+    @if (historial) {
+      <ul class="mt-3 mb-0">
+        @for (registro of historial; track registro.id) {
+          <li>{{ mostrarHora(registro.fechaHora) }} · {{ registro.estado }} · {{ registro.motivo }}</li>
+        } @empty { <li>Sin citas registradas.</li> }
+      </ul>
+    }
+  </section>
+}
+@if (modo) {
+  <!-- Formulario compartido para programar, editar y reprogramar citas. -->
+  <form class="card card-body mb-3" #citaForm="ngForm" (ngSubmit)="guardar()">
+    <h2 class="h5">{{ modo === 'nuevo' ? 'Nueva cita' : (modo === 'editar' ? 'Editar cita' : 'Reprogramar cita') }}</h2>
+    <div class="row g-2">
+      @if (modo !== 'reprogramar') {
+        <label class="col-md-6">Paciente
+          <select class="form-select" name="mascota" [(ngModel)]="form.mascotaId" required>
+            <option [ngValue]="null">Seleccionar</option>
+            @for (mascota of mascotas; track mascota.mascotaId) {
+              <option [ngValue]="mascota.mascotaId">{{ mascota.nombreMascota }} · {{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}</option>
+            }
+          </select>
+        </label>
+        <label class="col-md-6">Motivo <input class="form-control" name="motivo" [(ngModel)]="form.motivo" required></label>
+        <label class="col-md-4">Duración en minutos <input type="number" min="1" class="form-control" name="duracion" [(ngModel)]="form.duracionMinutos"></label>
+      }
+      <label class="col-md-4">Inicio en hora de Bogotá <input #campoInicio type="datetime-local" class="form-control" name="inicio" [(ngModel)]="form.fechaHora" required></label>
+      @if (modo === 'editar') {
+        <label class="col-md-4">Estado <select class="form-select" name="estado" [(ngModel)]="form.estado">
+          @for (estado of estados; track estado) { @if (estado !== 'ATENDIDA') { <option [value]="estado">{{ estado.replace('_', ' ') }}</option> } }
+        </select></label>
+        @if (form.estado === 'CANCELADA') {
+          <label class="col-12">Motivo de cancelación <input class="form-control" name="cancelacion" [(ngModel)]="form.motivoCancelacion" required></label>
+        }
+      }
+    </div>
+    <div class="mt-3 d-flex gap-2">
+      <button type="submit" class="btn btn-primary" [disabled]="citaForm.invalid || guardando">Guardar</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="modo = null" [disabled]="guardando">Cerrar</button>
+    </div>
+  </form>
+}
+<!-- Rango de fechas para exportar las citas a Excel. -->
+<form class="card card-body" (ngSubmit)="exportar()">
+  <h2 class="h5">Exportar citas</h2>
+  <div class="d-flex flex-wrap align-items-end gap-2">
+    <label>Desde <input type="date" class="form-control" name="desde" [(ngModel)]="desde" required></label>
+    <label>Hasta <input type="date" class="form-control" name="hasta" [(ngModel)]="hasta" required></label>
+    <button class="btn btn-outline-primary" [disabled]="!desde || !hasta || desde > hasta">Descargar Excel</button>
+  </div>
+</form>
+@if (!seleccion) {
+  <section class="card card-body mt-3">
+    <h2 class="h5">Historial de citas por mascota</h2>
+    <div class="d-flex flex-wrap align-items-end gap-2">
+      <label>Mascota
+        <select class="form-select" [(ngModel)]="mascotaHistorialId" [disabled]="cargandoHistorial">
+          <option [ngValue]="null">Seleccionar</option>
+          @for (mascota of mascotas; track mascota.mascotaId) {
+            <option [ngValue]="mascota.mascotaId">{{ mascota.nombreMascota }} · {{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}</option>
+          }
+        </select>
+      </label>
+      <button type="button" class="btn btn-outline-primary" [disabled]="!mascotaHistorialId || cargandoHistorial"
+        (click)="consultarHistorial(mascotaHistorialId)">Consultar historial</button>
+    </div>
+    @if (cargandoHistorial) { <p role="status">Consultando historial…</p> }
+    @if (historial) {
+      <ul class="mt-3">
+        @for (registro of historial; track registro.id) {
+          <li>{{ mostrarHora(registro.fechaHora) }} · {{ etiquetaEstado(registro.estado) }} · {{ registro.motivo }}</li>
+        } @empty { <li>Sin citas registradas.</li> }
+      </ul>
+    }
+  </section>
+}

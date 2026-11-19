@@ -8,16 +8,19 @@ import { AsignacionLote, Despacho, FormulaPendiente } from 'src/app/models/inven
 @Injectable({ providedIn: 'root' })
 export class DespachoService {
   private readonly baseUrl = environment.apiUrlAuth;
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly http: HttpClient) {}
 
   /** Consulta los despachos registrados para el historial del módulo. */
   listarDespachos(): Observable<Despacho[]> {
-    return this.http.get<Despacho[]>(`${this.baseUrl}/inventario/dispensaciones/listar`, { headers: this.headers() });
+    return this.http.get<Despacho[]>(`${this.baseUrl}/inventario/dispensaciones/historial`, { headers: this.headers() });
   }
 
   /** Consulta fórmulas vigentes con cantidades pendientes por entregar. */
-  listarPendientes(filtro = ''): Observable<FormulaPendiente[]> {
-    const params = filtro ? new HttpParams().set('filtro', filtro) : undefined;
+  listarPendientes(filtro = '', fecha = ''): Observable<FormulaPendiente[]> {
+    let params = new HttpParams();
+    if (filtro) params = params.set('filtro', filtro);
+    if (fecha) params = params.set('fechaGeneracion', fecha);
     return this.http.get<FormulaPendiente[]>(`${this.baseUrl}/inventario/dispensaciones/formulas-pendientes`, { params, headers: this.headers() });
   }
 
@@ -32,14 +35,33 @@ export class DespachoService {
   }
 
   /** Confirma cantidades por lote usando una clave idempotente para la operación. */
-  confirmar(despachoId: number, detalles: AsignacionLote[]): Observable<Despacho> {
-    const claveIdempotencia = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  confirmar(despachoId: number, detalles: AsignacionLote[], claveIdempotencia: string): Observable<Despacho> {
     return this.http.post<Despacho>(`${this.baseUrl}/inventario/dispensaciones/${despachoId}/confirmar`, { claveIdempotencia, observacion: 'Entrega confirmada desde el módulo de despacho.', detalles }, { headers: this.headers() });
   }
 
   /** Consulta las líneas trazables de una entrega ya registrada. */
   detalle(despachoId: number): Observable<Record<string, unknown>[]> {
     return this.http.get<Record<string, unknown>[]>(`${this.baseUrl}/inventario/dispensaciones/${despachoId}/detalles`, { headers: this.headers() });
+  }
+
+  /** Consulta los cambios de estado que se guardaron para el despacho. */
+  historialEstados(id: number): Observable<Record<string, unknown>[]> {
+    return this.http.get<Record<string, unknown>[]>(`${this.baseUrl}/inventario/dispensaciones/${id}/historial-estados`, { headers: this.headers() });
+  }
+
+  /** Consulta las entregas registradas para un medicamento. */
+  historialMedicamento(id: number): Observable<Record<string, unknown>[]> {
+    return this.http.get<Record<string, unknown>[]>(`${this.baseUrl}/inventario/dispensaciones/medicamento/${id}/historial`, { headers: this.headers() });
+  }
+
+  /** Solicita al servidor el PDF del comprobante de despacho. */
+  comprobante(id: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/inventario/dispensaciones/${id}/comprobante`, { headers: this.headers(), responseType: 'blob' });
+  }
+
+  /** Solicita cancelar el registro indicado. */
+  cancelar(id: number, observacion: string): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/inventario/dispensaciones/${id}/cancelar`, { observacion }, { headers: this.headers() });
   }
 
   /** Añade el token de la sesión actual a las operaciones protegidas. */

@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription } from 'rxjs';
+import { merge, Subscription } from 'rxjs';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule, formatDate } from '@angular/common';
 import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
@@ -13,12 +13,21 @@ import { Medico } from 'src/app/models/medico';
 import { MascotaService } from '../mascota/service/mascota.service';
 import { MedicoService } from '../medico/service/medico.service';
 
+/** Enumera las columnas por las que se puede ordenar la tabla. */
 type ColumnaOrden = 'mascota' | 'medico' | 'fechaHora' | 'motivo' | 'estado';
-type ModalBootstrap = { show(): void; hide(): void };
+/** Define las acciones que usa la pantalla para abrir y cerrar una ventana. */
+type ModalBootstrap = {
+  /** Abre la ventana. */
+  show(): void;
+  /** Cierra la ventana. */
+  hide(): void;
+};
+/** Describe dónde se encuentra Bootstrap en la ventana del navegador. */
 type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => ModalBootstrap } };
 
 
 
+/** Presenta la pantalla de citas y gestiona sus acciones. */
 @Component({
   selector: 'app-cita',
   imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule],
@@ -31,6 +40,11 @@ export class CitaComponent {
   modalInstance: ModalBootstrap | null = null;
   modalDetalleInstance: ModalBootstrap | null = null;
   citaDetalle: Cita | null = null;
+  historial: Cita[] | null = null;
+  errorHistorial = '';
+  cargandoHistorial = false;
+  private consultaHistorial?: Subscription;
+  readonly duracionPredeterminada = 30;
   titleModal: string = "";
   modoFormulario: string = "";
   titleBoton: string = "";
@@ -60,6 +74,7 @@ export class CitaComponent {
   enviando = false;
   respuestaError = '';
 
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor(private readonly citaService: CitaService,    
     private readonly formBuilder: FormBuilder,
     private readonly mascotaService: MascotaService,
@@ -69,6 +84,7 @@ export class CitaComponent {
     this.listarMascotas();
   }
 
+  /** Prepara los campos de la cita y reinicia la consulta de veterinarios al cambiar la mascota, la fecha o la duración. */
   inicializarFormulario() {
     this.form = this.formBuilder.group({
       mascota: [null, Validators.required],
@@ -80,8 +96,11 @@ export class CitaComponent {
       ]],
       motivo: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(255)]],
       estado: ['', Validators.required],
+      duracionMinutos: [this.duracionPredeterminada, [Validators.required, Validators.min(1),
+        (control: AbstractControl) => Number.isInteger(control.value) ? null : { entero: true }]],
+      motivoCancelacion: [''],
     });
-    this.form.controls['fechaHora'].valueChanges.pipe(
+    merge(...['fechaHora', 'duracionMinutos', 'mascota'].map((campo) => this.form.controls[campo].valueChanges)).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.consultaMedicos?.unsubscribe();
@@ -93,6 +112,7 @@ export class CitaComponent {
     });
   }
 
+  /** Consulta las citas. */
   listarCitas() {
     this.errorCitas = '';
     this.citaService.listarCitas().subscribe({
@@ -124,6 +144,7 @@ export class CitaComponent {
       : `No fue posible cargar ${recurso} (HTTP ${error.status ?? 'desconocido'}).`;
   }
 
+  /** Consulta las mascotas. */
   listarMascotas(): void {
     this.cargandoMascotas = true;
     this.errorMascotas = '';
@@ -140,16 +161,20 @@ export class CitaComponent {
     });
   }
 
+  /** Devuelve el inicio del rango elegido. */
   get fechaInicio(): Date | null {
     const control = this.form.controls['fechaHora'];
     return control.valid && control.value ? new Date(control.value) : null;
   }
 
+  /** Devuelve el final del rango elegido. */
   get fechaFin(): Date | null {
     const inicio = this.fechaInicio;
-    return inicio ? new Date(inicio.getTime() + 15 * 60 * 1000) : null;
+    const duracion = this.form.controls['duracionMinutos'];
+    return inicio && duracion.valid ? new Date(inicio.getTime() + duracion.value * 60_000) : null;
   }
 
+  /** Consulta qué veterinarios pueden atender a la mascota en el horario indicado. */
   consultarMedicosDisponibles(): void {
     const inicio = this.fechaInicio;
     const fin = this.fechaFin;
@@ -163,6 +188,7 @@ export class CitaComponent {
     this.listarMedicosDisponiblesPorFecha(inicio, fin);
   }
 
+  /** Solicita los veterinarios disponibles para la fecha indicada. */
   listarMedicosDisponiblesPorFecha(fechaInicio: Date, fechaFin: Date): void {
     this.consultaMedicos?.unsubscribe();
     this.listMedicos = [];
@@ -171,7 +197,7 @@ export class CitaComponent {
     this.cargandoMedicos = true;
     this.errorMedicos = '';
     this.consultaMedicos = this.medicoService
-      .listarMedicosDisponiblesPorFecha(fechaInicio, fechaFin)
+      .listarMedicosDisponiblesPorFecha(fechaInicio, fechaFin, this.citaSelected?.id, this.form.controls['mascota'].value?.mascotaId)
       .pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
@@ -188,16 +214,19 @@ export class CitaComponent {
     });
   }
 
+  /** Comprueba si dos opciones representan a la misma mascota. */
   compararMascotas(mascotaA: Mascota | null, mascotaB: Mascota | null): boolean {
     return mascotaA === mascotaB ||
       (mascotaA?.mascotaId != null && mascotaA.mascotaId === mascotaB?.mascotaId);
   }
 
+  /** Comprueba si dos opciones representan al mismo veterinario. */
   compararMedicos(medicoA: Medico | null, medicoB: Medico | null): boolean {
     return medicoA === medicoB || (medicoA?.id != null && medicoA.id === medicoB?.id);
   }
 
   // Obtiene los controles del formulario para facilitar el acceso a sus propiedades y métodos.
+  /** Da acceso a los controles del formulario para consultar su valor y sus errores. */
   get f(): { [key: string]: AbstractControl } {
     return this.form.controls;
   }
@@ -237,6 +266,7 @@ export class CitaComponent {
     });
   }
 
+  /** Obtiene el valor de la columna que se usa para ordenar cada fila. */
   private obtenerValorOrden(cita: Cita, columna: ColumnaOrden): string | number {
     switch (columna) {
       case 'mascota':
@@ -253,6 +283,7 @@ export class CitaComponent {
     }
   }
 
+  /** Cambia la columna de orden o invierte el sentido del orden actual. */
   ordenarPor(columna: ColumnaOrden): void {
     if (this.columnaOrden === columna) {
       this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
@@ -263,26 +294,31 @@ export class CitaComponent {
     this.paginaActual = 1;
   }
 
+  /** Devuelve las citas que corresponden a la página visible. */
   get citasPaginadas(): Cita[] {
     const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
     return this.citasFiltradas.slice(inicio, inicio + this.registrosPorPagina);
   }
 
+  /** Calcula cuántas páginas se necesitan para mostrar el listado. */
   get totalPaginas(): number {
     return Math.ceil(this.citasFiltradas.length / this.registrosPorPagina);
   }
 
+  /** Devuelve los números de página disponibles para el listado. */
   get paginas(): number[] {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
+  /** Aplica el texto de búsqueda y vuelve a la primera página. */
   actualizarBusqueda(event: Event) {
     this.terminoBusqueda = (event.target as HTMLInputElement).value;
     this.paginaActual = 1;
   }
 
   // Cambia paginacion.
+  /** Muestra la página seleccionada del listado. */
   cambiarPagina(pagina: number) {
     if (pagina >= 1 && pagina <= this.totalPaginas) {
       this.paginaActual = pagina;
@@ -290,6 +326,7 @@ export class CitaComponent {
   }
 
   // Metodo privado para normalizar el texto, eliminando acentos y convirtiendo a minúsculas.
+  /** Prepara el texto para comparar búsquedas sin distinguir mayúsculas ni tildes. */
   private normalizarTexto(texto: string): string {
     return texto
       .toLocaleLowerCase()
@@ -312,7 +349,12 @@ export class CitaComponent {
     }  
    
   
+    /** Muestra la información de la cita seleccionada. */
     verCita(cita: Cita): void {
+      this.consultaHistorial?.unsubscribe();
+      this.historial = null;
+      this.errorHistorial = '';
+      this.cargandoHistorial = false;
       this.citaDetalle = cita;
       const modalElement = document.getElementById('modalVerCita');
       if (modalElement) {
@@ -321,17 +363,37 @@ export class CitaComponent {
       }
     }
 
+    /** Cierra el detalle y limpia la selección actual. */
     cerrarDetalle(): void {
+      this.consultaHistorial?.unsubscribe();
       this.modalDetalleInstance?.hide();
     }
 
-    esCitaCancelada(cita: Cita | null): boolean {
-      return cita?.estado?.trim().toLowerCase() === 'cancelada';
+    /** Consulta el historial. */
+    consultarHistorial(mascotaId: number): void {
+      this.consultaHistorial?.unsubscribe();
+      this.historial = null;
+      this.errorHistorial = '';
+      this.cargandoHistorial = true;
+      this.consultaHistorial = this.citaService.listarCitasPorMascota(mascotaId)
+        .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: (citas) => { this.historial = citas; this.cargandoHistorial = false; },
+          error: (error) => {
+            this.errorHistorial = this.mensajeErrorCarga(error, 'el historial');
+            this.cargandoHistorial = false;
+          }
+        });
     }
 
+    /** Comprueba si la cita se encuentra en un estado que limita sus cambios. */
+    esCitaCerrada(cita: Cita | null): boolean {
+      return ['cancelada', 'atendida', 'no_asistida'].includes(cita?.estado?.trim().toLowerCase() ?? '');
+    }
+
+    /** Abre el formulario con los datos del registro que se quiere modificar. */
     abrirEdicion(cita: Cita) {
-      if (this.esCitaCancelada(cita)) {
-        Swal.fire('Cita cancelada', 'No se puede editar una cita cancelada.', 'warning');
+      if (this.esCitaCerrada(cita)) {
+        Swal.fire('Cita cerrada', 'No se puede editar una cita cerrada.', 'warning');
         return;
       }
       this.resetFormulario();
@@ -342,8 +404,9 @@ export class CitaComponent {
         mascota: cita.mascota,
         medico: cita.medico,
         motivo: cita.motivo ?? null,
+        duracionMinutos: cita.duracionMinutos ?? this.duracionPredeterminada,
         estado: cita.estado?.trim().toLowerCase() ?? null
-      });
+      }, { emitEvent: false });
       this.listMedicos = cita.medico ? [cita.medico] : [];
       this.openModal(this.modoFormulario);
     }
@@ -353,23 +416,33 @@ export class CitaComponent {
      * @returns Acción realizada sobre la cita (crear o actualizar).
      */
     guardarCita() {
-      if (this.modoFormulario === 'E' && this.esCitaCancelada(this.citaSelected)) {
-        this.respuestaError = 'No se puede actualizar una cita cancelada.';
+      if (this.modoFormulario === 'E' && this.esCitaCerrada(this.citaSelected)) {
+        this.respuestaError = 'No se puede actualizar una cita cerrada.';
         return;
       }
-      if (this.form.invalid || this.enviando) {
+      if (this.enviando) return;
+      const valores = this.form.getRawValue();
+      const estado = this.modoFormulario === 'C' || valores.estado?.trim().toUpperCase() === 'PENDIENTE'
+        ? 'PROGRAMADA' : valores.estado?.trim().toUpperCase();
+      const motivoCancelacion = valores.motivoCancelacion?.trim();
+      if (estado === 'CANCELADA' && !motivoCancelacion) {
+        this.respuestaError = 'Indica el motivo de cancelación.';
+        return;
+      }
+      if (estado !== 'CANCELADA' && this.form.invalid) {
         this.form.markAllAsTouched();
         return;
       }
   
-      const valores = this.form.getRawValue();
       const cita: Cita = {
         id: this.citaSelected?.id,
-        mascotaId: valores.mascota.mascotaId,
-        medicoId: valores.medico.id,
+        mascotaId: valores.mascota?.mascotaId,
+        medicoId: valores.medico?.id,
         fechaHora: valores.fechaHora,
         motivo: valores.motivo ?? null,
-        estado: this.modoFormulario === 'C' ? 'programada' : valores.estado
+        estado,
+        duracionMinutos: valores.duracionMinutos,
+        motivoCancelacion: estado === 'CANCELADA' ? motivoCancelacion : undefined
       };
   
       this.enviando = true;
@@ -398,6 +471,7 @@ export class CitaComponent {
       });
     }
   
+    /** Obtiene el mensaje que devuelve el servidor para mostrarlo en pantalla. */
     private obtenerMensajeRespuesta(respuesta: unknown, mensajePredeterminado: string): string {
       if (respuesta && typeof respuesta === 'object') {
         const cuerpo = respuesta as { mensaje?: unknown; message?: unknown };
@@ -410,14 +484,16 @@ export class CitaComponent {
     }
 
 
+  /** Restablece los campos y la selección del formulario. */
   resetFormulario() {
-    this.form.reset();
+    this.form.reset({ duracionMinutos: this.duracionPredeterminada });
     this.form.markAsPristine();
     this.form.markAsUntouched();
     this.respuestaError = '';
   }
 
 
+  /** Cierra la ventana indicada. */
   closeModal() {
     if (this.modalInstance) {
       this.modalInstance.hide();
@@ -425,6 +501,7 @@ export class CitaComponent {
     this.resetFormulario();
   }
 
+  /** Abre la ventana indicada. */
   openModal(modo: string) {
     this.titleModal = modo === 'C' ? 'Crear Cita' : 'Editar Cita';
     this.titleBoton = modo === 'C' ? 'Guardar Cita' : 'Actualizar Cita';

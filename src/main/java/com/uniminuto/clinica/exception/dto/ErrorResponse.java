@@ -13,6 +13,7 @@ public class ErrorResponse {
     private String error;
     private String message;
 
+    /** Prepara los datos necesarios para usar esta clase. */
     public ErrorResponse(int status, String error, String message) {
         this.status = status;
         this.error = error;

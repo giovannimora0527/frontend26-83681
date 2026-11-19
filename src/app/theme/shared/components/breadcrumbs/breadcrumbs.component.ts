@@ -8,6 +8,7 @@ import { Title } from '@angular/platform-browser';
 import { NavigationItem, getNavigationItems } from 'src/app/theme/layout/admin/navigation/navigation';
 import { SharedModule } from '../../shared.module';
 
+/** Indica qué tipo de título se muestra para la ruta actual. */
 interface titleType {
   // eslint-disable-next-line
   url: string | boolean | any | undefined;
@@ -16,6 +17,7 @@ interface titleType {
   type: string;
 }
 
+/** Muestra la ruta de navegación correspondiente a la pantalla activa. */
 @Component({
   selector: 'app-breadcrumb',
   imports: [CommonModule, RouterModule, SharedModule],
@@ -34,6 +36,7 @@ export class BreadcrumbsComponent {
   navigationList!: titleType[];
 
   // constructor
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor() {
     this.navigations = getNavigationItems();
     this.type = 'theme1';
@@ -41,6 +44,7 @@ export class BreadcrumbsComponent {
   }
 
   // public method
+  /** Actualiza la ruta de navegación visible. */
   setBreadcrumb() {
     this.route.events.subscribe((router: Event) => {
       if (router instanceof NavigationEnd) {
@@ -52,6 +56,7 @@ export class BreadcrumbsComponent {
     });
   }
 
+  /** Busca dentro del menú las opciones que corresponden a la ruta actual. */
   filterNavigation(navItems: NavigationItem[], activeLink: string): titleType[] {
     for (const navItem of navItems) {
       if (navItem.type === 'item' && 'url' in navItem && navItem.url === activeLink) {

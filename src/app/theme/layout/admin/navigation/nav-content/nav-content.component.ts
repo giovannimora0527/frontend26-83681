@@ -8,6 +8,7 @@ import { NavigationItem, getNavigationItems } from '../navigation';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { NavGroupComponent } from './nav-group/nav-group.component';
 
+/** Presenta las opciones disponibles dentro del menú lateral. */
 @Component({
   selector: 'app-nav-content',
   imports: [SharedModule, NavGroupComponent],
@@ -29,10 +30,12 @@ export class NavContentComponent {
   NavCollapsedMob = output();
 
   // constructor
+  /** Recibe los servicios y prepara el estado inicial del componente. */
   constructor() {
     this.navigations = getNavigationItems();
   }
 
+  /** Atiende el clic fuera de la opción activa del menú. */
   fireOutClick() {
     let current_url = this.location.path();
     if (this.location['_baseHref']) {

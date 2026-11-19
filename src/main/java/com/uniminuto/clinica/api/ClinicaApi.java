@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.uniminuto.clinica.exception.BadRequestException;
 
+/** Agrupa las operaciones de comprobación de la aplicación. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/clinica")
 public interface ClinicaApi {
@@ -24,12 +25,14 @@ public interface ClinicaApi {
             throws BadRequestException;
 
 
+    /** Devuelve la respuesta de la segunda comprobación del servicio. */
     @GetMapping(value = "/test2",
             produces = {"application/text"},
             consumes = {"application/json"})
     ResponseEntity<String> testService2()
             throws BadRequestException;
 
+    /** Devuelve la respuesta de la tercera comprobación del servicio. */
     @GetMapping(value = "/test3",
             produces = {"application/json"},
             consumes = {"application/json"})

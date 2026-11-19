@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 
+/** Muestra ejemplos de etiquetas de estado. */
 @Component({
   selector: 'app-basic-badge',
   standalone: true,

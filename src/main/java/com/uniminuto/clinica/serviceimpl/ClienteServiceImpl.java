@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/** Implementa las operaciones relacionadas con un propietario de mascotas. */
 @Service
 public class ClienteServiceImpl implements ClienteService {
 
@@ -16,6 +17,7 @@ public class ClienteServiceImpl implements ClienteService {
     private ClienteRepository clienteRepository;
 
 
+    /** Consulta los propietarios registrados. */
     @Override
     public List<Cliente> listarClientes() throws BadRequestException {
         return clienteRepository.findAll().stream()
@@ -23,6 +25,7 @@ public class ClienteServiceImpl implements ClienteService {
                 .toList();
     }
 
+    /** Obtiene un propietario a partir de su número de documento. */
     @Override
     public Cliente getClienteByNumeroDocumento(String numeroDocumento) throws BadRequestException {
         return clienteRepository.findByNumeroDocumento(numeroDocumento)

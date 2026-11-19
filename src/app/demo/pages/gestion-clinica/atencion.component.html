@@ -1,0 +1,87 @@
+<!-- Atención de la cita asignada al veterinario. -->
+<h1 class="h3">Atención médica</h1>
+<a routerLink="/inicio/calendario-medico">Volver a la agenda</a>
+@if (error) { <p class="alert alert-danger mt-2" role="alert">{{ error }}</p> }
+@if (!id) { <p class="mt-3">Selecciona una cita en tu agenda para abrir la atención.</p> }
+@if (detalle; as datos) {
+  <!-- Datos del paciente y antecedentes que sirven de apoyo a la consulta. -->
+  <section class="card card-body mt-3">
+    <h2 class="h5">{{ datos.cita.mascota }} · {{ datos.cita.propietario }}</h2>
+    <p>{{ datos.cita.especieMascota }} {{ datos.cita.razaMascota }} · Edad {{ datos.cita.edadMascota }} · {{ datos.cita.inicio | date:'short' }}</p>
+    <h3 class="h6">Antecedentes médicos</h3>
+    @for (historia of datos.antecedentes; track historia.id) {
+      <details class="mb-2">
+        <summary>{{ historia.fecha | date:'short' }} · {{ historia.motivo }}</summary>
+        <dl class="mb-1">
+          <dt>Síntomas</dt><dd>{{ historia.sintomas }}</dd>
+          <dt>Diagnóstico</dt><dd>{{ historia.diagnostico }}</dd>
+          <dt>Observaciones</dt><dd>{{ historia.observaciones }}</dd>
+          <dt>Recomendaciones</dt><dd>{{ historia.recomendaciones }}</dd>
+        </dl>
+        @for (nota of historia.anotaciones; track nota.id) {
+          <p>{{ nota.descripcion }} {{ nota.diagnostico }} {{ nota.observaciones }}</p>
+        }
+      </details>
+    } @empty { <p>Sin antecedentes registrados.</p> }
+  </section>
+  @if (abierta) {
+    <!-- Formulación de medicamentos y consulta de unidades disponibles. -->
+    <form class="card card-body" #formula="ngForm" (ngSubmit)="guardarFormula()">
+      <h2 class="h5">Fórmula médica</h2>
+      <fieldset [disabled]="ocupado">
+        @for (linea of medicamentos; track linea; let i = $index) {
+          <fieldset class="row g-2 border-bottom pb-3 mb-3">
+            <legend class="h6">Medicamento {{ i + 1 }}</legend>
+            <label class="col-md-6">Producto <select class="form-select" name="producto{{ i }}" [ngModel]="linea.medicamentoId" (ngModelChange)="consultarSaldo(linea, $event)" required>
+              <option [ngValue]="null">Seleccionar</option>
+              @for (producto of productos; track producto.id) { <option [ngValue]="producto.id">{{ producto.nombre }}</option> }
+            </select>
+            @if (linea.disponible !== null) { <span class="form-text">Unidades disponibles {{ linea.disponible }}</span> }
+            </label>
+            <label class="col-md-3">Cantidad <input class="form-control" type="number" min="1" name="cantidad{{ i }}" [(ngModel)]="linea.cantidad" required></label>
+            <label class="col-md-3">Dosis <input class="form-control" name="dosis{{ i }}" [(ngModel)]="linea.dosis" required></label>
+            <label class="col-md-4">Frecuencia <input class="form-control" name="frecuencia{{ i }}" [(ngModel)]="linea.frecuencia" required maxlength="100"></label>
+            <label class="col-md-4">Duración <input class="form-control" name="duracion{{ i }}" [(ngModel)]="linea.duracion" required maxlength="50"></label>
+            <label class="col-md-4">Vía <input class="form-control" name="via{{ i }}" [(ngModel)]="linea.via" required maxlength="50"></label>
+            <label class="col-md-9">Indicaciones especiales <input class="form-control" name="indicaciones{{ i }}" [(ngModel)]="linea.indicaciones"></label>
+            <div class="col-md-3 align-self-end"><button type="button" class="btn btn-outline-danger" [disabled]="medicamentos.length < 2" (click)="medicamentos.splice(i, 1)">Quitar</button></div>
+          </fieldset>
+        }
+        <label class="d-block mb-2">Indicaciones generales <textarea class="form-control" name="generales" [(ngModel)]="indicaciones"></textarea></label>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="medicamentos.push(nuevaLinea())">Agregar medicamento</button>
+          <button class="btn btn-primary" [disabled]="formula.invalid">Emitir fórmula</button>
+        </div>
+      </fieldset>
+    </form>
+  }
+  @for (idFormula of formulas; track idFormula) {
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button type="button" class="btn btn-outline-primary" (click)="verFormulaPdf(idFormula)">Ver e imprimir fórmula {{ idFormula }} en PDF</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="descargar('formulas', idFormula)">Descargar fórmula {{ idFormula }} en PDF</button>
+    </div>
+  }
+  <!-- Registro clínico y servicios que se guardan al cerrar la atención. -->
+  <form class="card card-body" #atencion="ngForm" (ngSubmit)="cerrarAtencion()">
+    <h2 class="h5">Registro clínico</h2>
+    <fieldset [disabled]="!abierta || ocupado" class="row g-2">
+      <label class="col-md-6">Motivo <textarea class="form-control" name="motivo" [(ngModel)]="form.motivo" required></textarea></label>
+      <label class="col-md-6">Síntomas <textarea class="form-control" name="sintomas" [(ngModel)]="form.sintomas"></textarea></label>
+      <label class="col-md-6">Diagnóstico <textarea class="form-control" name="diagnostico" [(ngModel)]="form.diagnostico" required></textarea></label>
+      <label class="col-md-6">Observaciones <textarea class="form-control" name="observaciones" [(ngModel)]="form.observaciones"></textarea></label>
+      <label class="col-md-6">Recomendaciones <textarea class="form-control" name="recomendaciones" [(ngModel)]="form.recomendaciones"></textarea></label>
+      @if (abierta) {
+        <label class="col-md-6">Servicios prestados <select multiple class="form-select" name="tarifas" [(ngModel)]="tarifaIds" required>
+          @for (tarifa of tarifas; track tarifa.id) { <option [ngValue]="tarifa.id">{{ tarifa.nombreServicio }} · {{ tarifa.valorBase | currency:'COP' }} · IVA {{ tarifa.ivaPorcentaje }}%</option> }
+        </select></label>
+        <div class="col-12">
+          <button class="btn btn-primary" [disabled]="atencion.invalid || ocupado">Finalizar y generar prefactura</button>
+        </div>
+      }
+    </fieldset>
+  </form>
+  @if (prefacturaId; as idDocumento) {
+    <p class="alert alert-success" role="status">Atención finalizada.</p>
+    <button class="btn btn-outline-primary" (click)="descargar('prefactura', idDocumento)">Descargar prefactura PDF</button>
+  }
+}

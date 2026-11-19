@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+/** Agrupa las operaciones HTTP del catálogo de razas. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/raza")
 public interface RazaApi {

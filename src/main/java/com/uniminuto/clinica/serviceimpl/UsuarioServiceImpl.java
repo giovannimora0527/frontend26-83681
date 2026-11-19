@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/** Implementa las operaciones relacionadas con una cuenta de usuario. */
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
 
@@ -22,12 +23,14 @@ public class UsuarioServiceImpl implements UsuarioService {
     private UsuarioRepository usuarioRepository;
 
 
+    /** Consulta las cuentas en el orden definido para el listado. */
     @Override
     public List<UsuarioRs> obtenerUsuariosOrdenados() {
         List<Usuario> usuarios = usuarioRepository.findAllByOrderByUsernameAsc(true);
         return convertirUsuarioToUsuarioRs(usuarios);
     }
 
+    /** Selecciona los datos de la cuenta que se devolverán en la respuesta. */
     private List<UsuarioRs> convertirUsuarioToUsuarioRs(List<Usuario> usuarios) {
         return usuarios.stream().map(usuario -> {
             UsuarioRs usuarioRs = new UsuarioRs();
@@ -41,6 +44,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         }).toList();
     }
 
+    /** Registra una nueva cuenta de usuario. */
     @Override
     public MiRespuestaRS crearUsuario(UsuarioRq usuarioRq) {
         this.validarUsuario(usuarioRq);
@@ -70,6 +74,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         return rta;
     }
 
+    /** Guarda los cambios de la cuenta de usuario. */
     @Override
     public MiRespuestaRS actualizarUsuario(UsuarioRq usuarioRq) {
         this.validarUsuario(usuarioRq);
@@ -103,6 +108,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         return rta;
     }
 
+    /** Comprueba los datos requeridos para guardar una cuenta. */
     private void validarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
         if (usuarioRq == null) {
             throw new BadRequestException("El usuario no puede estar vacío");

@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una fórmula médica. */
 @Entity
 @Table(name = "formula_medica")
 @Data
