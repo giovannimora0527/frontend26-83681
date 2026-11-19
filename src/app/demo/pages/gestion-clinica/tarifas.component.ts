@@ -21,6 +21,7 @@ export class TarifasComponent implements OnInit {
   private readonly api = inject(ClinicaApi);
   private readonly destroyRef = inject(DestroyRef);
   private consultaIva?: Subscription;
+  private vigenciaOriginal: string | null = null;
   especialidades: Especialidad[] = [];
   tarifas: Tarifa[] = [];
   medicamentos: Opcion[] = [];
@@ -64,6 +65,18 @@ export class TarifasComponent implements OnInit {
   /** Prepara la edición de la tarifa. */
   editarTarifa(item: Tarifa) {
     this.tarifa = { ...item };
+    this.vigenciaOriginal = item.fechaVigencia;
+  }
+
+  /** Devuelve el primer día permitido para programar la vigencia. */
+  get fechaMinimaVigencia(): string {
+    return hoyBogota();
+  }
+
+  /** Detecta una vigencia retroactiva nueva o modificada. */
+  get vigenciaAnterior(): boolean {
+    const fecha = this.tarifa.fechaVigencia;
+    return !!fecha && fecha < this.fechaMinimaVigencia && (!this.tarifa.id || fecha !== this.vigenciaOriginal);
   }
 
   /** Carga las especialidades. */
@@ -97,6 +110,10 @@ export class TarifasComponent implements OnInit {
   guardarTarifa() {
     const data = { ...this.tarifa, nombreServicio: this.tarifa.nombreServicio.trim() };
     if (!data.nombreServicio || !data.fechaVigencia) return;
+    if (this.vigenciaAnterior) {
+      this.error = 'La nueva vigencia debe ser de hoy o posterior.';
+      return;
+    }
     if (data.especializacionId === null && data.nombreServicio !== 'Consulta general') {
       this.error = 'La tarifa sin especialidad debe llamarse Consulta general.';
       return;

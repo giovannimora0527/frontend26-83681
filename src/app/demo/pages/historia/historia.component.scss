@@ -1,4 +1,16 @@
-// Estilos de el historial clínico.
+// Permite desplazar solo la tabla cuando las columnas no caben en el espacio disponible.
+.listado-historias {
+    overflow-x: auto;
+
+    > .tabla-historias {
+        min-width: 46rem;
+    }
+
+    .columna-acciones {
+        width: 9rem;
+    }
+}
+
 .descripcion-anotacion {
     white-space: pre-wrap;
 }

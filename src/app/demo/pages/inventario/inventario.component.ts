@@ -185,9 +185,24 @@ export class InventarioComponent implements OnInit {
     this.modalAbierto = 'producto';
   }
 
+  /** Devuelve el día actual de Bogotá para programar el próximo pedido. */
+  get fechaMinimaPedido(): string {
+    return this.fechaInventario.format();
+  }
+
+  /** Detecta un próximo pedido retroactivo nuevo o modificado. */
+  get pedidoAnterior(): boolean {
+    const fecha = this.formulario['fechaProximoPedido'];
+    return !!fecha && fecha < this.fechaMinimaPedido && fecha !== this.productoSeleccionado?.fechaProximoPedido;
+  }
+
   /** Valida campos de negocio y envía el formulario al endpoint correspondiente. */
   guardarProducto(): void {
     const f = this.formulario;
+    if (this.pedidoAnterior) {
+      Swal.fire('Revisa la fecha', 'El próximo pedido debe ser de hoy o posterior.', 'warning');
+      return;
+    }
     const invimaNecesario = f['tipoProducto'] === 'MEDICAMENTO';
     if (!this.esAdmin || !f['codigo'] || !/^[a-zA-Z0-9]{8}$/.test(f['codigo']) || !f['nombre']?.trim() || !f['tipoProducto'] ||
       (invimaNecesario && !f['registroInvima']?.trim()) || (invimaNecesario && !f['fechaVence']) || !f['fechaCompra'] ||
@@ -196,7 +211,13 @@ export class InventarioComponent implements OnInit {
       Swal.fire('Revisa los datos', 'El código debe tener 8 caracteres, Invima y vencimiento son obligatorios para medicamentos, y las fechas y cantidades deben ser válidas.', 'warning');
       return;
     }
-    const payload = { ...f, id: this.productoSeleccionado?.id, codigo: f['codigo'].toUpperCase(), nombre: f['nombre'].trim(), cantidadActual: Number(f['cantidadActual']), stockMinimo: Number(f['stockMinimo']), precioCompra: Number(f['precioCompra']), precioVenta: Number(f['precioVenta']), fechaVence: f['fechaVence'] || null, registroInvima: f['registroInvima'] || null };
+    const payload = {
+      ...f, id: this.productoSeleccionado?.id, codigo: f['codigo'].toUpperCase(), nombre: f['nombre'].trim(),
+      cantidadActual: Number(f['cantidadActual']), stockMinimo: Number(f['stockMinimo']),
+      precioCompra: Number(f['precioCompra']), precioVenta: Number(f['precioVenta']),
+      fechaVence: f['fechaVence'] || null, fechaProximoPedido: f['fechaProximoPedido'] || null,
+      registroInvima: f['registroInvima'] || null
+    };
     this.guardando = true;
     const request = this.productoSeleccionado ? this.inventario.actualizarMedicamento(payload) : this.inventario.crearMedicamento(payload);
     request.subscribe({ next: () => { this.guardando = false; this.modalAbierto = null; this.actualizar(); }, error: (err: HttpErrorResponse) => { this.guardando = false; Swal.fire('No se pudo guardar', this.mensajeError(err), 'error'); } });

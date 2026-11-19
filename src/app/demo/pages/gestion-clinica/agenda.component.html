@@ -92,7 +92,13 @@
         <label class="col-md-6">Motivo <input class="form-control" name="motivo" [(ngModel)]="form.motivo" required></label>
         <label class="col-md-4">Duración en minutos <input type="number" min="1" class="form-control" name="duracion" [(ngModel)]="form.duracionMinutos"></label>
       }
-      <label class="col-md-4">Inicio en hora de Bogotá <input #campoInicio type="datetime-local" class="form-control" name="inicio" [(ngModel)]="form.fechaHora" required></label>
+      <label class="col-md-4">Inicio en hora de Bogotá
+        <input #campoInicio type="datetime-local" class="form-control" name="inicio" [(ngModel)]="form.fechaHora"
+          [attr.min]="inicioMinimoCita" [readOnly]="cierreSinReprogramar" required>
+        @if (diaAnterior) {
+          <span class="text-danger">Elige hoy o una fecha posterior.</span>
+        }
+      </label>
       @if (modo === 'editar') {
         <label class="col-md-4">Estado <select class="form-select" name="estado" [(ngModel)]="form.estado">
           @for (estado of estados; track estado) { @if (estado !== 'ATENDIDA') { <option [value]="estado">{{ estado.replace('_', ' ') }}</option> } }
@@ -103,7 +109,7 @@
       }
     </div>
     <div class="mt-3 d-flex gap-2">
-      <button type="submit" class="btn btn-primary" [disabled]="citaForm.invalid || guardando">Guardar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="citaForm.invalid || diaAnterior || guardando">Guardar</button>
       <button type="button" class="btn btn-outline-secondary" (click)="modo = null" [disabled]="guardando">Cerrar</button>
     </div>
   </form>

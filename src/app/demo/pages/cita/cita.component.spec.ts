@@ -57,7 +57,24 @@ describe('CitaComponent', () => {
 
     fixture = TestBed.createComponent(CitaComponent);
     component = fixture.componentInstance;
+    spyOnProperty(component, 'inicioMinimoCita').and.returnValue('2026-10-15T00:00');
     fixture.detectChanges();
+  });
+
+  it('blocks previous days in the picker and in the availability query', () => {
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('#citaFechaHora');
+    const fecha = component.form.controls['fechaHora'];
+    expect(input.min).toBe('2026-10-15T00:00');
+
+    fecha.setValue('2026-10-14T23:59');
+    expect(fecha.hasError('diaAnterior')).toBeTrue();
+    component.consultarMedicosDisponibles();
+    expect(medicoService.listarMedicosDisponiblesPorFecha).not.toHaveBeenCalled();
+
+    fecha.setValue('2026-10-15T00:00');
+    expect(fecha.hasError('diaAnterior')).toBeFalse();
+    fecha.setValue('2026-10-16T00:00');
+    expect(fecha.hasError('diaAnterior')).toBeFalse();
   });
 
   it('should create', () => {

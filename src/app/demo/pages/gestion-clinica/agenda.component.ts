@@ -178,9 +178,29 @@ export class AgendaComponent implements OnInit {
     afterNextRender(() => this.campoInicio()?.nativeElement.focus(), { injector: this.injector });
   }
 
+  /** Usa el inicio del día actual en Bogotá como límite del calendario. */
+  get inicioMinimoCita(): string {
+    return hoyBogota() + 'T00:00';
+  }
+
+  /** Identifica los cambios de estado que cierran la cita sin asignar un horario. */
+  get cierreSinReprogramar(): boolean {
+    return this.modo === 'editar' && ['CANCELADA', 'NO_ASISTIDA'].includes(this.form.estado);
+  }
+
+  /** Comprueba la fecha únicamente cuando se está asignando un horario. */
+  get diaAnterior(): boolean {
+    return !!this.form.fechaHora && this.form.fechaHora < this.inicioMinimoCita &&
+      !this.cierreSinReprogramar;
+  }
+
   /** Valida y envía los datos de la cita según la acción elegida. */
   guardar() {
     if (!this.modo || this.guardando) return;
+    if (this.diaAnterior) {
+      this.error = 'Elige hoy o una fecha posterior.';
+      return;
+    }
     const cita = this.seleccion;
     const form = { ...this.form, motivo: this.form.motivo.trim(), motivoCancelacion: this.form.motivoCancelacion.trim() };
     const reprogramar = this.modo === 'reprogramar';

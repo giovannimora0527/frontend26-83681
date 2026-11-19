@@ -12,6 +12,7 @@ import { Mascota } from 'src/app/models/mascota';
 import { Medico } from 'src/app/models/medico';
 import { MascotaService } from '../mascota/service/mascota.service';
 import { MedicoService } from '../medico/service/medico.service';
+import { hoyBogota } from '../gestion-clinica/clinica-api.service';
 
 /** Enumera las columnas por las que se puede ordenar la tabla. */
 type ColumnaOrden = 'mascota' | 'medico' | 'fechaHora' | 'motivo' | 'estado';
@@ -92,7 +93,9 @@ export class CitaComponent {
       fechaHora: [null, [
         Validators.required,
         (control: AbstractControl) => control.value && Number.isNaN(new Date(control.value).getTime())
-          ? { fechaInvalida: true } : null
+          ? { fechaInvalida: true } : null,
+        (control: AbstractControl) => control.value && control.value < this.inicioMinimoCita
+          ? { diaAnterior: true } : null
       ]],
       motivo: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(255)]],
       estado: ['', Validators.required],
@@ -161,6 +164,11 @@ export class CitaComponent {
     });
   }
 
+  /** Usa el inicio del día actual en Bogotá como límite del calendario. */
+  get inicioMinimoCita(): string {
+    return hoyBogota() + 'T00:00';
+  }
+
   /** Devuelve el inicio del rango elegido. */
   get fechaInicio(): Date | null {
     const control = this.form.controls['fechaHora'];
@@ -176,6 +184,7 @@ export class CitaComponent {
 
   /** Consulta qué veterinarios pueden atender a la mascota en el horario indicado. */
   consultarMedicosDisponibles(): void {
+    this.form.controls['fechaHora'].updateValueAndValidity({ emitEvent: false });
     const inicio = this.fechaInicio;
     const fin = this.fechaFin;
     if (!inicio || !fin) {
@@ -429,6 +438,7 @@ export class CitaComponent {
         this.respuestaError = 'Indica el motivo de cancelación.';
         return;
       }
+      this.form.controls['fechaHora'].updateValueAndValidity({ emitEvent: false });
       if (estado !== 'CANCELADA' && this.form.invalid) {
         this.form.markAllAsTouched();
         return;

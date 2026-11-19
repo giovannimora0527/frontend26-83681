@@ -34,10 +34,13 @@
     </select></label>
     <label class="col-md-4">Valor base <input class="form-control" type="number" name="valor" min="0" step="0.01" [(ngModel)]="tarifa.valorBase" required></label>
     <label class="col-md-4">IVA % <input class="form-control" type="number" name="iva" min="0" max="100" step="0.01" [(ngModel)]="tarifa.ivaPorcentaje" required></label>
-    <label class="col-md-4">Vigencia <input class="form-control" type="date" name="vigencia" [(ngModel)]="tarifa.fechaVigencia" required></label>
+    <label class="col-md-4">Vigencia
+      <input class="form-control" type="date" name="vigencia" [(ngModel)]="tarifa.fechaVigencia" [attr.min]="fechaMinimaVigencia" required>
+      @if (vigenciaAnterior) { <span class="text-danger">Elige hoy o una fecha posterior.</span> }
+    </label>
     <label class="col-md-4"><input type="checkbox" class="form-check-input me-1" name="activa" [(ngModel)]="tarifa.activo"> Activa</label>
     <div class="col-12 d-flex gap-2">
-      <button class="btn btn-primary" [disabled]="tarifaForm.invalid || ocupado">{{ tarifa.id ? 'Actualizar tarifa' : 'Crear tarifa' }}</button>
+      <button class="btn btn-primary" [disabled]="tarifaForm.invalid || vigenciaAnterior || ocupado">{{ tarifa.id ? 'Actualizar tarifa' : 'Crear tarifa' }}</button>
       @if (tarifa.id) { <button type="button" class="btn btn-outline-secondary" (click)="tarifa = nuevaTarifa()">Cancelar edición</button> }
     </div>
   </form>

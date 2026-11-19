@@ -268,9 +268,9 @@
                         <div class="col-md-6">
                             <label for="citaFechaHora" class="form-label">Fecha y hora de inicio</label>
                             <input id="citaFechaHora" type="datetime-local" class="form-control"
-                                formControlName="fechaHora">
+                                formControlName="fechaHora" [attr.min]="inicioMinimoCita">
                             <div class="text-danger" *ngIf="f['fechaHora'].touched && f['fechaHora'].invalid">
-                                Ingresa una fecha y hora de inicio válida.
+                                {{ f['fechaHora'].hasError('diaAnterior') ? 'Elige hoy o una fecha posterior.' : 'Ingresa una fecha y hora de inicio válida.' }}
                             </div>
                         </div>
                         <div class="col-md-6">
