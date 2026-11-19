@@ -1,3 +1,5 @@
+import { getJwtMenus, getJwtPayload } from 'src/app/utils/jwt.util';
+
 export interface NavigationItem {
   id: string;
   title: string;
@@ -6,6 +8,8 @@ export interface NavigationItem {
   icon?: string;
   hidden?: boolean;
   url?: string;
+  /** Parámetros de ruta que el item comparte con su componente de destino. */
+  queryParams?: Record<string, string>;
   classes?: string;
   exactMatch?: boolean;
   external?: boolean;
@@ -22,11 +26,43 @@ export const NavigationItems: NavigationItem[] = [
     icon: 'icon-navigation',
     children: [
       {
-        id: 'usuario',
-        title: 'Gestión de Usuarios',
+        id: 'cita',
+        title: 'Gestión de Citas',
         type: 'item',
-        url: '/inicio/usuarios',
-        icon: 'feather icon-user',
+        url: '/inicio/citas',
+        icon: 'bi bi-calendar',
+        classes: 'nav-item'
+      },
+      {
+        id: 'clientes',
+        title: 'Gestión de Clientes',
+        type: 'item',
+        url: '/inicio/clientes',
+        icon: 'bi bi-person-check',
+        classes: 'nav-item'
+      },
+      {
+        id: 'especializaciones',
+        title: 'Gestión de Especializaciones',
+        type: 'item',
+        url: '/inicio/especializaciones',
+        icon: 'fa-solid fa-user-graduate',
+        classes: 'nav-item'
+      },
+      {
+        id: 'formulas',
+        title: 'Gestión de Formulas',
+        type: 'item',
+        url: '/inicio/formulas',
+        icon: 'fa-solid fa-clipboard-list',
+        classes: 'nav-item'
+      },
+      {
+        id: 'historias',
+        title: 'Gestión de Historias',
+        type: 'item',
+        url: '/inicio/historias',
+        icon: 'fa-solid fa-book-medical',
         classes: 'nav-item'
       },
       {
@@ -34,56 +70,7 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Gestión de Mascotas',
         type: 'item',
         url: '/inicio/mascotas',
-        icon: 'bi bi-person-lines-fill',
-        classes: 'nav-item'
-      },
-      /* ---------- Nuevos menus aqui -------------  */       
-      {
-      id: 'medicos',
-      title: 'Gestión de Médicos',
-      type: 'item',
-      url: '/inicio/medicos',
-      icon: 'feather icon-user-plus',
-      classes: 'nav-item'
-      },
-      {
-      id: 'citas',
-      title: 'Gestión de Citas',
-      type: 'item',
-      url: '/inicio/citas',
-      icon: 'feather icon-calendar',
-      classes: 'nav-item'
-      },
-      {
-        id: 'especializaciones',
-        title: 'Gestión de Especializaciones',
-        type: 'item',
-        url: '/inicio/especializaciones',
-        icon: 'feather icon-award',
-        classes: 'nav-item'
-      },
-      {
-        id: 'historias-medicas',
-        title: 'Historias Médicas',
-        type: 'item',
-        url: '/inicio/historias-medicas',
-        icon: 'feather icon-clipboard',
-        classes: 'nav-item'
-      },
-      {
-        id: 'anotaciones-historias',
-        title: 'Anotaciones Clínicas',
-        type: 'item',
-        url: '/inicio/anotaciones-historias',
-        icon: 'feather icon-edit',
-        classes: 'nav-item'
-      },
-      {
-        id: 'formulas-medicas',
-        title: 'Fórmulas Médicas',
-        type: 'item',
-        url: '/inicio/formulas-medicas',
-        icon: 'feather icon-file-text',
+        icon: 'fa-solid fa-paw',
         classes: 'nav-item'
       },
       {
@@ -91,19 +78,79 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Gestión de Medicamentos',
         type: 'item',
         url: '/inicio/medicamentos',
-        icon: 'feather icon-box',
+        icon: 'fa-solid fa-capsules',
         classes: 'nav-item'
       },
       {
-        id: 'razas',
-        title: 'Gestión de Razas',
+        id: 'inventario',
+        title: 'Gestión de Inventario',
         type: 'item',
-        url: '/inicio/razas',
-        icon: 'feather icon-target',
+        url: '/inicio/medicamentos',
+        queryParams: { modulo: 'inventario' },
+        icon: 'bi bi-boxes',
         classes: 'nav-item'
+      },
+      {
+        id: 'despacho',
+        title: 'Gestión de Despacho',
+        type: 'item',
+        url: '/inicio/medicamentos',
+        queryParams: { modulo: 'despacho' },
+        icon: 'bi bi-clipboard2-check',
+        classes: 'nav-item'
+      },
+      {
+        id: 'medicos',
+        title: 'Gestión de Medicos',
+        type: 'item',
+        url: '/inicio/medicos',
+        icon: 'fa-solid fa-user-doctor',
+        classes: 'nav-item'
+      },
+      {
+        id: 'usuarios',
+        title: 'Gestión de Usuarios',
+        type: 'item',
+        url: '/inicio/usuarios',
+        icon: 'feather icon-users',
+        classes: 'nav-item'
+      },
+      /* ---------- Nuevos menus aqui -------------  */
+    ]
+  },
+];
+
+export function getNavigationItems(): NavigationItem[] {
+  // El administrador puede navegar todos los módulos; el backend conserva la autorización de cada API.
+  try {
+    const rol = getJwtPayload()?.rol ?? '';
+    const rolNormalizado = rol.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s-]+/g, '_').toUpperCase();
+    if (rolNormalizado === 'ADMIN' || rolNormalizado === 'ADMINISTRADOR') {
+      return NavigationItems.map((item) => ({ ...item, children: item.children?.map((child) => ({ ...child })) }));
+    }
+  } catch (error) {
+    console.error('No fue posible obtener el perfil del token JWT', error);
+    return [];
+  }
+
+  // Los otros perfiles conservan los menús activos que entrega el backend en el JWT.
+  let allowedCodes: Set<string>;
+  try {
+    allowedCodes = new Set(getJwtMenus().filter((menu) => menu.activo).map((menu) => menu.code));
+  } catch (error) {
+    console.error('No fue posible obtener los menus del token JWT', error);
+    return [];
+  }
+
+  const filterItems = (items: NavigationItem[]): NavigationItem[] =>
+    items.flatMap((item) => {
+      if (item.type === 'item') {
+        return allowedCodes.has(item.id) ? [{ ...item }] : [];
       }
 
+      const children = filterItems(item.children ?? []);
+      return children.length > 0 ? [{ ...item, children }] : [];
+    });
 
-    ]
-  },  
-];
+  return filterItems(NavigationItems);
+}

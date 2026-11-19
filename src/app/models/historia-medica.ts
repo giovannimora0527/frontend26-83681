@@ -1,15 +1,7 @@
-import { Cita } from "./cita";
-import { Mascota } from "./mascota";
-import { Medico } from "./medico";
+import { AnotacionHistoria } from './anotacion-historia';
+import { Historia } from './historia';
 
 export class HistoriaMedica {
-    id?: number;
-    mascota?: Mascota; 
-    cita?: Cita;     
-    medico?: Medico; 
-    fechaCreacion?: string;
-    diagnostico?: string;
-    observaciones?: string;
-    motivoConsulta?: string;
-    estado?: string;
+    historia!: Historia;
+    anotaciones!: AnotacionHistoria[];
 }

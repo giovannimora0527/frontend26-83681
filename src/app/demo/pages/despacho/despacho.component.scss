@@ -1,0 +1,210 @@
+/* Diseño local para la cola y el flujo de entrega de medicamentos. */
+.dispatch-module {
+  padding: 1rem 1.2rem;
+  border: 1px solid #e8edf3;
+  border-radius: 0.85rem;
+  background: #fff;
+  box-shadow: 0 5px 22px #2338560a;
+  color: #243247;
+}
+.module-heading,
+.preparation header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.module-heading h2,
+.preparation h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.module-heading p,
+.preparation header p {
+  margin: 0.3rem 0 0;
+  color: #77849a;
+  font-size: 0.83rem;
+}
+.filter-row {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 700px;
+  margin-bottom: 1rem;
+}
+.dispatch-module .table {
+  font-size: 0.82rem;
+}
+.dispatch-module .table th {
+  background: #f7f9fc;
+  color: #6e7b90;
+  font-size: 0.73rem;
+  white-space: nowrap;
+}
+.dispatch-module .table td,
+.dispatch-module .table th {
+  padding: 0.72rem;
+  border-color: #edf1f5;
+}
+.empty {
+  padding: 2rem !important;
+  text-align: center;
+  color: #8491a3;
+}
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  color: #8290a3;
+  font-size: 0.75rem;
+}
+.pager > div {
+  display: flex;
+  gap: 0.2rem;
+}
+.eyebrow {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #71819a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.preparation {
+  margin-top: 1.3rem;
+  padding: 1rem;
+  border: 1px solid #dce7f5;
+  border-radius: 0.8rem;
+  background: #f8fafd;
+}
+.medicine-line {
+  padding: 0.9rem 0;
+  border-top: 1px solid #e6edf5;
+}
+.line-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+.line-heading strong,
+.line-heading small {
+  display: block;
+}
+.line-heading small {
+  margin-top: 0.25rem;
+  color: #77849a;
+  font-size: 0.75rem;
+}
+.line-heading > span {
+  color: #65748a;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.allocation {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 150px auto;
+  align-items: end;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.allocation label {
+  display: grid;
+  gap: 0.25rem;
+  color: #65748a;
+  font-size: 0.74rem;
+}
+.allocation select,
+.allocation input {
+  font-size: 0.8rem;
+}
+.preparation footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+@media (max-width: 600px) {
+  .module-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .filter-row,
+  .pager {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .pager > div {
+    flex-wrap: wrap;
+  }
+  .line-heading {
+    flex-direction: column;
+  }
+  .allocation {
+    grid-template-columns: 1fr auto;
+  }
+  .allocation label:first-child {
+    grid-column: 1/-1;
+  }
+}
+/* Estilos del historial paginado y del diálogo de trazabilidad. */
+.history-panel {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e8edf3;
+}
+.history-panel header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.history-panel header p {
+  margin: 0.3rem 0;
+  color: #77849a;
+  font-size: 0.8rem;
+}
+.history-search {
+  max-width: 460px;
+  margin: 0.7rem 0;
+}
+.overlay {
+  position: fixed;
+  z-index: 1050;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 1rem;
+  background: #18253785;
+}
+.detail-dialog {
+  width: min(100%, 760px);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.detail-dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+.detail-dialog h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.detail-dialog p {
+  margin: 0.3rem 0;
+  color: #77849a;
+  font-size: 0.8rem;
+}
+.detail-dialog .table {
+  font-size: 0.8rem;
+}
+.detail-dialog th {
+  background: #f7f9fc;
+  color: #6e7b90;
+}
