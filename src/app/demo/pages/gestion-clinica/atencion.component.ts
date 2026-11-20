@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -62,13 +63,19 @@ export class AtencionComponent implements OnInit {
           diagnostico: historia?.diagnostico ?? '', observaciones: historia?.observaciones ?? '',
           recomendaciones: historia?.recomendaciones ?? '' };
         if (this.abierta) this.cargarCatalogos();
-        this.api.leer<{ id: number; cita: { id: number } }[]>('formula-medica/listar').subscribe({
-          next: (formulas) => {
-            const emitidas = formulas.filter((formula) => formula.cita?.id === this.id).map((formula) => formula.id);
-            this.formulas = [...new Set([...this.formulas, ...emitidas])];
-          }, error: this.fallo
-        });
+        this.cargarFormulas();
       }, error: this.fallo
+    });
+  }
+
+  /** Carga las fórmulas emitidas para esta cita. */
+  private cargarFormulas() {
+    this.api.leer<{ id: number; cita?: { id: number } }[]>('formula-medica/listar').subscribe({
+      next: (formulas) => {
+        const emitidas = formulas.filter((formula) => formula.cita?.id === this.id).map((formula) => formula.id);
+        this.formulas = [...new Set([...this.formulas, ...emitidas])];
+      },
+      error: this.fallo
     });
   }
 
@@ -82,12 +89,13 @@ export class AtencionComponent implements OnInit {
 
   /** Prepara los valores iniciales de una línea de la fórmula médica. */
   nuevaLinea() {
-    return { medicamentoId: null as number | null, cantidad: 1, dosis: '', frecuencia: '', duracion: '',
+    return { medicamentoId: null as number | null, cantidad: null as number | null, dosis: '', frecuencia: '', duracion: '',
       via: '', indicaciones: '', disponible: null as number | null };
   }
 
   /** Consulta las unidades disponibles para el medicamento elegido en la prescripción. */
   consultarSaldo(linea: ReturnType<AtencionComponent['nuevaLinea']>, id: number | null) {
+    if (linea.medicamentoId !== id) linea.cantidad = null;
     linea.medicamentoId = id;
     linea.disponible = null;
     if (!id) return;
@@ -96,12 +104,31 @@ export class AtencionComponent implements OnInit {
     });
   }
 
+  /** Quita una línea o deja un formulario vacío si era la única. */
+  quitarMedicamento(indice: number): void {
+    if (this.medicamentos.length === 1) {
+      this.medicamentos = [this.nuevaLinea()];
+      return;
+    }
+    this.medicamentos.splice(indice, 1);
+  }
+
+  /** Comprueba que todas las líneas tengan una cantidad prescrita. */
+  get cantidadesValidas(): boolean {
+    return this.medicamentos.every((linea) => this.cantidadValida(linea.cantidad));
+  }
+
+  /** Valida que la cantidad sea entera y positiva. */
+  private cantidadValida(cantidad: number | null): boolean {
+    return cantidad !== null && Number.isInteger(cantidad) && cantidad > 0;
+  }
+
   /** Valida la prescripción y envía la fórmula de la cita al servidor. */
   guardarFormula() {
     if (!this.abierta || this.ocupado) return;
     const cantidades = new Map<number, number>();
     for (const linea of this.medicamentos) {
-      if (!linea.medicamentoId) continue;
+      if (!linea.medicamentoId || linea.cantidad === null) continue;
       const cantidad = (cantidades.get(linea.medicamentoId) ?? 0) + linea.cantidad;
       cantidades.set(linea.medicamentoId, cantidad);
       if (linea.disponible !== null && cantidad > linea.disponible) {
@@ -113,7 +140,7 @@ export class AtencionComponent implements OnInit {
       ...linea, dosis: linea.dosis.trim(), frecuencia: linea.frecuencia.trim(),
       duracion: linea.duracion.trim(), via: linea.via.trim(), indicaciones: linea.indicaciones.trim()
     }));
-    if (medicamentos.some((linea) => !linea.medicamentoId || !Number.isInteger(linea.cantidad) || linea.cantidad <= 0
+    if (medicamentos.some((linea) => !linea.medicamentoId || !this.cantidadValida(linea.cantidad)
       || !linea.dosis || !linea.frecuencia || !linea.duracion || !linea.via)) {
       this.error = 'Completa la prescripción de cada medicamento.';
       return;
@@ -124,9 +151,10 @@ export class AtencionComponent implements OnInit {
       indicaciones: this.indicaciones.trim(), medicamentos
     }).pipe(finalize(() => this.ocupado = false)).subscribe({
       next: ({ formulaId }) => {
-        this.formulas = [...this.formulas, formulaId];
+        this.formulas = [...new Set([...this.formulas, formulaId])];
         this.medicamentos = [this.nuevaLinea()];
         this.indicaciones = '';
+        confirmarAccion('La fórmula médica se guardó correctamente.');
       }, error: this.fallo
     });
   }
@@ -134,7 +162,7 @@ export class AtencionComponent implements OnInit {
   /** Detecta datos de una fórmula que todavía no se han guardado. */
   private tieneBorradorFormula(): boolean {
     return !!this.indicaciones.trim() || this.medicamentos.some((linea) =>
-      linea.medicamentoId !== null || linea.cantidad !== 1
+      linea.medicamentoId !== null || linea.cantidad !== null
       || [linea.dosis, linea.frecuencia, linea.duracion, linea.via, linea.indicaciones].some((texto) => texto.trim())
     );
   }
@@ -170,13 +198,17 @@ export class AtencionComponent implements OnInit {
     }
     this.api.enviar<{ prefacturaId: number }>('POST', this.base + '/finalizar', solicitud)
       .pipe(finalize(() => this.ocupado = false)).subscribe({
-      next: ({ prefacturaId }) => this.prefacturaId = prefacturaId, error: this.fallo
+      next: ({ prefacturaId }) => {
+        this.prefacturaId = prefacturaId;
+        confirmarAccion('La atención se finalizó y se generó la prefactura.');
+      }, error: this.fallo
     });
   }
 
   /** Solicita al servidor el archivo seleccionado y lo guarda desde el navegador. */
   descargar(tipo: 'formulas' | 'prefactura', id: number) {
-    this.api.descargar(`${this.base}/${tipo}/${id}/pdf`, `${tipo}-${id}.pdf`, (mensaje) => this.error = mensaje);
+    const archivo = tipo === 'formulas' ? 'formula-medica.pdf' : `prefactura-${id}.pdf`;
+    this.api.descargar(`${this.base}/${tipo}/${id}/pdf`, archivo, (mensaje) => this.error = mensaje);
   }
 
   /** Abre el PDF de la fórmula para consultarlo e imprimirlo. */

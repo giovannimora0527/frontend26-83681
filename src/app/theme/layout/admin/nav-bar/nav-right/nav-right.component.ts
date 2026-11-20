@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 // angular import
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
@@ -35,5 +36,6 @@ export class NavRightComponent {
   cerrarSesion(): void {
     this.authService.logout();
     void this.router.navigate(['/login'], { replaceUrl: true });
+    confirmarAccion('Sesión cerrada.', true);
   }
 }

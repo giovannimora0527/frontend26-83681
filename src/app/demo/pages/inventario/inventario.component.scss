@@ -104,9 +104,10 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--clinic-action-space);
   white-space: normal;
 }
+.actions > .btn { margin: 0; }
 .empty {
   padding: 2rem !important;
   text-align: center;

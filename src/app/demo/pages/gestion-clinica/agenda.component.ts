@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 import { afterNextRender, Component, ElementRef, inject, Injector, OnInit, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -57,7 +58,6 @@ export class AgendaComponent implements OnInit {
   modo: 'nuevo' | 'editar' | 'reprogramar' | null = null;
   form = this.nuevaCita();
   error = '';
-  aviso = '';
   cargando = false;
   guardando = false;
   private readonly mostrarError = this.api.error((mensaje) => this.error = mensaje);
@@ -106,7 +106,6 @@ export class AgendaComponent implements OnInit {
   cargar() {
     this.solicitud?.unsubscribe();
     this.limpiarDetalle();
-    this.aviso = '';
     this.error = '';
     this.citas = [];
     this.dias = [];
@@ -224,10 +223,14 @@ export class AgendaComponent implements OnInit {
             const fechaDestino = respuesta.inicio.slice(0, 10);
             if (!this.dias.includes(fechaDestino)) this.fecha = fechaDestino;
             this.cargar();
-            this.aviso = `Cita reprogramada para el ${this.mostrarHora(respuesta.inicio)} (hora de Bogotá).`;
+            confirmarAccion(`Cita reprogramada para el ${this.mostrarHora(respuesta.inicio)} (hora de Bogotá).`);
             return;
           }
           this.cargar();
+          const mensaje = editar
+            ? (form.estado === 'CANCELADA' ? 'La cita se canceló correctamente.' : 'La cita se actualizó correctamente.')
+            : 'La cita se creó correctamente.';
+          confirmarAccion(mensaje);
         },
         error: this.mostrarError
       });
@@ -249,7 +252,8 @@ export class AgendaComponent implements OnInit {
   etiquetaEstado(estado: string): string {
     if (estado === 'PROGRAMADA') return 'Pendiente';
     if (estado === 'ATENDIDA') return 'Finalizada';
-    return estado.replace('_', ' ');
+    const etiqueta = estado.replace(/_/g, ' ').toLocaleLowerCase('es');
+    return etiqueta.charAt(0).toLocaleUpperCase('es') + etiqueta.slice(1);
   }
 
   /** Descarga en Excel las citas del período seleccionado. */

@@ -92,21 +92,23 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <button type="button"
-                                    class="btn btn-outline-primary btn-ver-cita me-2"
-                                    (click)="verCita(cita)" ngbTooltip="Ver información de la cita"
-                                    tooltipClass="tooltip-info" triggers="hover focus" placement="top" container="body">
-                                    <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;Ver
-                                </button>
-                                <button type="button"
-                                    class="btn btn-outline-info d-inline-flex align-items-center justify-content-center"
-                                    (click)="abrirEdicion(cita)"
-                                    [disabled]="esCitaCerrada(cita)"
-                                    [attr.aria-label]="esCitaCerrada(cita) ? 'No se puede editar una cita cerrada' : 'Editar cita'"
-                                    ngbTooltip="Editar" tooltipClass="tooltip-info" triggers="hover focus"
-                                    placement="top" container="body">
-                                    <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;Editar
-                                </button>
+                                <div class="clinic-actions justify-content-center">
+                                    <button type="button"
+                                        class="btn btn-outline-primary btn-ver-cita"
+                                        (click)="verCita(cita)" ngbTooltip="Ver información de la cita"
+                                        tooltipClass="tooltip-info" triggers="hover focus" placement="top" container="body">
+                                        <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;Ver
+                                    </button>
+                                    <button type="button"
+                                        class="btn btn-outline-info d-inline-flex align-items-center justify-content-center"
+                                        (click)="abrirEdicion(cita)"
+                                        [disabled]="esCitaCerrada(cita)"
+                                        [attr.aria-label]="esCitaCerrada(cita) ? 'No se puede editar una cita cerrada' : 'Editar cita'"
+                                        ngbTooltip="Editar" tooltipClass="tooltip-info" triggers="hover focus"
+                                        placement="top" container="body">
+                                        <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;Editar
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>

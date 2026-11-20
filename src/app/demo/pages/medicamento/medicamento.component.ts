@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -57,7 +58,7 @@ export class MedicamentoComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { this.querySubscription?.unsubscribe(); }
 
   /** Consulta los medicamentos usando el servicio existente del módulo. */
-  listarMedicamentos(): void {
+  listarMedicamentos(mostrarConfirmacion = false): void {
     this.cargandoMedicamentos = true;
     this.errorMedicamentos = '';
     this.medicamentoService.listarMedicamentos().subscribe({
@@ -65,6 +66,7 @@ export class MedicamentoComponent implements OnInit, OnDestroy {
         this.medicamentos = Array.isArray(data) ? data : [];
         this.paginaMedicamentos = 1;
         this.cargandoMedicamentos = false;
+        if (mostrarConfirmacion) confirmarAccion('Catálogo de medicamentos actualizado.', true);
       },
       error: (error: { status?: number; message?: string; error?: { mensaje?: string; message?: string } }) => {
         this.errorMedicamentos = this.mensajeErrorCarga(error);

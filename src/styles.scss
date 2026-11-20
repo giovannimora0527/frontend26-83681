@@ -21,6 +21,7 @@
 @import 'scss/plugins/plugins';
 
 @import 'scss/custom';
+@import 'scss/clinic-actions';
 
 body .swal2-container {
 	z-index: 1100;
@@ -33,8 +34,8 @@ body .swal2-container {
 	align-items: center;
 	gap: 0.65rem;
 	margin-top: 2rem;
-	padding: 0.8rem 1.1rem;
-	border-radius: 4px;
+	padding: 0.45rem 0.8rem;
+	border-radius: 0.625rem;
 	background: var(--clinic-teal);
 	color: #ffffff;
 	font-weight: 600;

@@ -60,6 +60,15 @@
               ],
               "outputHashing": "all"
             },
+            "docker": {
+              "optimization": {
+                "scripts": true,
+                "styles": true,
+                "fonts": false
+              },
+              "fileReplacements": [],
+              "budgets": []
+            },
             "development": {
               "buildOptimizer": false,
               "optimization": false,

@@ -29,9 +29,29 @@
 }
 .filter-row {
   display: flex;
-  gap: 0.5rem;
+  align-items: flex-end;
+  gap: var(--clinic-action-space, 0.75rem);
   max-width: 700px;
   margin-bottom: 1rem;
+}
+.filter-row > .form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.filter-row > label {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+  margin: 0;
+  min-width: 9.5rem;
+}
+.filter-row .form-control,
+.filter-row > .btn {
+  height: 2.5rem;
+}
+.filter-row > .btn {
+  flex: 0 0 auto;
+  margin: 0;
 }
 .dispatch-module .table {
   font-size: 0.82rem;

@@ -17,7 +17,7 @@
     <!-- Cada vista se implementa y mantiene en su carpeta de dominio. -->
     <section *ngIf="moduloActual === 'medicamentos'" class="module-panel">
       <!-- Listado de medicamentos incorporado en la página y el servicio que ya existían para este módulo. -->
-      <header class="panel-heading"><div><h2>Listar medicamentos</h2><p>Consulta resumida del catálogo registrado.</p></div><button type="button" class="btn btn-outline-primary" (click)="listarMedicamentos()" [disabled]="cargandoMedicamentos">Actualizar</button></header>
+      <header class="panel-heading"><div><h2>Listar medicamentos</h2><p>Consulta resumida del catálogo registrado.</p></div><button type="button" class="btn btn-outline-primary" (click)="listarMedicamentos(true)" [disabled]="cargandoMedicamentos">Actualizar</button></header>
       <!-- Búsqueda por nombre y reinicio automático de la página. -->
       <label class="search-box"><i class="bi bi-search"></i><input type="search" placeholder="Buscar medicamento por nombre" [(ngModel)]="busquedaMedicamentos" (ngModelChange)="reiniciarBusquedaMedicamentos()" /></label>
       <div *ngIf="errorMedicamentos" class="alert alert-danger">{{ errorMedicamentos }}</div>

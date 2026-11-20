@@ -86,9 +86,9 @@ describe('getNavigationItems', () => {
     expect(log).toHaveBeenCalledWith('No fue posible obtener el perfil del token JWT', jasmine.any(Error));
   });
 
-  it('shows the personal agenda and attendance to a veterinarian instead of the appointments list', () => {
+  it('shows one entry for the veterinarian when both agenda and attendance are assigned', () => {
     storeMenus(['cita', 'calendario-medico', 'atencion-medica'], [], 'Medico');
-    expect(getNavigationItems()[0].children?.map((item) => item.id)).toEqual(['calendario-medico', 'atencion-medica']);
+    expect(getNavigationItems()[0].children?.map((item) => item.id)).toEqual(['calendario-medico']);
   });
 
   it('shows administration the original appointments list, billing and reports', () => {

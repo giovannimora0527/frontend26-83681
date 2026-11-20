@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -55,19 +56,57 @@ export class FacturacionComponent implements OnInit {
   referencia = '';
   ocupado = false;
   error = '';
-  aviso = '';
   private readonly fallo = this.api.error((mensaje) => this.error = mensaje);
 
-  /** Muestra únicamente las mascotas que coinciden con el propietario elegido. */
+  /** Muestra las mascotas del propietario elegido en el historial. */
   get mascotasVisibles() {
-    return this.mascotas.filter((mascota) => !this.clienteId || (mascota.cliente?.id ?? mascota.clienteId) === this.clienteId);
+    return this.mascotas.filter((mascota) =>
+      this.clienteId === null || this.idPropietario(mascota) === this.clienteId || mascota.mascotaId === this.mascotaId);
   }
 
-  /** Muestra las citas que coinciden con los filtros de facturación. */
-  get citasVisibles() {
-    return this.citas.filter((cita) => (!this.clienteId || (cita.cliente?.id ?? cita.mascota?.cliente?.id) === this.clienteId)
-      && (!this.mascotaId || (cita.mascota?.mascotaId ?? cita.mascotaId) === this.mascotaId));
+  /** Ofrece para emisión las mascotas que tienen al menos una cita atendida. */
+  get mascotasParaEmitir() {
+    const atendidas = new Set(this.citas.map((cita) => this.idMascotaCita(cita)));
+    return this.mascotas.filter((mascota) => atendidas.has(mascota.mascotaId ?? null));
   }
+
+  /** Filtra citas atendidas por mascota o, si no se eligió una, por propietario. */
+  get citasVisibles() {
+    return this.citas.filter((cita) => this.mascotaId !== null
+      ? this.idMascotaCita(cita) === this.mascotaId
+      : this.clienteId === null || this.propietarioCita(cita)?.id === this.clienteId);
+  }
+
+  /** Muestra el propietario registrado en la cita elegida o en la ficha de la mascota. */
+  get propietarioEmision(): Cliente | undefined {
+    const cita = this.citas.find((item) => item.id === this.citaId);
+    return (cita && this.propietarioCita(cita))
+      ?? this.propietarioMascota(this.mascotas.find((item) => item.mascotaId === this.mascotaId));
+  }
+
+  /** Devuelve el nombre que acompaña a la mascota en los selectores. */
+  nombrePropietario(mascota: Mascota): string {
+    const cliente = this.propietarioMascota(mascota);
+    return [cliente?.nombres, cliente?.apellidos].filter(Boolean).join(' ');
+  }
+
+  private idPropietario(mascota: Mascota | undefined): number | null {
+    return mascota?.cliente?.id ?? mascota?.clienteId ?? null;
+  }
+
+  private propietarioMascota(mascota: Mascota | undefined): Cliente | undefined {
+    return mascota?.cliente ?? this.clientes.find((cliente) => cliente.id === this.idPropietario(mascota));
+  }
+
+  private idMascotaCita(cita: Cita): number | null {
+    return cita.mascota?.mascotaId ?? cita.mascotaId ?? null;
+  }
+
+  private propietarioCita(cita: Cita): Cliente | undefined {
+    return cita.cliente ?? this.propietarioMascota(cita.mascota)
+      ?? this.propietarioMascota(this.mascotas.find((item) => item.mascotaId === this.idMascotaCita(cita)));
+  }
+
 
   /** Calcula el valor pendiente de pago de la factura seleccionada. */
   get saldo(): number {
@@ -105,8 +144,41 @@ export class FacturacionComponent implements OnInit {
     return etiquetasEstado[estado] ?? estado.replace(/_/g, ' ');
   }
 
-  /** Actualiza el historial cuando cambian los filtros del propietario o la mascota. */
-  cambiarFiltros() {
+  /** Reinicia la selección de mascota cuando el usuario elige otro propietario. */
+  cambiarPropietario(clienteId: number | null) {
+    this.clienteId = clienteId;
+    this.mascotaId = null;
+    this.cambiarFiltros();
+  }
+
+  /** Asocia automáticamente el propietario de la mascota y reinicia la cita anterior. */
+  cambiarMascota(mascotaId: number | null, desdeEmision = false) {
+    this.mascotaId = mascotaId;
+    if (mascotaId !== null || desdeEmision) {
+      this.clienteId = this.idPropietario(this.mascotas.find((item) => item.mascotaId === mascotaId));
+    }
+    this.cambiarFiltros();
+  }
+
+  /** Selecciona la cita y conserva el propietario que se usará para emitir la factura. */
+  cambiarCita(citaId: number | null) {
+    if (citaId !== this.citaId) this.descuento = { monto: null, motivo: '' };
+    const cita = this.citasVisibles.find((item) => item.id === citaId);
+    if (cita) {
+      const mascotaId = this.idMascotaCita(cita);
+      const clienteId = this.propietarioCita(cita)?.id ?? null;
+      if (mascotaId !== this.mascotaId || clienteId !== this.clienteId) {
+        this.mascotaId = mascotaId;
+        this.clienteId = clienteId;
+        this.cambiarFiltros();
+      }
+    }
+    this.consultarEmision(cita?.id ?? null);
+  }
+
+  /** Limpia el historial y la disponibilidad cuando cambian sus filtros. */
+  private cambiarFiltros() {
+    this.descuento = { monto: null, motivo: '' };
     this.consulta?.unsubscribe();
     this.facturas = null;
     this.seleccion = null;
@@ -160,7 +232,10 @@ export class FacturacionComponent implements OnInit {
     this.operar(this.api.enviar<{ facturaId: number }>('POST', `factura/cita/${this.citaId}`, data), 'Factura generada.', ({ facturaId }) => {
       this.consultarEmision(null);
       this.descuento = { monto: null, motivo: '' };
-      this.mascotaId = cita?.mascota?.mascotaId ?? cita?.mascotaId ?? this.mascotaId;
+      if (cita) {
+        this.mascotaId = this.idMascotaCita(cita);
+        this.clienteId = this.propietarioCita(cita)?.id ?? null;
+      }
       this.historial(facturaId);
     });
   }
@@ -230,10 +305,9 @@ export class FacturacionComponent implements OnInit {
   private operar<T>(peticion: Observable<T>, aviso: string, completar: (respuesta: T) => void) {
     if (this.ocupado) return;
     this.error = '';
-    this.aviso = '';
     this.ocupado = true;
     peticion.pipe(finalize(() => this.ocupado = false)).subscribe({
-      next: (respuesta) => { this.aviso = aviso; completar(respuesta); }, error: this.fallo
+      next: (respuesta) => { completar(respuesta); confirmarAccion(aviso); }, error: this.fallo
     });
   }
 }
