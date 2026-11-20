@@ -1,0 +1,16 @@
+.attention-page { padding-bottom: 2rem; color: #253248; } .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .5rem 0 1.4rem; }
+.page-heading h1 { margin: 0; font-weight: 700; } .page-heading p { margin: .35rem 0 0; color: #7a879a; } .eyebrow, .kicker { color: #16847d; font-size: .72rem; font-weight: 700; letter-spacing: .1em; }
+.panel, .patient-card { border: 1px solid #e3e9f0; border-radius: 14px; background: #fff; padding: 1.15rem; margin-bottom: 1rem; box-shadow: 0 5px 20px #23344d0a; }
+.appointment-select { display: grid; gap: .5rem; color: #5f6e84; font-size: .82rem; }
+.patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; } .patient-card h2 { font-size: 1.05rem; margin: .35rem 0; } .patient-card p { color: #78859a; margin: 0; }
+.history-panel h2, .panel > h2 { font-size: 1.1rem; } .history-panel > p { color: #7b879a; font-size: .85rem; }
+details { padding: .7rem 0; border-top: 1px solid #e8edf2; } summary { color: #47566d; cursor: pointer; font-weight: 600; } pre { max-height: 18rem; overflow: auto; padding: .8rem; background: #f7f9fb; border-radius: 8px; font-size: .77rem; white-space: pre-wrap; }
+.fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; } .fields label, .formula-entry label { display: grid; gap: .35rem; color: #617087; font-size: .8rem; } .required { color: #bb3844; }
+.prescription-header { margin-top: 1.5rem; } .prescription-header h3 { margin: 0; font-size: 1rem; } .prescription-header p { color: #7f8b9d; font-size: .82rem; }
+.formula-entry { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; padding: 1rem; background: #f8fafb; border-radius: 10px; }
+.formula-entry small { color: #178075; } .formula-entry > button { align-self: end; }
+.actions { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.25rem; } .muted { color: #7d899a; font-size: .82rem; }
+.success-panel { display: flex; align-items: center; gap: 1rem; } .success-panel h2 { margin: 0; } .success-panel p { color: #738197; } .success-icon { display: grid; place-items: center; min-width: 3rem; height: 3rem; border-radius: 50%; color: #0f826f; background: #e6f5ef; }
+.loading { text-align: center; padding: 1.2rem; color: #78869a; }
+@media(max-width:900px) { .formula-entry { grid-template-columns: repeat(2, 1fr); } }
+@media(max-width:620px) { .page-heading { align-items: flex-start; flex-direction: column; } .patient-grid, .fields, .formula-entry { grid-template-columns: 1fr; } .actions { align-items: stretch; flex-direction: column; } .panel, .patient-card { padding: .85rem; } }

@@ -50,17 +50,18 @@
                                             aria-hidden="true"></i>
                                     </button>
                                 </th>                                  
+                                <th class="text-center">Estado</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody *ngIf="listEspecializaciones.length === 0">
                             <tr>
-                                <td colspan="7" class="text-center">No hay especializaciones registradas</td>
+                                <td colspan="5" class="text-center">No hay especializaciones registradas</td>
                             </tr>
                         </tbody>
                         <tbody *ngIf="listEspecializaciones.length > 0 && especializacionesFiltradas.length === 0">
                             <tr>
-                                <td colspan="7" class="text-center">No se encontraron especializaciones</td>
+                                <td colspan="5" class="text-center">No se encontraron especializaciones</td>
                             </tr>
                         </tbody>
                         <tbody *ngIf="especializacionesFiltradas.length > 0">
@@ -68,6 +69,7 @@
                                 <td class="text-justify">{{ especializacion.nombre }}</td>
                                 <td class="text-justify">{{ especializacion.descripcion }}</td>
                                 <td class="text-justify">{{ especializacion.codigoEspecializacion }}</td>
+                                <td class="text-center"><span class="badge" [class.bg-success]="especializacion.activo !== false" [class.bg-secondary]="especializacion.activo === false">{{ especializacion.activo === false ? 'Inactiva' : 'Activa' }}</span></td>
                                 <td class="text-center">
                                     <button class="btn btn-outline-info d-inline-flex 
                                     align-items-center justify-content-center" (click)="abrirEdicion(especializacion)"
@@ -131,6 +133,10 @@
                             <div class="text-danger" *ngIf="f['descripcion'].touched && f['descripcion'].invalid">Ingresa una descripción
                                 válida.</div>
                         </div>                                         
+                        <div class="col-12 form-check ms-2">
+                            <input id="activoEspecializacion" class="form-check-input" type="checkbox" formControlName="activo">
+                            <label class="form-check-label" for="activoEspecializacion">Especialidad activa</label>
+                        </div>
                     </div>
                     <div class="alert alert-danger mt-3 mb-0" *ngIf="respuestaError" role="alert">{{ respuestaError }}
                     </div>

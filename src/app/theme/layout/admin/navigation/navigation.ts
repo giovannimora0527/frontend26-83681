@@ -32,6 +32,14 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       {
+        id: 'atencion',
+        title: 'Atención médica',
+        type: 'item',
+        url: '/inicio/atencion',
+        icon: 'fa-solid fa-stethoscope',
+        classes: 'nav-item'
+      },
+      {
         id: 'clientes',
         title: 'Gestión de Clientes',
         type: 'item',
@@ -45,6 +53,14 @@ export const NavigationItems: NavigationItem[] = [
         type: 'item',
         url: '/inicio/especializaciones',
         icon: 'fa-solid fa-user-graduate',
+        classes: 'nav-item'
+      },
+      {
+        id: 'tarifas',
+        title: 'Tarifas de servicios',
+        type: 'item',
+        url: '/inicio/tarifas',
+        icon: 'fa-solid fa-tags',
         classes: 'nav-item'
       },
       {
@@ -77,6 +93,30 @@ export const NavigationItems: NavigationItem[] = [
         type: 'item',
         url: '/inicio/medicamentos',
         icon: 'fa-solid fa-capsules',
+        classes: 'nav-item'
+      },
+      {
+        id: 'despacho',
+        title: 'Despacho y dispensación',
+        type: 'item',
+        url: '/inicio/despacho',
+        icon: 'fa-solid fa-prescription-bottle-medical',
+        classes: 'nav-item'
+      },
+      {
+        id: 'facturacion',
+        title: 'Facturación y pagos',
+        type: 'item',
+        url: '/inicio/facturacion',
+        icon: 'fa-solid fa-file-invoice-dollar',
+        classes: 'nav-item'
+      },
+      {
+        id: 'reportes',
+        title: 'Reportes',
+        type: 'item',
+        url: '/inicio/reportes',
+        icon: 'fa-solid fa-chart-column',
         classes: 'nav-item'
       },
       {

@@ -1,0 +1,8 @@
+.tarifas-page { padding-bottom: 2rem; color: #253248; } header, .panel-title, .actions { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+header { margin: .5rem 0 1.4rem; } header h1 { margin: 0; font-weight: 700; } header p { margin: .35rem 0 0; color: #7c899b; } .eyebrow { color: #16847d; font-weight: 700; font-size: .72rem; letter-spacing: .1em; }
+.panel { padding: 1.15rem; margin-bottom: 1rem; background: #fff; border: 1px solid #e3e9f0; border-radius: 14px; box-shadow: 0 5px 20px #23344d0a; }
+.status { display: inline-block; padding: .3rem .55rem; border-radius: 99px; background: #e7f5f0; color: #18765f; font-size: .75rem; } .status.inactive { background: #f0f1f3; color: #697588; }
+.panel-title h2, .history h2 { font-size: 1.1rem; margin: 0; } .panel-title p { color: #7c899b; font-size: .83rem; } .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .9rem; }
+.form-grid label { display: grid; gap: .35rem; color: #617087; font-size: .8rem; } .form-grid .check { display: flex; align-items: center; gap: .5rem; }
+.actions { justify-content: flex-end; margin-top: 1rem; } .history pre { max-height: 30rem; overflow: auto; padding: 1rem; background: #f7f9fb; border-radius: 8px; }
+@media(max-width:700px) { header { align-items: flex-start; flex-direction: column; } .form-grid { grid-template-columns: 1fr; } .panel { padding: .85rem; } }

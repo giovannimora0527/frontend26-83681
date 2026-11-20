@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpContext, HttpContextToken, HttpHeaders } from '@angular/common/http';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
 
 
 @Injectable()
@@ -10,21 +10,12 @@ export class HeadersInterceptor implements HttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    const clonedRequest = req.clone({
-      setHeaders: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const hasContentType = clonedRequest.headers.has('Content-Type');
-
-    return next.handle(clonedRequest);
-  }
-
-  addHeaders(request: HttpRequest<unknown>): HttpRequest<any> {
-    return (request = request.clone({
-      setHeaders: {
-        'Content-Type': 'application/json',
-      },
-    }));
+    const token = sessionStorage.getItem('token');
+    const isMultipart = typeof FormData !== 'undefined' && req.body instanceof FormData;
+    let headers = req.headers;
+    if (isMultipart) headers = headers.delete('Content-Type');
+    else if (req.body != null && !headers.has('Content-Type')) headers = headers.set('Content-Type', 'application/json');
+    if (token && !headers.has('Authorization')) headers = headers.set('Authorization', `Bearer ${token}`);
+    return next.handle(req.clone({ headers }));
   }
 }

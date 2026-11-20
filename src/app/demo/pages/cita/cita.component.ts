@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
-import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule, formatDate } from '@angular/common';
 import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -12,6 +12,8 @@ import { Mascota } from 'src/app/models/mascota';
 import { Medico } from 'src/app/models/medico';
 import { MascotaService } from '../mascota/service/mascota.service';
 import { MedicoService } from '../medico/service/medico.service';
+import { Router } from '@angular/router';
+import { getJwtPayload } from 'src/app/utils/jwt.util';
 
 type ColumnaOrden = 'mascota' | 'medico' | 'fechaHora' | 'motivo' | 'estado';
 type ModalBootstrap = { show(): void; hide(): void };
@@ -21,7 +23,7 @@ type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => 
 
 @Component({
   selector: 'app-cita',
-  imports: [CommonModule, ReactiveFormsModule, NgbTooltipModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgbTooltipModule],
   templateUrl: './cita.component.html',
   styleUrl: './cita.component.scss'
 })
@@ -53,6 +55,9 @@ export class CitaComponent {
   readonly registrosPorPagina = 5;
   columnaOrden: ColumnaOrden = 'mascota';
   direccionOrden: 'asc' | 'desc' = 'asc';
+  vistaCalendario: 'dia' | 'semana' | 'mes' = 'mes';
+  modoVista: 'agenda' | 'tabla' = 'agenda';
+  fechaCalendario = new Date().toISOString().slice(0, 10);
 
   // Formulario para crear o editar especializacion.
   form!: FormGroup;
@@ -63,7 +68,8 @@ export class CitaComponent {
   constructor(private readonly citaService: CitaService,    
     private readonly formBuilder: FormBuilder,
     private readonly mascotaService: MascotaService,
-    private readonly medicoService: MedicoService) {
+    private readonly medicoService: MedicoService,
+    private readonly router: Router) {
     this.inicializarFormulario();
     this.listarCitas();
     this.listarMascotas();
@@ -95,7 +101,10 @@ export class CitaComponent {
 
   listarCitas() {
     this.errorCitas = '';
-    this.citaService.listarCitas().subscribe({
+    const request = this.rolActual() === 'MEDICO'
+      ? this.citaService.listarMisCitas(...this.rangoCalendario())
+      : this.citaService.listarCitas();
+    request.subscribe({
       next: (citas) => {
         this.listEspecializaciones = citas;
         this.paginaActual = Math.min(this.paginaActual, this.totalPaginas || 1);
@@ -192,6 +201,7 @@ export class CitaComponent {
   get citasFiltradas(): Cita[] {
     const termino = this.normalizarTexto(this.terminoBusqueda.trim());
     const filtradas = this.listEspecializaciones.filter((cita) => {
+      if (!this.enRangoCalendario(cita)) return false;
       if (!termino) {
         return true;
       }
@@ -219,6 +229,50 @@ export class CitaComponent {
       return this.direccionOrden === 'asc' ? comparacion : -comparacion;
     });
   }
+
+  private enRangoCalendario(cita: Cita): boolean {
+    if (!cita.fechaHora) return false;
+    const fecha = new Date(cita.fechaHora);
+    const seleccionada = new Date(`${this.fechaCalendario}T00:00:00`);
+    if (this.vistaCalendario === 'dia') return fecha.toDateString() === seleccionada.toDateString();
+    if (this.vistaCalendario === 'mes') return fecha.getFullYear() === seleccionada.getFullYear() && fecha.getMonth() === seleccionada.getMonth();
+    const inicio = new Date(seleccionada);
+    const dia = (inicio.getDay() + 6) % 7;
+    inicio.setDate(inicio.getDate() - dia);
+    const fin = new Date(inicio); fin.setDate(fin.getDate() + 7);
+    return fecha >= inicio && fecha < fin;
+  }
+
+  cambiarVistaCalendario(vista: 'dia' | 'semana' | 'mes'): void { this.vistaCalendario = vista; this.paginaActual = 1; this.listarCitas(); }
+  cambiarFechaCalendario(): void { this.paginaActual = 1; this.listarCitas(); }
+
+  private rolActual(): string { try { return getJwtPayload()?.rol.toUpperCase() ?? ''; } catch { return ''; } }
+  private rangoCalendario(): [string, string] {
+    const anchor = new Date(`${this.fechaCalendario}T00:00:00`);
+    let start: Date; let end: Date;
+    if (this.vistaCalendario === 'dia') { start = anchor; end = new Date(anchor); end.setDate(end.getDate() + 1); }
+    else if (this.vistaCalendario === 'semana') {
+      start = new Date(anchor); start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); end = new Date(start); end.setDate(end.getDate() + 7);
+    } else { start = new Date(anchor.getFullYear(), anchor.getMonth(), 1); end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1); }
+    const format = (date: Date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}T${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}:00`;
+    return [format(start), format(end)];
+  }
+
+  cambiarEstado(cita: Cita, estado: 'CONFIRMADA' | 'CANCELADA'): void {
+    const ejecutar = () => {
+      const payload: Cita = { id: cita.id, mascotaId: cita.mascota?.mascotaId, medicoId: cita.medico?.id,
+        fechaHora: cita.fechaHora, motivo: cita.motivo ?? null, estado };
+      this.citaService.actualizarCita(payload).subscribe({
+        next: () => { void Swal.fire('Estado actualizado', `La cita quedó ${estado.toLowerCase()}.`, 'success'); this.listarCitas(); },
+        error: err => void Swal.fire('No se pudo actualizar', err?.error?.message ?? err?.error?.mensaje ?? 'El backend rechazó el cambio de estado.', 'error')
+      });
+    };
+    if (estado === 'CANCELADA') void Swal.fire({ title: '¿Cancelar esta cita?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Cancelar cita', cancelButtonText: 'Volver' }).then(result => { if (result.isConfirmed) ejecutar(); });
+    else ejecutar();
+  }
+
+  abrirAtencion(cita: Cita): void { void this.router.navigate(['/inicio/atencion'], { queryParams: { citaId: cita.id } }); }
+  fechaEtiqueta(fecha: Date | string): string { return new Intl.DateTimeFormat('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(fecha)); }
 
   private obtenerValorOrden(cita: Cita, columna: ColumnaOrden): string | number {
     switch (columna) {

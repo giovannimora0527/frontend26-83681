@@ -53,7 +53,8 @@ export class EspecializacionComponent {
     this.form = this.formBuilder.group({
       nombre: ['', Validators.required],
       descripcion: [null, Validators.required],
-      codigoEspecializacion: ['', [Validators.required, Validators.minLength(6)]]
+      codigoEspecializacion: ['', [Validators.required, Validators.minLength(6)]],
+      activo: [true]
     });
   }
 
@@ -175,7 +176,7 @@ export class EspecializacionComponent {
   }
 
   resetFormulario() {
-    this.form.reset();
+    this.form.reset({ activo: true });
     this.form.markAsPristine();
     this.form.markAsUntouched();
     this.respuestaError = '';
@@ -187,7 +188,8 @@ export class EspecializacionComponent {
     this.form.patchValue({
       nombre: especializacion.nombre,
       descripcion: especializacion.descripcion ?? null,
-      codigoEspecializacion: especializacion.codigoEspecializacion ?? null
+      codigoEspecializacion: especializacion.codigoEspecializacion ?? null,
+      activo: especializacion.activo ?? true
     });
     this.openModal(this.modoFormulario);
   }
@@ -207,7 +209,8 @@ export class EspecializacionComponent {
       id: this.especializacionSelected?.id,
       nombre: valores.nombre,
       descripcion: valores.descripcion,
-      codigoEspecializacion: valores.codigoEspecializacion ?? null
+      codigoEspecializacion: valores.codigoEspecializacion ?? null,
+      activo: valores.activo ?? true
     };
 
     this.enviando = true;

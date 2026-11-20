@@ -20,6 +20,11 @@ export class CitaService {
       return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
     }    
 
+    listarMisCitas(fechaInicio: string, fechaFin: string): Observable<Cita[]> {
+      const params = new HttpParams().set('fechaInicio', fechaInicio).set('fechaFin', fechaFin);
+      return this.backendService.getPath(environment.apiUrlAuth, 'cita/mis-citas', params);
+    }
+
     listarCitasPorMascota(mascotaId: number): Observable<Cita[]> {
       const params = new HttpParams().set('mascotaId', mascotaId);
       return this.backendService.get(environment.apiUrlAuth, this.api, "listar-por-mascota", params);

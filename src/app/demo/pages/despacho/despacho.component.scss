@@ -1,0 +1,27 @@
+.dispatch-page { padding-bottom: 2rem; color: #253248; }
+.page-heading, .panel-heading, .filters, .formula-card, .formula-main, .quantity, .lot-heading, .prepare-controls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.page-heading { margin: .5rem 0 1.4rem; } .page-heading h1 { margin: 0; font-weight: 700; } .page-heading p { color: #768398; margin: .35rem 0 0; }
+.eyebrow, .kicker { font-size: .72rem; font-weight: 700; color: #16847d; letter-spacing: .09em; }
+.panel { background: #fff; border: 1px solid #e4eaf1; border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; box-shadow: 0 5px 20px #23344d0a; }
+.tabs { display: flex; gap: .4rem; border-bottom: 1px solid #e6ebf0; margin-bottom: 1rem; }
+.tabs button { border: 0; border-bottom: 2px solid transparent; background: none; padding: .65rem .9rem; color: #6f7c90; }
+.tabs button.active { color: #087e76; border-color: #168981; font-weight: 650; }
+.filters { justify-content: flex-start; flex-wrap: wrap; margin-bottom: 1rem; }
+.filters label, .prepare-controls label { display: grid; gap: .35rem; color: #66748a; font-size: .78rem; min-width: 12rem; }
+.formula-list { display: grid; gap: .75rem; }
+.formula-card { border: 1px solid #e8edf3; border-radius: 12px; padding: 1rem; }
+.formula-card.chosen { border-color: #18877e; background: #f7fcfb; }
+.formula-main { justify-content: flex-start; flex: 1; }
+.formula-icon { display: grid; place-items: center; width: 2.7rem; height: 2.7rem; color: #12847d; background: #e8f6f3; border-radius: 10px; }
+.formula-card h2 { font-size: 1rem; margin: .15rem 0; } .formula-card p { margin: .15rem 0; font-size: .84rem; }
+.muted, .quantity small { color: #8793a5; } .quantity { align-items: flex-start; flex-direction: column; gap: .15rem; min-width: 10rem; }
+.quantity strong { font-size: 1.35rem; } .quantity span { color: #7b889b; font-size: .78rem; }
+.empty, .loading { text-align: center; padding: 1.8rem; color: #7b889b; }
+.preparation h2 { margin: 0; font-size: 1.15rem; } .preparation .panel-heading { align-items: flex-start; }
+.lot-heading { margin-top: 1rem; } .lot-heading h3 { font-size: .95rem; }
+.prepare-controls { justify-content: flex-start; flex-wrap: wrap; margin-top: 1rem; }
+.prepare-controls > span { color: #77849a; font-size: .84rem; margin-right: auto; }
+.prepare-controls label { min-width: 13rem; }
+.table { min-width: 720px; }
+@media(max-width: 800px) { .formula-card { align-items: flex-start; flex-wrap: wrap; } .formula-main { min-width: 100%; } .quantity { flex: 1; } .page-heading { align-items: flex-start; } }
+@media(max-width: 600px) { .page-heading { align-items: flex-start; flex-direction: column; } .filters { align-items: stretch; flex-direction: column; } .filters label { min-width: 0; } .panel { padding: .8rem; } }

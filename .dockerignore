@@ -1,0 +1,8 @@
+.git
+.codebase-memory
+.angular
+node_modules
+dist
+coverage
+*.log
+.env

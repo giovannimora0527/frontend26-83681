@@ -21,3 +21,14 @@
     color: #fff;
   }
 }
+.calendar-agenda { display: grid; gap: .65rem; }
+.calendar-event { display: grid; grid-template-columns: 6rem minmax(0,1fr) auto auto; align-items: center; gap: 1rem; padding: .85rem 1rem; border: 1px solid #e5eaf0; border-left: 4px solid #4980bd; border-radius: 10px; background: #fff; }
+.calendar-event[data-estado='confirmada'] { border-left-color: #148578; }
+.calendar-event[data-estado='cancelada'] { border-left-color: #c24a55; opacity: .78; }
+.calendar-event[data-estado='atendida'] { border-left-color: #69758a; }
+.event-date { display: grid; gap: .15rem; color: #33435b; }
+.event-date strong { font-size: 1.05rem; } .event-date small, .event-content span, .event-content small { color: #7e8a9d; font-size: .78rem; }
+.event-content { display: grid; gap: .18rem; } .event-content strong { color: #26364c; }
+.event-status { padding: .3rem .55rem; border-radius: 99px; background: #eef3f8; color: #536984; font-size: .7rem; font-weight: 700; }
+.event-actions { display: flex; gap: .4rem; }
+@media(max-width:760px) { .calendar-event { grid-template-columns: 4.5rem minmax(0,1fr); } .event-status { grid-column: 2; justify-self: start; } .event-actions { grid-column: 2; } }

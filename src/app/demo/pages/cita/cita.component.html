@@ -16,11 +16,32 @@
             </div>
         </div>
         <div class="card-body">
+            <div class="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-3">
+                <div class="d-flex align-items-end gap-2 flex-wrap">
+                    <label class="form-label mb-0">Fecha de calendario<input class="form-control" type="date" [(ngModel)]="fechaCalendario" (ngModelChange)="cambiarFechaCalendario()"></label>
+                    <div class="btn-group" role="group" aria-label="Vista del calendario">
+                        <button class="btn" [class.btn-primary]="vistaCalendario === 'dia'" [class.btn-outline-primary]="vistaCalendario !== 'dia'" (click)="cambiarVistaCalendario('dia')">Día</button>
+                        <button class="btn" [class.btn-primary]="vistaCalendario === 'semana'" [class.btn-outline-primary]="vistaCalendario !== 'semana'" (click)="cambiarVistaCalendario('semana')">Semana</button>
+                        <button class="btn" [class.btn-primary]="vistaCalendario === 'mes'" [class.btn-outline-primary]="vistaCalendario !== 'mes'" (click)="cambiarVistaCalendario('mes')">Mes</button>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2"><span class="text-muted small">{{ citasFiltradas.length }} citas en este período</span>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Formato de citas"><button class="btn" [class.btn-secondary]="modoVista === 'agenda'" [class.btn-outline-secondary]="modoVista !== 'agenda'" (click)="modoVista = 'agenda'">Agenda</button><button class="btn" [class.btn-secondary]="modoVista === 'tabla'" [class.btn-outline-secondary]="modoVista !== 'tabla'" (click)="modoVista = 'tabla'">Tabla</button></div>
+                </div>
+            </div>
             <div class="alert alert-danger" *ngIf="errorCitas" role="alert">
                 {{ errorCitas }}
                 <button type="button" class="btn btn-link" (click)="listarCitas()">Reintentar</button>
             </div>
-            <div class="table-responsive">
+            <div class="calendar-agenda" *ngIf="modoVista === 'agenda' && citasFiltradas.length">
+                <article class="calendar-event" *ngFor="let cita of citasFiltradas" [attr.data-estado]="(cita.estado || '').toLowerCase()">
+                    <div class="event-date"><strong>{{ cita.fechaHora | date:'HH:mm' }}</strong><small>{{ fechaEtiqueta(cita.fechaHora) }}</small></div>
+                    <div class="event-content"><strong>{{ cita.mascota?.nombreMascota ?? cita.mascota?.nombre }}</strong><span>Propietario: {{ cita.cliente?.nombres }} {{ cita.cliente?.apellidos }}</span><small>{{ cita.motivo }}</small></div>
+                    <span class="event-status">{{ cita.estado | uppercase }}</span><div class="event-actions"><button class="btn btn-sm btn-outline-secondary" (click)="verCita(cita)">Ver</button><button class="btn btn-sm btn-outline-primary" *ngIf="cita.estado?.toUpperCase() !== 'CANCELADA' && cita.estado?.toUpperCase() !== 'ATENDIDA'" (click)="abrirAtencion(cita)">Atender</button></div>
+                </article>
+                <div class="text-center text-muted p-4" *ngIf="!citasFiltradas.length">No hay citas en este rango.</div>
+            </div>
+            <div class="table-responsive" *ngIf="modoVista === 'tabla'">
                 <table class="table table-striped table-condensed">
                     <thead>
                         <tr>
@@ -33,6 +54,7 @@
                                         aria-hidden="true"></i>
                                 </button>
                             </th>
+                            <th class="text-center">Propietario</th>
                             <th class="text-center"
                                 [attr.aria-sort]="columnaOrden === 'medico' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
                                 <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
@@ -74,13 +96,14 @@
                     </thead>
                     <tbody>
                         <tr *ngIf="!errorCitas && listEspecializaciones.length === 0">
-                            <td colspan="6" class="text-center">No hay citas registradas</td>
+                            <td colspan="7" class="text-center">No hay citas registradas</td>
                         </tr>
                         <tr *ngIf="listEspecializaciones.length > 0 && citasFiltradas.length === 0">
-                            <td colspan="6" class="text-center">No se encontraron citas</td>
+                            <td colspan="7" class="text-center">No se encontraron citas</td>
                         </tr>
                         <tr *ngFor="let cita of citasPaginadas">
                             <td class="text-center">{{ cita.mascota?.nombreMascota ?? cita.mascota?.nombre }}</td>
+                            <td class="text-center">{{ cita.cliente?.nombres }} {{ cita.cliente?.apellidos }}</td>
                             <td class="text-center">{{ cita.medico?.nombres }} {{ cita.medico?.apellidos }}</td>
                             <td class="text-center">{{ cita.fechaHora | date:'yyyy-MM-dd HH:mm' }}</td>
                             <td class="text-center">{{ cita.motivo }}</td>
@@ -105,6 +128,9 @@
                                     placement="top" container="body">
                                     <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;Editar
                                 </button>
+                                <button type="button" class="btn btn-outline-success btn-sm ms-1" *ngIf="cita.estado?.toUpperCase() === 'PROGRAMADA'" (click)="cambiarEstado(cita, 'CONFIRMADA')">Confirmar</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm ms-1" *ngIf="cita.estado?.toUpperCase() !== 'CANCELADA' && cita.estado?.toUpperCase() !== 'ATENDIDA'" (click)="cambiarEstado(cita, 'CANCELADA')">Cancelar</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm ms-1" *ngIf="cita.estado?.toUpperCase() !== 'CANCELADA' && cita.estado?.toUpperCase() !== 'ATENDIDA'" (click)="abrirAtencion(cita)">Atender</button>
                             </td>
                         </tr>
                     </tbody>
@@ -155,6 +181,16 @@
                     </dd>
                     <dt class="col-sm-4">Motivo</dt>
                     <dd class="col-sm-8 text-break">{{ cita.motivo || 'No registrado' }}</dd>
+                </dl>
+                <hr>
+                <h2 class="h6">Datos del propietario</h2>
+                <dl class="row">
+                    <dt class="col-sm-4">Nombre</dt>
+                    <dd class="col-sm-8">{{ cita.cliente?.nombres }} {{ cita.cliente?.apellidos }}</dd>
+                    <dt class="col-sm-4">Documento</dt>
+                    <dd class="col-sm-8">{{ cita.cliente?.tipoDocumento }} {{ cita.cliente?.numeroDocumento }}</dd>
+                    <dt class="col-sm-4">Teléfono</dt>
+                    <dd class="col-sm-8">{{ cita.cliente?.telefono || 'No registrado' }}</dd>
                 </dl>
                 <hr>
                 <h2 class="h6">Datos de la mascota</h2>

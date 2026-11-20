@@ -1,0 +1,19 @@
+.billing-page { padding-bottom: 2rem; color: #253248; } .page-heading { margin: .5rem 0 1.4rem; }
+.page-heading h1 { margin: 0; font-weight: 700; } .page-heading p { color: #77849a; margin: .35rem 0 0; }
+.eyebrow { color: #16847d; letter-spacing: .1em; font-size: .72rem; font-weight: 700; }
+.panel { padding: 1.15rem; margin-bottom: 1rem; border: 1px solid #e3e9f0; border-radius: 14px; background: #fff; box-shadow: 0 5px 20px #23344d0a; }
+.filters { display: flex; align-items: end; flex-wrap: wrap; gap: .7rem; } .filters label, .payment-fields label { display: grid; gap: .35rem; min-width: 14rem; color: #65738a; font-size: .8rem; }
+.or { color: #a0a9b6; padding: 0 .2rem .5rem; } .panel-heading { display: flex; justify-content: space-between; align-items: center; }
+.panel-heading h2 { font-size: 1.15rem; } .panel-heading p { color: #7c899a; margin: 0; } .count { color: #7c899a; font-size: .85rem; }
+.state-pill { padding: .3rem .55rem; border-radius: 99px; background: #fff3d7; color: #986208; font-size: .72rem; font-weight: 700; }
+.state-pill.paid { background: #e5f4ee; color: #19785c; } .state-pill.partial { background: #e8f2fc; color: #326996; } .state-pill.cancelled { background: #fce9e9; color: #a73440; }
+.invoice-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; padding: 1rem 0; }
+.invoice-summary div { display: flex; justify-content: space-between; padding: .85rem; background: #f7f9fb; border-radius: 8px; gap: .5rem; }
+.invoice-summary span { color: #758197; } .invoice-summary strong { white-space: nowrap; }
+.invoice-summary .balance { background: #eaf6f3; color: #126c64; } .invoice-detail h3 { font-size: 1rem; margin-top: .8rem; }
+.payment-form { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid #e8edf2; } .payment-fields { display: flex; gap: .8rem; align-items: end; flex-wrap: wrap; }
+.loading, .empty { color: #7d899b; text-align: center; padding: 1.6rem; } table { min-width: 780px; }
+.create-invoice h2 { margin: 0; font-size: 1.1rem; } .create-invoice p { margin: .3rem 0 1rem; color: #78869a; font-size: .83rem; }
+.invoice-create-fields { display: flex; align-items: end; flex-wrap: wrap; gap: .8rem; }
+.invoice-create-fields label { display: grid; gap: .35rem; min-width: 13rem; color: #65738a; font-size: .8rem; }
+@media(max-width:700px) { .filters { align-items: stretch; flex-direction: column; } .filters label { min-width: 0; } .or { display: none; } .invoice-summary { grid-template-columns: 1fr; } .panel { padding: .85rem; } }
