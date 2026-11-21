@@ -1,0 +1,41 @@
+<div class="container-fluid py-3">
+  <h3>Inventario de medicamentos y productos</h3>
+  <p class="text-muted">Registro de productos y lotes. Las existencias se incrementan al registrar un lote.</p>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="mensaje" class="alert alert-success">{{ mensaje }}</div>
+  <section class="card p-3 mb-3">
+    <h5>{{ producto.id ? 'Editar producto' : 'Nuevo producto' }}</h5>
+    <form (ngSubmit)="guardar()" #form="ngForm">
+      <div class="row g-2">
+        <div class="col-md-3"><label>Código (8 caracteres)</label><input class="form-control" name="codigo" [(ngModel)]="producto.codigo" required minlength="8" maxlength="8" pattern="[A-Za-z0-9]{8}"></div>
+        <div class="col-md-3"><label>Nombre</label><input class="form-control" name="nombre" [(ngModel)]="producto.nombre" required></div>
+        <div class="col-md-3"><label>Tipo</label><select class="form-select" name="tipo" [(ngModel)]="producto.tipoProducto"><option value="MEDICAMENTO">Medicamento</option><option value="UTENSILIO">Utensilio</option></select></div>
+        <div class="col-md-3"><label>Registro INVIMA</label><input class="form-control" name="invima" [(ngModel)]="producto.registroInvima" [required]="producto.tipoProducto === 'MEDICAMENTO'"></div>
+        <div class="col-md-4"><label>Descripción</label><input class="form-control" name="descripcion" [(ngModel)]="producto.descripcion"></div>
+        <div class="col-md-4"><label>Presentación</label><input class="form-control" name="presentacion" [(ngModel)]="producto.presentacion"></div>
+        <div class="col-md-2"><label>Fecha compra</label><input type="date" class="form-control" name="compra" [(ngModel)]="producto.fechaCompra" required></div>
+        <div class="col-md-2"><label>Fecha vence</label><input type="date" class="form-control" name="vence" [(ngModel)]="producto.fechaVence" required></div>
+        <div class="col-md-3"><label>Precio compra</label><input type="number" min="0" step="0.01" class="form-control" name="precioCompra" [(ngModel)]="producto.precioCompra" required></div>
+        <div class="col-md-3"><label>Precio venta</label><input type="number" min="0" step="0.01" class="form-control" name="precioVenta" [(ngModel)]="producto.precioVenta" required></div>
+        <div class="col-md-3"><label>Stock mínimo</label><input type="number" min="0" class="form-control" name="stockMinimo" [(ngModel)]="producto.stockMinimo" required></div>
+      </div>
+      <div class="mt-3"><button class="btn btn-primary" [disabled]="form.invalid">Guardar producto</button> <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Limpiar</button></div>
+    </form>
+  </section>
+  <section class="card p-3 mb-3">
+    <div class="d-flex justify-content-between"><h5>Productos registrados</h5><button class="btn btn-outline-primary btn-sm" (click)="cargar()">Actualizar</button></div>
+    <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Existencias</th><th>Precio venta</th><th>Acciones</th></tr></thead>
+      <tbody><tr *ngFor="let m of medicamentos"><td>{{m.codigo}}</td><td>{{m.nombre}}</td><td>{{m.tipoProducto}}</td><td>{{m.stockActual}}</td><td>{{m.precioVenta | currency:'COP':'symbol':'1.0-0'}}</td><td><button class="btn btn-sm btn-outline-secondary me-1" (click)="editar(m)">Editar</button><button class="btn btn-sm btn-outline-primary" (click)="verLotes(m)">Lotes</button></td></tr></tbody></table></div>
+  </section>
+  <section *ngIf="seleccionado" class="card p-3">
+    <h5>Lotes de {{seleccionado.nombre}}</h5>
+    <div class="table-responsive"><table class="table"><thead><tr><th>Lote</th><th>Vencimiento</th><th>Inicial</th><th>Disponible</th><th>Precio compra</th></tr></thead><tbody><tr *ngFor="let l of lotes"><td>{{l.numeroLote}}</td><td>{{l.fechaVence}}</td><td>{{l.cantidadInicial}}</td><td>{{l.cantidadDisponible}}</td><td>{{l.precioCompra}}</td></tr></tbody></table></div>
+    <form (ngSubmit)="registrarLote()" #formLote="ngForm"><div class="row g-2">
+      <div class="col-md-3"><label>Número lote</label><input class="form-control" name="numero" [(ngModel)]="lote.numeroLote" required></div>
+      <div class="col-md-3"><label>Vencimiento</label><input class="form-control" type="date" name="vence" [(ngModel)]="lote.fechaVence" required></div>
+      <div class="col-md-2"><label>Precio compra</label><input class="form-control" type="number" min="0" step="0.01" name="precio" [(ngModel)]="lote.precioCompra" required></div>
+      <div class="col-md-2"><label>Cantidad</label><input class="form-control" type="number" min="1" name="cantidad" [(ngModel)]="lote.cantidadInicial" required></div>
+      <div class="col-md-2"><label>Ingreso</label><input class="form-control" type="date" name="ingreso" [(ngModel)]="lote.fechaIngreso" required></div>
+    </div><button class="btn btn-primary mt-3" [disabled]="formLote.invalid">Registrar lote</button></form>
+  </section>
+</div>

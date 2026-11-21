@@ -1,0 +1,45 @@
+<div class="card">
+  <div class="card-header"><h4 class="mb-0">Gestión de Clientes</h4></div>
+  <div class="card-body">
+    <button class="btn btn-primary mb-3" type="button" (click)="creando = !creando">{{ creando ? 'Cancelar' : 'Crear cliente' }}</button>
+    <form *ngIf="creando" (ngSubmit)="crear()" class="border rounded p-3 mb-3">
+      <h5>Nuevo cliente</h5>
+      <div class="row g-2">
+        <div class="col-md-6"><label>Nombres *</label><input class="form-control" name="nombres" [(ngModel)]="nuevo.nombres" required maxlength="100"></div>
+        <div class="col-md-6"><label>Apellidos *</label><input class="form-control" name="apellidos" [(ngModel)]="nuevo.apellidos" required maxlength="100"></div>
+        <div class="col-md-3"><label>Tipo de documento *</label><select class="form-select" name="tipo" [(ngModel)]="nuevo.tipoDocumento"><option value="CC">CC</option><option value="CE">CE</option><option value="PA">Pasaporte</option></select></div>
+        <div class="col-md-3"><label>Número de documento *</label><input class="form-control" name="documento" [(ngModel)]="nuevo.numeroDocumento" required maxlength="20"></div>
+        <div class="col-md-3"><label>Fecha de nacimiento *</label><input class="form-control" type="date" name="nacimiento" [(ngModel)]="nuevo.fechaNacimiento" required></div>
+        <div class="col-md-3"><label>Género</label><select class="form-select" name="genero" [(ngModel)]="nuevo.genero"><option value="">No especificado</option><option value="M">M</option><option value="F">F</option></select></div>
+        <div class="col-md-6"><label>Teléfono</label><input class="form-control" name="telefono" [(ngModel)]="nuevo.telefono" maxlength="20"></div>
+        <div class="col-md-6"><label>Dirección</label><input class="form-control" name="direccion" [(ngModel)]="nuevo.direccion"></div>
+      </div>
+      <button class="btn btn-success mt-3" type="submit" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar cliente' }}</button>
+    </form>
+    <div class="row mb-3">
+      <div class="col-md-8">
+        <input class="form-control" type="search" placeholder="Buscar por nombre, documento o teléfono"
+          [(ngModel)]="filtro" aria-label="Buscar clientes">
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-outline-primary" [disabled]="cargando" (click)="cargar()">Actualizar clientes</button>
+      </div>
+    </div>
+    <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+    <p *ngIf="cargando">Cargando clientes...</p>
+    <div class="table-responsive" *ngIf="!cargando">
+      <table class="table table-striped">
+        <thead><tr><th>Nombre</th><th>Documento</th><th>Teléfono</th><th>Dirección</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of filtrados">
+            <td>{{ c.nombres }} {{ c.apellidos }}</td>
+            <td>{{ c.tipoDocumento }} {{ c.numeroDocumento }}</td>
+            <td>{{ c.telefono || '—' }}</td><td>{{ c.direccion || '—' }}</td>
+            <td>{{ c.activo ? 'Activo' : 'Inactivo' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!filtrados.length">No hay clientes que coincidan con la búsqueda.</p>
+    </div>
+  </div>
+</div>
