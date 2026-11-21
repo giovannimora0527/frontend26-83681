@@ -36,29 +36,36 @@
               <option [ngValue]="null">Seleccionar</option>
               @for (producto of productos; track producto.id) { <option [ngValue]="producto.id">{{ producto.nombre }}</option> }
             </select>
-            @if (linea.disponible !== null) { <span class="form-text">Unidades disponibles {{ linea.disponible }}</span> }
+            @if (linea.disponible !== null) { <span class="form-text" role="status">Unidades disponibles: {{ linea.disponible }}</span> }
             </label>
-            <label class="col-md-3">Cantidad <input class="form-control" type="number" min="1" name="cantidad{{ i }}" [(ngModel)]="linea.cantidad" required></label>
+            <label class="col-md-3">Cantidad prescrita
+              <input class="form-control" type="number" min="1" step="1" name="cantidad{{ i }}"
+                placeholder="Indicar unidades" [(ngModel)]="linea.cantidad" [attr.max]="linea.disponible"
+                [disabled]="!linea.medicamentoId" required>
+            </label>
             <label class="col-md-3">Dosis <input class="form-control" name="dosis{{ i }}" [(ngModel)]="linea.dosis" required></label>
             <label class="col-md-4">Frecuencia <input class="form-control" name="frecuencia{{ i }}" [(ngModel)]="linea.frecuencia" required maxlength="100"></label>
             <label class="col-md-4">Duración <input class="form-control" name="duracion{{ i }}" [(ngModel)]="linea.duracion" required maxlength="50"></label>
             <label class="col-md-4">Vía <input class="form-control" name="via{{ i }}" [(ngModel)]="linea.via" required maxlength="50"></label>
             <label class="col-md-9">Indicaciones especiales <input class="form-control" name="indicaciones{{ i }}" [(ngModel)]="linea.indicaciones"></label>
-            <div class="col-md-3 align-self-end"><button type="button" class="btn btn-outline-danger" [disabled]="medicamentos.length < 2" (click)="medicamentos.splice(i, 1)">Quitar</button></div>
+            <div class="col-md-3 align-self-end"><button type="button" class="btn btn-outline-danger" (click)="quitarMedicamento(i)">{{ medicamentos.length === 1 ? 'Limpiar medicamento' : 'Quitar' }}</button></div>
           </fieldset>
         }
         <label class="d-block mb-2">Indicaciones generales <textarea class="form-control" name="generales" [(ngModel)]="indicaciones"></textarea></label>
-        <div class="d-flex gap-2">
+        <div class="clinic-actions">
           <button type="button" class="btn btn-outline-secondary" (click)="medicamentos.push(nuevaLinea())">Agregar medicamento</button>
-          <button class="btn btn-primary" [disabled]="formula.invalid">Emitir fórmula</button>
+          <button type="submit" class="btn btn-primary" [disabled]="formula.invalid || !cantidadesValidas">Emitir fórmula</button>
         </div>
+        @if (formula.invalid || !cantidadesValidas) {
+          <p class="form-text mb-0">Selecciona el producto y completa la prescripción con una cantidad entera mayor que cero.</p>
+        }
       </fieldset>
     </form>
   }
   @for (idFormula of formulas; track idFormula) {
-    <div class="d-flex flex-wrap gap-2 mb-3">
-      <button type="button" class="btn btn-outline-primary" (click)="verFormulaPdf(idFormula)">Ver e imprimir fórmula {{ idFormula }} en PDF</button>
-      <button type="button" class="btn btn-outline-secondary" (click)="descargar('formulas', idFormula)">Descargar fórmula {{ idFormula }} en PDF</button>
+    <div class="clinic-actions mb-3">
+      <button type="button" class="btn btn-outline-primary" (click)="verFormulaPdf(idFormula)">Ver fórmula</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="descargar('formulas', idFormula)">Descargar fórmula</button>
     </div>
   }
   <!-- Registro clínico y servicios que se guardan al cerrar la atención. -->
@@ -75,7 +82,10 @@
           @for (tarifa of tarifas; track tarifa.id) { <option [ngValue]="tarifa.id">{{ tarifa.nombreServicio }} · {{ tarifa.valorBase | currency:'COP' }} · IVA {{ tarifa.ivaPorcentaje }}%</option> }
         </select></label>
         <div class="col-12">
-          <button class="btn btn-primary" [disabled]="atencion.invalid || ocupado">Finalizar y generar prefactura</button>
+          <button type="submit" class="btn btn-primary" [disabled]="atencion.invalid || ocupado">Finalizar y generar prefactura</button>
+          @if (atencion.invalid) {
+            <p class="form-text mb-0">Completa el motivo, el diagnóstico y selecciona al menos un servicio prestado.</p>
+          }
         </div>
       }
     </fieldset>

@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
@@ -69,13 +70,18 @@ export class InventarioComponent implements OnInit {
   ngOnInit(): void { this.actualizar(); }
 
   /** Obtiene colecciones según los permisos de lectura del perfil. */
-  actualizar(): void {
+  actualizar(mostrarConfirmacion = false): void {
     this.errorLotes = '';
     this.cargando = true;
     this.error = '';
     const catalogo$ = this.esAdmin ? this.inventario.listarMedicamentos() : this.inventario.listarInventarioParaConsulta();
     catalogo$.subscribe({
-      next: (data) => { this.productos = data ?? []; this.paginaProductos = 1; this.cargando = false; },
+      next: (data) => {
+        this.productos = data ?? [];
+        this.paginaProductos = 1;
+        this.cargando = false;
+        if (mostrarConfirmacion) confirmarAccion('Catálogo de productos actualizado.', true);
+      },
       error: (err: HttpErrorResponse) => { this.error = 'No se pudo cargar el catálogo. ' + this.mensajeError(err); this.cargando = false; }
     });
     if (this.puedeConsultar) {
@@ -219,8 +225,14 @@ export class InventarioComponent implements OnInit {
       registroInvima: f['registroInvima'] || null
     };
     this.guardando = true;
-    const request = this.productoSeleccionado ? this.inventario.actualizarMedicamento(payload) : this.inventario.crearMedicamento(payload);
-    request.subscribe({ next: () => { this.guardando = false; this.modalAbierto = null; this.actualizar(); }, error: (err: HttpErrorResponse) => { this.guardando = false; Swal.fire('No se pudo guardar', this.mensajeError(err), 'error'); } });
+    const editando = !!this.productoSeleccionado;
+    const request = editando ? this.inventario.actualizarMedicamento(payload) : this.inventario.crearMedicamento(payload);
+    request.subscribe({ next: () => {
+      this.guardando = false;
+      this.modalAbierto = null;
+      this.actualizar();
+      confirmarAccion(editando ? 'El producto se actualizó correctamente.' : 'El producto se creó correctamente.');
+    }, error: (err: HttpErrorResponse) => { this.guardando = false; Swal.fire('No se pudo guardar', this.mensajeError(err), 'error'); } });
   }
 
   /** Selecciona un producto para abrir su detalle de lotes y movimientos. */
@@ -248,7 +260,7 @@ export class InventarioComponent implements OnInit {
   confirmarCarga(): void {
     if (!this.esAdmin || !this.cargaId || !this.previsualizacion?.registrosValidos || this.procesandoCarga) return;
     this.procesandoCarga = true;
-    this.inventario.confirmarCarga(this.cargaId).pipe(finalize(() => this.procesandoCarga = false)).subscribe({ next: (resultado) => { this.resultadoCarga = resultado; this.previsualizacion = null; this.cargaId = null; this.archivo = null; this.actualizar(); }, error: (err: HttpErrorResponse) => Swal.fire('No se pudo importar', this.mensajeError(err), 'error') });
+    this.inventario.confirmarCarga(this.cargaId).pipe(finalize(() => this.procesandoCarga = false)).subscribe({ next: (resultado) => { this.resultadoCarga = resultado; this.previsualizacion = null; this.cargaId = null; this.archivo = null; this.actualizar(); confirmarAccion('La importación finalizó. Consulta el resumen de registros importados.'); }, error: (err: HttpErrorResponse) => Swal.fire('No se pudo importar', this.mensajeError(err), 'error') });
   }
 
   /** Prepara el formulario para registrar un lote de inventario. */
@@ -270,7 +282,7 @@ export class InventarioComponent implements OnInit {
     this.guardando = true;
     this.inventario.guardarLote({ ...lote, numeroLote: lote.numeroLote.trim(), fechaVencimiento: lote.fechaVencimiento || null })
       .pipe(finalize(() => this.guardando = false)).subscribe({
-        next: () => { this.formularioLote = null; this.actualizar(); },
+        next: () => { this.formularioLote = null; this.actualizar(); confirmarAccion('El lote se registró correctamente.'); },
         error: (err: HttpErrorResponse) => Swal.fire('No se pudo registrar el lote', this.mensajeError(err), 'error')
       });
   }
@@ -324,6 +336,7 @@ export class InventarioComponent implements OnInit {
         enlace.download = `informe-inventario-${this.fechaHoy()}.${formato === 'pdf' ? 'pdf' : 'xlsx'}`;
         enlace.click();
         setTimeout(() => URL.revokeObjectURL(url), 0);
+        confirmarAccion(formato === 'pdf' ? 'Descarga del informe PDF iniciada.' : 'Descarga del informe Excel iniciada.', true);
       },
       error: (err: HttpErrorResponse) => this.errorInforme = 'No se pudo descargar el informe. ' + this.mensajeError(err)
     });

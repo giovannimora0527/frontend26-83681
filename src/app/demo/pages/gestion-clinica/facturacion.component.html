@@ -1,17 +1,16 @@
 <h1 class="h3">Facturación y pagos</h1>
 @if (error) { <p class="alert alert-danger" role="alert">{{ error }}</p> }
-@if (aviso) { <p class="alert alert-success" role="status">{{ aviso }}</p> }
 <!-- Consulta de facturas con filtros por propietario y mascota. -->
 <section class="card card-body mb-3">
   <h2 class="h5">Historial de facturación</h2>
   <form (ngSubmit)="historial()" class="row g-2 align-items-end">
-    <label class="col-md-5">Propietario <select class="form-select" name="cliente" [(ngModel)]="clienteId" (change)="mascotaId = null; cambiarFiltros()" [disabled]="ocupado">
+    <label class="col-md-5">Propietario <select class="form-select" name="cliente" [ngModel]="clienteId" (ngModelChange)="cambiarPropietario($event)" [disabled]="ocupado">
       <option [ngValue]="null">Seleccionar propietario</option>
       @for (cliente of clientes; track cliente.id) { <option [ngValue]="cliente.id">{{ cliente.nombres }} {{ cliente.apellidos }} · {{ cliente.numeroDocumento }}</option> }
     </select></label>
-    <label class="col-md-5">Mascota <select class="form-select" name="mascota" [(ngModel)]="mascotaId" (change)="cambiarFiltros()" [disabled]="ocupado">
+    <label class="col-md-5">Mascota <select class="form-select" name="mascota" [ngModel]="mascotaId" (ngModelChange)="cambiarMascota($event)" [disabled]="ocupado">
       <option [ngValue]="null">Seleccionar mascota</option>
-      @for (mascota of mascotasVisibles; track mascota.mascotaId) { <option [ngValue]="mascota.mascotaId">{{ mascota.nombreMascota }} · {{ mascota.cliente?.nombres }} {{ mascota.cliente?.apellidos }}</option> }
+      @for (mascota of mascotasVisibles; track mascota.mascotaId) { <option [ngValue]="mascota.mascotaId">{{ mascota.nombreMascota }} · {{ nombrePropietario(mascota) }}</option> }
     </select></label>
     <div class="col-md-2"><button class="btn btn-outline-primary" [disabled]="(!clienteId && !mascotaId) || ocupado">Consultar</button></div>
   </form>
@@ -21,8 +20,8 @@
       <tbody>@for (factura of facturas; track factura.id) {
         <tr><td>{{ factura.numero }}</td><td>{{ factura.fecha | date:'short' }}</td><td>{{ etiquetaEstado(factura.estado) }}</td>
           <td>{{ factura.total | currency:'COP' }}</td><td>{{ factura.pagado | currency:'COP' }}</td>
-          <td><button class="btn btn-sm btn-outline-primary me-1" (click)="abrir(factura)" [disabled]="ocupado">Detalle</button>
-            <button class="btn btn-sm btn-outline-secondary" (click)="pdf(factura.id)">PDF</button></td></tr>
+          <td><div class="clinic-actions"><button class="btn btn-sm btn-outline-primary" (click)="abrir(factura)" [disabled]="ocupado">Detalle</button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="pdf(factura.id)">PDF</button></div></td></tr>
       } @empty { <tr><td colspan="6">Sin facturas para estos filtros.</td></tr> }</tbody>
     </table></div>
   }
@@ -31,8 +30,23 @@
 <form class="card card-body mb-3" #emision="ngForm" (ngSubmit)="emitir()">
   <h2 class="h5">Emitir factura</h2>
   <fieldset [disabled]="ocupado" class="row g-2 align-items-end">
+    <label class="col-md-6">Mascota <select class="form-select" name="mascotaEmision" [ngModel]="mascotaId"
+        (ngModelChange)="cambiarMascota($event, true)">
+      <option [ngValue]="null">Seleccionar mascota atendida</option>
+      @for (mascota of mascotasParaEmitir; track mascota.mascotaId) {
+        <option [ngValue]="mascota.mascotaId">{{ mascota.nombreMascota }} · {{ nombrePropietario(mascota) }}</option>
+      }
+    </select></label>
+    <div class="col-md-6">
+      <span class="d-block">Propietario</span>
+      @if (propietarioEmision; as propietario) {
+        <p class="form-control mb-0" role="status">{{ propietario.nombres }} {{ propietario.apellidos }} @if (propietario.numeroDocumento) { · {{ propietario.numeroDocumento }} }</p>
+      } @else {
+        <p class="form-control mb-0 text-muted">Se completa al seleccionar la mascota o la cita.</p>
+      }
+    </div>
     <label class="col-md-6">Cita atendida <select class="form-select" name="cita" [ngModel]="citaId"
-        (ngModelChange)="consultarEmision($event)" required>
+        (ngModelChange)="cambiarCita($event)" required>
       <option [ngValue]="null">Seleccionar</option>
       @for (cita of citasVisibles; track cita.id) { <option [ngValue]="cita.id">{{ cita.fechaHora | date:'short' }} · {{ cita.mascota?.nombreMascota }} · {{ cita.cliente?.nombres }} {{ cita.cliente?.apellidos }}</option> }
     </select></label>

@@ -1,13 +1,14 @@
 <!-- Plantilla para mostrar una opción de menú. -->
 @if (!item().hidden) {
   @if (item().url && !item().external) {
-    <li [ngClass]="item().classes" [routerLinkActive]="['active']"
+    <li [ngClass]="item().classes" [routerLinkActive]="['active']" #enlaceActivo="routerLinkActive"
         [routerLinkActiveOptions]="{ exact: item().exactMatch === true }">
       <a
         class="nav-link"
         [target]="item().target ? '_blank' : '_self'"
         [routerLink]="item().url"
         [queryParams]="item().queryParams"
+        [attr.aria-current]="enlaceActivo.isActive ? 'page' : null"
         [attr.aria-label]="item().title"
         [ngbTooltip]="item().title"
         #menuTooltip="ngbTooltip"

@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -35,7 +36,6 @@ export class TarifasComponent implements OnInit {
   cambios: Cambio[] | null = null;
   tarifaHistorial = '';
   error = '';
-  aviso = '';
   ocupado = false;
   private readonly fallo = this.api.error((mensaje) => this.error = mensaje);
 
@@ -100,7 +100,7 @@ export class TarifasComponent implements OnInit {
       this.error = 'Completa nombre, código y descripción de la especialidad.';
       return;
     }
-    this.guardar(data.id ? 'PUT' : 'POST', 'especializacion/' + (data.id ? 'actualizar' : 'crear'), data, () => {
+    this.guardar(data.id ? 'PUT' : 'POST', 'especializacion/' + (data.id ? 'actualizar' : 'crear'), data, data.id ? 'La especialidad se actualizó.' : 'La especialidad se creó.', () => {
       this.especialidad = this.nuevaEspecialidad();
       this.cargarEspecialidades();
     });
@@ -118,7 +118,7 @@ export class TarifasComponent implements OnInit {
       this.error = 'La tarifa sin especialidad debe llamarse Consulta general.';
       return;
     }
-    this.guardar(data.id ? 'PUT' : 'POST', 'tarifa' + (data.id ? '/' + data.id : ''), data, () => {
+    this.guardar(data.id ? 'PUT' : 'POST', 'tarifa' + (data.id ? '/' + data.id : ''), data, data.id ? 'La tarifa se actualizó.' : 'La tarifa se creó.', () => {
       this.tarifa = this.nuevaTarifa();
       this.cargarTarifas();
     });
@@ -149,7 +149,7 @@ export class TarifasComponent implements OnInit {
   guardarIva() {
     const { id, ivaPorcentaje } = this.impuesto;
     if (!id || !this.ivaConsultado || ivaPorcentaje === null) return;
-    this.guardar('PUT', 'tarifa/impuestos-medicamento/' + id, { ivaPorcentaje }, () => {
+    this.guardar('PUT', 'tarifa/impuestos-medicamento/' + id, { ivaPorcentaje }, 'El IVA del medicamento se actualizó.', () => {
       this.ivaVigente = ivaPorcentaje;
       this.impuesto.ivaPorcentaje = ivaPorcentaje;
     });
@@ -165,13 +165,12 @@ export class TarifasComponent implements OnInit {
   }
 
   /** Envía el cambio y actualiza la vista cuando el servidor confirma la operación. */
-  private guardar(metodo: 'PUT' | 'POST', ruta: string, data: unknown, completar: () => void) {
+  private guardar(metodo: 'PUT' | 'POST', ruta: string, data: unknown, mensaje: string, completar: () => void) {
     if (this.ocupado) return;
     this.error = '';
-    this.aviso = '';
     this.ocupado = true;
     this.api.enviar(metodo, ruta, data).pipe(finalize(() => this.ocupado = false)).subscribe({
-      next: () => { this.aviso = 'Cambios guardados.'; completar(); }, error: this.fallo
+      next: () => { completar(); confirmarAccion(mensaje); }, error: this.fallo
     });
   }
 }

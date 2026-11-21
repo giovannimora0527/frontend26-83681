@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -61,11 +62,16 @@ export class DespachoComponent implements OnInit {
   }
 
   /** Recarga la cola usando el filtro textual opcional del endpoint. */
-  actualizar(): void {
+  actualizar(mostrarConfirmacion = false): void {
     this.cargando = true;
     this.error = '';
     this.despachoService.listarPendientes(this.filtro.trim(), this.fechaGeneracion).subscribe({
-      next: (data) => { this.pendientes = data ?? []; this.paginaPendientes = 1; this.cargando = false; },
+      next: (data) => {
+        this.pendientes = data ?? [];
+        this.paginaPendientes = 1;
+        this.cargando = false;
+        if (mostrarConfirmacion) confirmarAccion('Cola de dispensación actualizada.', true);
+      },
       error: (err: HttpErrorResponse) => { this.error = this.mensajeError(err); this.cargando = false; }
     });
     this.despachoService.listarDespachos().subscribe({
@@ -113,7 +119,7 @@ export class DespachoComponent implements OnInit {
     if (!this.formula || this.guardando) return;
     this.guardando = true;
     this.despachoService.preparar(this.formula.formulaId).subscribe({
-      next: (despacho) => { this.despacho = despacho; this.guardando = false; },
+      next: (despacho) => { this.despacho = despacho; this.guardando = false; confirmarAccion('La preparación del despacho se inició correctamente.'); },
       error: (err: HttpErrorResponse) => { this.guardando = false; Swal.fire('No fue posible iniciar', this.mensajeError(err), 'error'); }
     });
   }
@@ -167,8 +173,9 @@ export class DespachoComponent implements OnInit {
         sessionStorage.removeItem(registro);
         this.cerrarPreparacion();
         this.actualizar();
-        if (despacho.numeroComprobante && detalles.length) this.descargarComprobante(despacho);
+        if (despacho.numeroComprobante && detalles.length) this.descargarComprobante(despacho, false);
         if (!detalles.length) Swal.fire('Pendiente por disponibilidad', 'El despacho quedó registrado sin salidas de inventario.', 'info');
+        else confirmarAccion('La entrega se confirmó correctamente.');
       },
       error: (err: HttpErrorResponse) => {
         if (err.status === 400 || err.status === 422) sessionStorage.removeItem(registro);
@@ -242,7 +249,7 @@ export class DespachoComponent implements OnInit {
   }
 
   /** Descarga el comprobante PDF de la entrega seleccionada. */
-  descargarComprobante(item: Despacho): void {
+  descargarComprobante(item: Despacho, mostrarConfirmacion = true): void {
     this.despachoService.comprobante(item.id).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
@@ -251,6 +258,7 @@ export class DespachoComponent implements OnInit {
         enlace.download = item.numeroDespacho + '.pdf';
         enlace.click();
         setTimeout(() => URL.revokeObjectURL(url), 0);
+        if (mostrarConfirmacion) confirmarAccion('Descarga del comprobante iniciada.', true);
       },
       error: (err: HttpErrorResponse) => Swal.fire('No fue posible descargar el comprobante', this.mensajeError(err), 'error')
     });
@@ -266,7 +274,7 @@ export class DespachoComponent implements OnInit {
       if (!isConfirmed || this.guardando) return;
       this.guardando = true;
       this.despachoService.cancelar(item.id, String(value).trim()).pipe(finalize(() => this.guardando = false)).subscribe({
-        next: () => { this.cerrarDetalle(); this.actualizar(); },
+        next: () => { this.cerrarDetalle(); this.actualizar(); confirmarAccion('El despacho se canceló correctamente.'); },
         error: (err: HttpErrorResponse) => Swal.fire('No se pudo cancelar', this.mensajeError(err), 'error')
       });
     });

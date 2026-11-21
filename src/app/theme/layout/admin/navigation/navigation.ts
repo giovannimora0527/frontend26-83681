@@ -129,14 +129,6 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       {
-        id: 'atencion-medica',
-        title: 'Atención médica',
-        type: 'item',
-        url: '/inicio/atencion-medica',
-        icon: 'fa-solid fa-stethoscope',
-        classes: 'nav-item'
-      },
-      {
         id: 'tarifas',
         title: 'Especialidades y tarifas',
         type: 'item',
@@ -173,7 +165,7 @@ export function getNavigationItems(): NavigationItem[] {
     if (rolNormalizado === 'ADMIN' || rolNormalizado === 'ADMINISTRADOR') {
       return NavigationItems.map((item) => ({
         ...item,
-        children: item.children?.filter((child) => !['calendario-medico', 'atencion-medica', 'despacho'].includes(child.id))
+        children: item.children?.filter((child) => !['calendario-medico', 'despacho'].includes(child.id))
           .map((child) => ({ ...child }))
       }));
     }
@@ -186,6 +178,7 @@ export function getNavigationItems(): NavigationItem[] {
   let allowedCodes: Set<string>;
   try {
     allowedCodes = new Set(getJwtMenus().filter((menu) => menu.activo).map((menu) => menu.code));
+    if (allowedCodes.has('atencion-medica')) allowedCodes.add('calendario-medico');
     if (allowedCodes.has('inventario-lotes')) allowedCodes.add('inventario');
   } catch (error) {
     console.error('No fue posible obtener los menus del token JWT', error);

@@ -1,3 +1,4 @@
+import { confirmarAccion } from 'src/app/utils/confirmar-accion';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
@@ -77,6 +78,7 @@ export class ClinicaApi {
         enlace.download = archivo;
         enlace.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+        confirmarAccion('Descarga iniciada: ' + archivo, true);
       },
       error: this.error(error)
     });
