@@ -11,11 +11,11 @@ export class ClienteService {
 
   private api = `cliente`;
 
-  constructor(private readonly backendService: BackendService) {
+  constructor(private backendService: BackendService) {
+
   }
 
-  getClientes(): Observable<Cliente[]> {
-    return this.backendService.get(environment.apiUrlAuth, this.api, "all");
+  listarClientes(): Observable<Cliente[]> {
+    return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
   }
-
 }

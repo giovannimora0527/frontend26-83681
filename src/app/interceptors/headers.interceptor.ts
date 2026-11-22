@@ -10,6 +10,10 @@ export class HeadersInterceptor implements HttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
+    // Las cargas de archivos (multipart) deben conservar el Content-Type con boundary que fija el navegador.
+    if (req.body instanceof FormData) {
+      return next.handle(req);
+    }
     const clonedRequest = req.clone({
       setHeaders: {
         'Content-Type': 'application/json',
