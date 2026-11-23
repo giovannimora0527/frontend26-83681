@@ -1,0 +1,350 @@
+<div class="container-fluid agenda">
+  <div class="card">
+    <div class="card-header">
+      <div class="row g-2 align-items-center">
+        <div class="col-12 col-lg-4">
+          <label class="form-label small text-muted mb-1" for="medicoAgenda">Médico veterinario</label>
+          <select id="medicoAgenda" class="form-select" [value]="medicoId ?? ''" (change)="cambiarMedico($any($event.target).value)">
+            <option *ngFor="let m of medicos" [value]="m.id">
+              {{ m.nombres }} {{ m.apellidos }} — {{ m.especializacion?.nombre ?? 'Sin especialidad' }}
+            </option>
+          </select>
+        </div>
+        <div class="col-12 col-lg-8 d-flex flex-wrap gap-2 justify-content-lg-end align-items-end">
+          <button type="button" class="btn btn-primary" (click)="nuevaCita()" [disabled]="!medicoId">
+            <i class="fa fa-plus"></i>&nbsp;Nueva cita
+          </button>
+          <button type="button" class="btn btn-outline-secondary" (click)="abrirHorarios()" [disabled]="!medicoId">
+            <i class="fa fa-clock"></i>&nbsp;Horario
+          </button>
+          <button type="button" class="btn btn-outline-success" (click)="abrir('modalReporte')" [disabled]="!medicoId">
+            <i class="fa fa-file-excel"></i>&nbsp;Reporte Excel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+        <div class="d-flex gap-1 align-items-center">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="mover(-1)" aria-label="Anterior"><i class="fa fa-chevron-left"></i></button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="irHoy()">Hoy</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="mover(1)" aria-label="Siguiente"><i class="fa fa-chevron-right"></i></button>
+          <h5 class="mb-0 ms-2 text-capitalize">{{ titulo }}</h5>
+        </div>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Vista">
+          <button type="button" class="btn" [ngClass]="vista === 'dia' ? 'btn-primary' : 'btn-outline-primary'" (click)="cambiarVista('dia')">Día</button>
+          <button type="button" class="btn" [ngClass]="vista === 'semana' ? 'btn-primary' : 'btn-outline-primary'" (click)="cambiarVista('semana')">Semana</button>
+          <button type="button" class="btn" [ngClass]="vista === 'mes' ? 'btn-primary' : 'btn-outline-primary'" (click)="cambiarVista('mes')">Mes</button>
+        </div>
+      </div>
+
+      <!-- Leyenda y resumen por estado (sirve de filtro) -->
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-sm leyenda" [class.activa]="!filtroEstado" (click)="filtroEstado = ''">
+          Todas <span class="badge bg-dark ms-1">{{ citas.length }}</span>
+        </button>
+        <button type="button" *ngFor="let e of estados" class="btn btn-sm leyenda" [class.activa]="filtroEstado === e"
+          (click)="filtroEstado = filtroEstado === e ? '' : e">
+          <span class="punto" [ngClass]="'estado-' + e.toLowerCase()"></span>{{ e | titlecase }}
+          <span class="badge bg-secondary ms-1">{{ contar(e) }}</span>
+        </button>
+      </div>
+
+      <div class="alert alert-danger" *ngIf="error" role="alert">{{ error }}</div>
+      <div class="alert alert-info" *ngIf="!medicos.length && !error">No hay médicos activos registrados.</div>
+      <div class="text-muted small mb-2" *ngIf="cargando"><i class="fa fa-spinner fa-spin"></i> Cargando citas…</div>
+
+      <!-- Vista mes -->
+      <div *ngIf="vista === 'mes'" class="mes">
+        <div class="mes-cabecera" *ngFor="let d of diasSemana">{{ d }}</div>
+        <div *ngFor="let dia of diasMes" class="mes-dia" [class.fuera]="!dia.delMes" [class.hoy]="dia.hoy"
+          (dblclick)="nuevaCita(dia.fecha, 8)">
+          <button type="button" class="btn btn-link p-0 numero" (click)="irADia(dia.fecha)">{{ dia.fecha.getDate() }}</button>
+          <button type="button" *ngFor="let c of dia.citas.slice(0, 3)" class="evento-mes" [ngClass]="'estado-' + estado(c).toLowerCase()"
+            (click)="verCita(c, $event)" [title]="c.motivo">
+            {{ inicioCita(c) | date:'HH:mm' }} {{ c.mascota?.nombreMascota }}
+          </button>
+          <button type="button" *ngIf="dia.citas.length > 3" class="btn btn-link btn-sm p-0 small" (click)="irADia(dia.fecha)">
+            +{{ dia.citas.length - 3 }} más
+          </button>
+        </div>
+      </div>
+
+      <!-- Vista semana / día -->
+      <div *ngIf="vista !== 'mes'" class="grilla-scroll">
+        <div class="grilla" [style.--columnas]="diasColumnas.length">
+          <div class="esquina"></div>
+          <div *ngFor="let dia of diasColumnas" class="cabecera-dia" [class.hoy]="dia.hoy">
+            <button type="button" class="btn btn-link p-0 text-reset" (click)="irADia(dia.fecha)">
+              {{ dia.fecha | date:'EEE d':'':'es-CO' | titlecase }}
+            </button>
+          </div>
+          <div class="columna-horas">
+            <div *ngFor="let h of horas" class="hora" [style.height.px]="pxHora">{{ h < 10 ? '0' + h : h }}:00</div>
+          </div>
+          <div *ngFor="let dia of diasColumnas" class="columna-dia" [style.height.px]="horas.length * pxHora">
+            <div *ngFor="let h of horas" class="franja" [style.height.px]="pxHora" (click)="nuevaCita(dia.fecha, h)"
+              title="Agendar a las {{ h }}:00"></div>
+            <button type="button" *ngFor="let c of dia.citas" class="evento" [ngClass]="'estado-' + estado(c).toLowerCase()"
+              [ngStyle]="posicion(c)" (click)="verCita(c, $event)">
+              <strong>{{ inicioCita(c) | date:'HH:mm' }}–{{ finCita(c) | date:'HH:mm' }}</strong>
+              {{ c.mascota?.nombreMascota }}
+              <span class="d-block text-truncate opacity-75">{{ c.motivo }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="small text-muted mt-2 mb-0">Haz clic en una franja libre para agendar; en la vista mes, doble clic sobre el día.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: detalle de la cita -->
+<div class="modal fade" id="modalDetalleCita" tabindex="-1" aria-labelledby="tituloDetalleCita" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" *ngIf="citaSel as c">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tituloDetalleCita">Cita #{{ c.id }}
+          <span class="badge ms-2" [ngClass]="'estado-' + estado(c).toLowerCase()">{{ estado(c) }}</span>
+        </h5>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar('modalDetalleCita')"></button>
+      </div>
+      <div class="modal-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Inicio</dt><dd class="col-sm-8">{{ inicioCita(c) | date:'fullDate':'':'es-CO' }} {{ inicioCita(c) | date:'HH:mm' }}</dd>
+          <dt class="col-sm-4">Finalización</dt><dd class="col-sm-8">{{ finCita(c) | date:'HH:mm' }} ({{ c.duracionMinutos ?? 30 }} min)</dd>
+          <dt class="col-sm-4">Motivo</dt><dd class="col-sm-8">{{ c.motivo || '—' }}</dd>
+          <dt class="col-sm-4">Mascota</dt>
+          <dd class="col-sm-8">{{ c.mascota?.nombreMascota }}
+            <span class="text-muted" *ngIf="c.mascota?.raza">· {{ c.mascota?.raza?.especie }} {{ c.mascota?.raza?.nombre }}</span>
+            <span class="text-muted" *ngIf="c.mascota?.edad != null">· {{ c.mascota?.edad }} años</span>
+          </dd>
+          <dt class="col-sm-4">Propietario</dt>
+          <dd class="col-sm-8">{{ c.cliente?.nombres }} {{ c.cliente?.apellidos }}
+            <span class="d-block small text-muted">{{ c.cliente?.tipoDocumento }} {{ c.cliente?.numeroDocumento }} · {{ c.cliente?.telefono || 'sin teléfono' }}</span>
+          </dd>
+          <dt class="col-sm-4">Médico</dt><dd class="col-sm-8">{{ c.medico?.nombres }} {{ c.medico?.apellidos }}</dd>
+        </dl>
+      </div>
+      <div class="modal-footer flex-wrap justify-content-between">
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="verHistorial(c)"><i class="fa fa-history"></i> Historial de la mascota</button>
+        <div class="d-flex flex-wrap gap-1">
+          <button type="button" class="btn btn-outline-primary btn-sm" *ngIf="esEditable(c)" (click)="editarCita(c)"><i class="fa fa-edit"></i> Editar / reprogramar</button>
+          <button type="button" class="btn btn-outline-info btn-sm" *ngIf="estado(c) === 'PROGRAMADA'" (click)="cambiarEstado(c, 'CONFIRMADA')">Confirmar</button>
+          <button type="button" class="btn btn-outline-danger btn-sm" *ngIf="esEditable(c)" (click)="cambiarEstado(c, 'CANCELADA')">Cancelar</button>
+          <button type="button" class="btn btn-success btn-sm" *ngIf="esEditable(c)" [disabled]="!puedeAtender(c)"
+            [title]="'Iniciar la atención de la mascota, aunque haya llegado antes de su turno'" (click)="atender(c)">
+            <i class="fa fa-stethoscope"></i> Atender
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: crear / editar cita -->
+<div class="modal fade" id="modalCita" tabindex="-1" aria-labelledby="tituloCita" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" [formGroup]="formCita" (ngSubmit)="guardarCita()">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tituloCita">{{ formCita.get('id')?.value ? 'Editar cita' : 'Nueva cita' }} — {{ medico?.nombres }} {{ medico?.apellidos }}</h5>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar('modalCita')"></button>
+      </div>
+      <div class="modal-body row g-3">
+        <div class="col-12">
+          <label class="form-label" for="mascotaCita">Mascota (propietario)</label>
+          <select id="mascotaCita" class="form-select" formControlName="mascota" [compareWith]="compararMascotas">
+            <option [ngValue]="null" disabled>Selecciona una mascota</option>
+            <option *ngFor="let m of mascotas" [ngValue]="m">{{ m.nombreMascota }} — {{ m.cliente?.nombres }} {{ m.cliente?.apellidos }}</option>
+          </select>
+          <div class="text-danger small" *ngIf="formCita.get('mascota')?.touched && formCita.get('mascota')?.invalid">Selecciona la mascota.</div>
+        </div>
+        <div class="col-6">
+          <label class="form-label" for="fechaCita">Fecha</label>
+          <input id="fechaCita" type="date" class="form-control" formControlName="fecha">
+        </div>
+        <div class="col-6">
+          <label class="form-label" for="duracionCita">Duración (min)</label>
+          <select id="duracionCita" class="form-select" formControlName="duracionMinutos">
+            <option *ngFor="let d of [15, 20, 30, 45, 60, 90, 120]" [ngValue]="d">{{ d }}</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="horaCita">Hora disponible</label>
+          <select id="horaCita" class="form-select" formControlName="hora">
+            <option [ngValue]="null" disabled>{{ cargandoSlots ? 'Consultando disponibilidad…' : slots.length ? 'Selecciona una hora' : 'Sin franjas disponibles ese día' }}</option>
+            <option *ngFor="let s of slots" [ngValue]="s">{{ horaSlot(s) }}</option>
+          </select>
+          <div class="form-text">Solo se muestran horas dentro del horario del médico y sin cruces con otras citas.</div>
+        </div>
+        <div class="col-12" *ngIf="formCita.get('id')?.value">
+          <label class="form-label" for="estadoCita">Estado</label>
+          <select id="estadoCita" class="form-select" formControlName="estado">
+            <option value="PROGRAMADA">Programada</option>
+            <option value="CONFIRMADA">Confirmada</option>
+            <option value="CANCELADA">Cancelada</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="motivoCita">Motivo de la consulta</label>
+          <textarea id="motivoCita" class="form-control" rows="2" formControlName="motivo"></textarea>
+          <div class="text-danger small" *ngIf="formCita.get('motivo')?.touched && formCita.get('motivo')?.invalid">Indica el motivo.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrar('modalCita')">Cerrar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="enviando">{{ enviando ? 'Guardando…' : 'Guardar' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: atención médica -->
+<div class="modal fade" id="modalAtencion" tabindex="-1" aria-labelledby="tituloAtencion" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <form class="modal-content" [formGroup]="formAtencion" (ngSubmit)="finalizarAtencion()" *ngIf="citaSel as c">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tituloAtencion">Atención — {{ c.mascota?.nombreMascota }} ({{ c.cliente?.nombres }} {{ c.cliente?.apellidos }})</h5>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar('modalAtencion')"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <h6>Datos de la mascota</h6>
+            <p class="mb-3 small">
+              {{ c.mascota?.nombreMascota }} · {{ c.mascota?.raza?.especie }} {{ c.mascota?.raza?.nombre }}
+              <span *ngIf="c.mascota?.edad != null">· {{ c.mascota?.edad }} años</span>
+            </p>
+            <h6>Antecedentes médicos</h6>
+            <div class="antecedentes">
+              <p class="small text-muted" *ngIf="!antecedentes?.anotaciones?.length">Sin anotaciones previas en la historia clínica.</p>
+              <div class="border-start border-3 ps-2 mb-2 small" *ngFor="let a of antecedentes?.anotaciones">
+                <strong>{{ a.fecha | date:'yyyy-MM-dd' }}</strong> · {{ a.medico?.nombres }} {{ a.medico?.apellidos }}
+                <div class="pre">{{ a.descripcion }}</div>
+                <div><em>Dx:</em> {{ a.diagnostico }}</div>
+              </div>
+              <h6 class="mt-3">Citas anteriores</h6>
+              <div class="small" *ngFor="let h of historialMascota.slice(0, 8)">
+                {{ inicioCita(h) | date:'yyyy-MM-dd HH:mm' }} — {{ h.motivo }}
+                <span class="badge" [ngClass]="'estado-' + estado(h).toLowerCase()">{{ estado(h) }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-7 row g-3">
+            <div class="col-12">
+              <label class="form-label" for="atMotivo">Motivo de consulta</label>
+              <input id="atMotivo" class="form-control" formControlName="motivo">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="atSintomas">Síntomas identificados</label>
+              <textarea id="atSintomas" class="form-control" rows="2" formControlName="sintomas"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="atDiagnostico">Diagnóstico</label>
+              <textarea id="atDiagnostico" class="form-control" rows="2" formControlName="diagnostico"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="atObservaciones">Observaciones médicas</label>
+              <textarea id="atObservaciones" class="form-control" rows="2" formControlName="observaciones"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="atRecomendaciones">Recomendaciones</label>
+              <textarea id="atRecomendaciones" class="form-control" rows="2" formControlName="recomendaciones"></textarea>
+            </div>
+            <div class="col-12 text-danger small" *ngIf="formAtencion.touched && formAtencion.invalid">
+              Motivo, síntomas, diagnóstico y observaciones son obligatorios.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrar('modalAtencion')">Cerrar</button>
+        <button type="submit" class="btn btn-success" [disabled]="enviando">
+          <i class="fa fa-check"></i> {{ enviando ? 'Guardando…' : 'Finalizar atención' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: historial de citas de la mascota -->
+<div class="modal fade" id="modalHistorial" tabindex="-1" aria-labelledby="tituloHistorial" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tituloHistorial">Historial de citas — {{ citaSel?.mascota?.nombreMascota }}</h5>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar('modalHistorial')"></button>
+      </div>
+      <div class="modal-body table-responsive">
+        <table class="table table-sm align-middle">
+          <thead><tr><th>Fecha</th><th>Médico</th><th>Motivo</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let h of historialMascota">
+              <td>{{ inicioCita(h) | date:'yyyy-MM-dd HH:mm' }}</td>
+              <td>{{ h.medico?.nombres }} {{ h.medico?.apellidos }}</td>
+              <td>{{ h.motivo }}</td>
+              <td><span class="badge" [ngClass]="'estado-' + estado(h).toLowerCase()">{{ estado(h) }}</span></td>
+            </tr>
+            <tr *ngIf="!historialMascota.length"><td colspan="4" class="text-center text-muted">Sin citas registradas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: horario de disponibilidad -->
+<div class="modal fade" id="modalHorarios" tabindex="-1" aria-labelledby="tituloHorarios" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tituloHorarios">Horario de disponibilidad</h5>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar('modalHorarios')"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm">
+          <thead><tr><th>Día</th><th>Desde</th><th>Hasta</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let h of horarios" [class.text-muted]="h.activo === false">
+              <td>{{ nombresDia[h.diaSemana] }}</td><td>{{ h.horaInicio | slice:0:5 }}</td><td>{{ h.horaFin | slice:0:5 }}</td><td><button *ngIf="h.activo !== false" class="btn btn-sm btn-outline-danger" type="button" (click)="desactivarHorario(h)">Desactivar</button><span *ngIf="h.activo === false">Inactivo</span></td>
+            </tr>
+            <tr *ngIf="!horarios.length"><td colspan="4" class="text-muted text-center">Sin horario configurado: no se podrán agendar citas.</td></tr>
+          </tbody>
+        </table>
+        <form class="row g-2 align-items-end" [formGroup]="formHorario" (ngSubmit)="guardarHorario()">
+          <div class="col-4">
+            <label class="form-label small" for="hDia">Día</label>
+            <select id="hDia" class="form-select form-select-sm" formControlName="diaSemana">
+              <option *ngFor="let n of [1,2,3,4,5,6,7]" [ngValue]="n">{{ nombresDia[n] }}</option>
+            </select>
+          </div>
+          <div class="col-3"><label class="form-label small" for="hIni">Desde</label><input id="hIni" type="time" class="form-control form-control-sm" formControlName="horaInicio"></div>
+          <div class="col-3"><label class="form-label small" for="hFin">Hasta</label><input id="hFin" type="time" class="form-control form-control-sm" formControlName="horaFin"></div>
+          <div class="col-2"><button type="submit" class="btn btn-sm btn-primary w-100">Agregar</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: reporte Excel -->
+<div class="modal fade" id="modalReporte" tabindex="-1" aria-labelledby="tituloReporte" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <form class="modal-content" [formGroup]="formReporte" (ngSubmit)="descargarReporte()">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tituloReporte">Reporte de citas (.xlsx)</h5>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar('modalReporte')"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label" for="rDesde">Fecha inicial</label>
+        <input id="rDesde" type="date" class="form-control mb-2" formControlName="desde">
+        <label class="form-label" for="rHasta">Fecha final</label>
+        <input id="rHasta" type="date" class="form-control" formControlName="hasta">
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-success w-100"><i class="fa fa-download"></i> Descargar Excel</button>
+      </div>
+    </form>
+  </div>
+</div>

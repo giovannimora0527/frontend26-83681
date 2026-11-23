@@ -1,0 +1,65 @@
+<main class="container-fluid reports-page">
+  <header class="mb-4"><p class="eyebrow">Administración</p><h1 class="h2 mb-1">Reportes</h1><p class="text-muted mb-0">Consulta datos consolidados y descarga documentos PDF o Excel.</p></header>
+  @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+  <section class="card mb-4">
+    <div class="card-header"><h2 class="h5 mb-0">Filtros del reporte</h2></div>
+    <div class="card-body"><div class="row g-3 align-items-end">
+      <div class="col-md-4"><label class="form-label" for="report-type">Reporte</label><select id="report-type" class="form-select" [(ngModel)]="tipo"><option value="citas">Gestión médica · citas</option><option value="medicos">Gestión médica · veterinarios</option><option value="inventario">Control de inventario</option><option value="facturacion">Financiero · facturación</option></select></div>
+      @if (tipo !== 'inventario') {
+        <div class="col-md-3"><label class="form-label" for="report-from">Desde</label><input id="report-from" type="date" class="form-control" [(ngModel)]="desde"></div>
+        <div class="col-md-3"><label class="form-label" for="report-to">Hasta</label><input id="report-to" type="date" class="form-control" [(ngModel)]="hasta"></div>
+      }
+      <div class="col-md-2"><button class="btn btn-primary w-100" type="button" (click)="consultar()" [disabled]="cargando">{{ cargando ? 'Consultando…' : 'Vista previa' }}</button></div>
+    </div>
+      <div class="d-flex flex-wrap gap-2 mt-3"><button class="btn btn-outline-secondary" type="button" (click)="descargar('pdf')">Descargar PDF</button><button class="btn btn-outline-secondary" type="button" (click)="descargar('xlsx')">Descargar Excel</button></div>
+    </div>
+  </section>
+
+  @if (citas) {
+    <section class="card"><div class="card-header d-flex justify-content-between"><h2 class="h5 mb-0">Citas del {{ citas.desde }} al {{ citas.hasta }}</h2><span class="badge text-bg-primary">{{ citas.total }} registros</span></div>
+      <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Fecha y hora</th><th>Cliente</th><th>Mascota</th><th>Veterinario</th><th>Estado</th></tr></thead><tbody>
+        @for (cita of citas.citas; track cita.id) { <tr><td>{{ cita.fechaHora | date:'short' }}</td><td>{{ cita.cliente }}</td><td>{{ cita.mascota }}</td><td>{{ cita.medico }}</td><td>{{ cita.estado }}</td> }
+        @empty { <tr><td colspan="5" class="text-center py-4">No hay citas en este rango.</td></tr> }
+      </tbody></table></div>
+    </section>
+  }
+  @if (medicos) {
+    <section class="card"><div class="card-header d-flex justify-content-between"><h2 class="h5 mb-0">Gestión médica · {{ medicos.desde }} al {{ medicos.hasta }}</h2><span class="badge text-bg-primary">{{ medicos.totalCitas }} citas</span></div>
+      <div class="card-body"><p>Atendidas: <strong>{{ medicos.totalAtendidas }}</strong> · Canceladas: <strong>{{ medicos.totalCanceladas }}</strong></p>
+        <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Veterinario</th><th>Citas</th><th>Atendidas</th><th>Canceladas</th><th>Pendientes</th></tr></thead><tbody>
+          @for (medico of medicos.medicos; track medico.medicoId) { <tr><td>{{ medico.medico }}</td><td>{{ medico.totalCitas }}</td><td>{{ medico.atendidas }}</td><td>{{ medico.canceladas }}</td><td>{{ medico.pendientes }}</td></tr> }
+          @empty { <tr><td colspan="5" class="text-center py-4">No hay citas en este rango.</td></tr> }
+        </tbody></table></div>
+      </div>
+    </section>
+  }
+  @if (inventario) {
+    <section class="card"><div class="card-header"><h2 class="h5 mb-0">Resumen de inventario · {{ inventario.fechaCorte }}</h2></div>
+      <div class="card-body"><div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3"><article class="metric"><span>Productos</span><strong>{{ inventario.productos }}</strong></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric"><span>Unidades disponibles</span><strong>{{ inventario.unidadesDisponibles }}</strong></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric"><span>Existencias vencidas</span><strong>{{ inventario.unidadesVencidas }}</strong></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric"><span>Valor inventario</span><strong>{{ inventario.valorInventario | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article></div>
+      </div><p>Productos con stock bajo: <strong>{{ inventario.productosBajoStock }}</strong> · Próximos a vencer: <strong>{{ inventario.productosProximosAVencer }}</strong></p>
+      <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Producto</th><th>Tipo</th><th>Disponible</th><th>Vencida</th><th>Stock mínimo</th><th>Estado</th><th>Vencimiento cercano</th><th>Valor</th></tr></thead><tbody>
+        @for (producto of inventario.productosDetalle; track producto.medicamentoId) { <tr><td>{{ producto.nombre }}</td><td>{{ producto.tipoProducto }}</td><td>{{ producto.existenciaDispensable }}</td><td>{{ producto.existenciaVencida }}</td><td>{{ producto.stockMinimo }}</td><td>{{ producto.estadoStock }}</td><td>{{ producto.vencimientoMasCercano || '—' }}</td><td>{{ producto.valorExistencia | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr> }
+        @empty { <tr><td colspan="8" class="text-center py-4">No hay productos registrados.</td></tr> }
+      </tbody></table></div>
+    </div></section>
+  }
+  @if (facturacion) {
+    <section class="card"><div class="card-header"><h2 class="h5 mb-0">Resumen financiero · {{ facturacion.desde }} al {{ facturacion.hasta }}</h2></div>
+      <div class="card-body"><div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3"><article class="metric"><span>Facturas</span><strong>{{ facturacion.totalFacturas }}</strong></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric"><span>Total</span><strong>{{ facturacion.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric"><span>Pagado</span><strong>{{ facturacion.pagado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric"><span>Saldo pendiente</span><strong>{{ facturacion.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article></div>
+      </div>
+        <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Factura</th><th>Cita</th><th>Fecha</th><th>Estado</th><th>Subtotal</th><th>Impuesto</th><th>Total</th><th>Pagado</th><th>Saldo</th></tr></thead><tbody>
+          @for (factura of facturacion.facturas; track factura.id) { <tr><td>#{{ factura.id }}</td><td>{{ factura.citaId }}</td><td>{{ factura.fecha | date:'shortDate' }}</td><td>{{ factura.estado }}</td><td>{{ factura.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td>{{ factura.impuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td>{{ factura.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td>{{ factura.pagado | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td>{{ factura.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td> }
+          @empty { <tr><td colspan="9" class="text-center py-4">No hay facturas en este rango.</td></tr> }
+        </tbody></table></div>
+      </div>
+    </section>
+  }
+</main>

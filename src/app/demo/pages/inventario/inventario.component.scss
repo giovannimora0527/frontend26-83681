@@ -1,0 +1,34 @@
+.inventory-page {
+  padding-block: 1rem 2rem;
+}
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-heading h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+}
+
+.eyebrow {
+  margin: 0 0 .35rem;
+  color: #6574cd;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+tbody tr[tabindex] {
+  cursor: pointer;
+}
+
+.result-list {
+  max-height: 18rem;
+}

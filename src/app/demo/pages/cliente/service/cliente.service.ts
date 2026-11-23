@@ -18,4 +18,12 @@ export class ClienteService {
   listarClientes(): Observable<Cliente[]> {
     return this.backendService.get(environment.apiUrlAuth, this.api, "listar");
   }
+
+  crear(request: Cliente): Observable<Cliente> {
+    return this.backendService.post(environment.apiUrlAuth, this.api, 'guardar', request);
+  }
+
+  actualizar(request: Cliente): Observable<Cliente> {
+    return this.backendService.post(environment.apiUrlAuth, this.api, 'actualizar', request);
+  }
 }

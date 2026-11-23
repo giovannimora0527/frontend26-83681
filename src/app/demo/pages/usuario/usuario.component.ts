@@ -1,106 +1,141 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 import { Usuario } from 'src/app/models/usuario';
-import { UsuarioService } from './service/usuario.service';
+import { PerfilUsuario, UsuarioRequest, UsuarioService } from './service/usuario.service';
 
 @Component({
   selector: 'app-usuario',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './usuario.component.html',
   styleUrl: './usuario.component.scss'
 })
 export class UsuarioComponent implements OnInit {
-  listUsuarios: Usuario[] = [];
-  terminoBusqueda = '';
-  paginaActual = 1;
-  readonly registrosPorPagina = 10;
+  usuarios: Usuario[] = [];
+  perfiles: PerfilUsuario[] = [];
   cargando = false;
-  mensajeError = '';
+  guardando = false;
+  mostrarFormulario = false;
+  usuarioEditando?: Usuario;
 
-  constructor(private readonly usuarioService: UsuarioService) {}
+  formulario = this.fb.group({
+    username: ['', [Validators.required, Validators.maxLength(50)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+    perfilId: [null as number | null, Validators.required],
+    password: ['', [Validators.minLength(6), Validators.maxLength(72)]],
+    confirmarPassword: [''],
+    activo: [true]
+  });
+
+  constructor(
+    private readonly fb: FormBuilder,
+    private readonly usuarioService: UsuarioService
+  ) { }
 
   ngOnInit(): void {
-    this.listar();
+    this.cargarDatos();
   }
 
-  get usuariosFiltrados(): Usuario[] {
-    const termino = this.normalizar(this.terminoBusqueda.trim());
-    if (!termino) {
-      return this.listUsuarios;
+  cargarDatos(): void {
+    this.cargando = true;
+    this.usuarioService.getPerfiles().subscribe({
+      next: perfiles => {
+        this.perfiles = perfiles;
+        this.usuarioService.getUsuarios().subscribe({
+          next: usuarios => {
+            this.usuarios = usuarios;
+            this.cargando = false;
+          },
+          error: err => this.mostrarError(err, 'No fue posible cargar los usuarios')
+        });
+      },
+      error: err => this.mostrarError(err, 'No fue posible cargar los roles')
+    });
+  }
+
+  nuevoUsuario(): void {
+    this.usuarioEditando = undefined;
+    this.formulario.reset({ username: '', email: '', perfilId: null, password: '', confirmarPassword: '', activo: true });
+    this.formulario.controls.password.setValidators([Validators.required, Validators.minLength(6), Validators.maxLength(72)]);
+    this.formulario.controls.password.updateValueAndValidity();
+    this.mostrarFormulario = true;
+  }
+
+  editarUsuario(usuario: Usuario): void {
+    this.usuarioEditando = usuario;
+    const perfil = this.perfiles.find(item => item.nombre === usuario.rol);
+    this.formulario.reset({
+      username: usuario.username ?? '',
+      email: usuario.email ?? '',
+      perfilId: perfil?.id ?? null,
+      password: '',
+      confirmarPassword: '',
+      activo: usuario.activo ?? true
+    });
+    this.formulario.controls.password.setValidators([Validators.minLength(6), Validators.maxLength(72)]);
+    this.formulario.controls.password.updateValueAndValidity();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarEdicion(): void {
+    this.mostrarFormulario = false;
+    this.usuarioEditando = undefined;
+    this.formulario.reset({ username: '', email: '', perfilId: null, password: '', confirmarPassword: '', activo: true });
+  }
+
+  guardarUsuario(): void {
+    if (this.formulario.invalid) {
+      this.formulario.markAllAsTouched();
+      return;
     }
 
-    return this.listUsuarios.filter((usuario) =>
-      [
-        usuario.id,
-        usuario.username,
-        usuario.email,
-        usuario.rol,
-        usuario.fechaCreacion,
-        usuario.activo === undefined ? '' : usuario.activo ? 'activo' : 'inactivo'
-      ].some((valor) => this.normalizar(String(valor ?? '')).includes(termino))
-    );
-  }
+    const valores = this.formulario.getRawValue();
+    const password = valores.password ?? '';
+    if ((!this.usuarioEditando && password !== (valores.confirmarPassword ?? ''))
+        || (password.length > 0 && password !== (valores.confirmarPassword ?? ''))) {
+      void Swal.fire({ icon: 'warning', title: 'Revisa la contraseña', text: 'Las contraseñas no coinciden.' });
+      return;
+    }
 
-  get usuariosPaginados(): Usuario[] {
-    const inicio = (this.paginaActual - 1) * this.registrosPorPagina;
-    return this.usuariosFiltrados.slice(inicio, inicio + this.registrosPorPagina);
-  }
+    const perfil = this.perfiles.find(item => item.id === valores.perfilId);
+    if (!perfil) {
+      this.formulario.controls.perfilId.markAsTouched();
+      return;
+    }
 
-  get totalPaginas(): number {
-    return Math.ceil(this.usuariosFiltrados.length / this.registrosPorPagina);
-  }
+    const request: UsuarioRequest = {
+      id: this.usuarioEditando?.id,
+      username: (valores.username ?? '').trim(),
+      email: (valores.email ?? '').trim(),
+      password: password || null,
+      rol: perfil.nombre,
+      perfilId: perfil.id,
+      activo: this.usuarioEditando ? Boolean(valores.activo) : true
+    };
 
-  get paginas(): number[] {
-    return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
-  }
-
-  listar(): void {
-    this.cargando = true;
-    this.mensajeError = '';
-    this.usuarioService.getUsuarios().subscribe({
-      next: (usuarios) => {
-        this.listUsuarios = usuarios;
-        this.paginaActual = 1;
-        this.cargando = false;
+    this.guardando = true;
+    const operacion = this.usuarioEditando
+      ? this.usuarioService.actualizarUsuario(request)
+      : this.usuarioService.crearUsuario(request);
+    operacion.subscribe({
+      next: respuesta => {
+        this.guardando = false;
+        void Swal.fire({ icon: 'success', title: 'Listo', text: respuesta.message });
+        this.cancelarEdicion();
+        this.cargarDatos();
       },
-      error: (error: unknown) => {
-        this.cargando = false;
-        this.mensajeError = this.obtenerMensajeError(error);
+      error: err => {
+        this.guardando = false;
+        this.mostrarError(err, 'No fue posible guardar el usuario');
       }
     });
   }
 
-  actualizarBusqueda(event: Event): void {
-    this.terminoBusqueda = (event.target as HTMLInputElement).value;
-    this.paginaActual = 1;
-  }
-
-  cambiarPagina(pagina: number): void {
-    if (pagina >= 1 && pagina <= this.totalPaginas) {
-      this.paginaActual = pagina;
-    }
-  }
-
-  mostrarFecha(fecha?: Date | string): string {
-    if (!fecha) {
-      return '—';
-    }
-    const valor = new Date(fecha);
-    return Number.isNaN(valor.getTime()) ? '—' : valor.toLocaleString();
-  }
-
-  private normalizar(valor: string): string {
-    return valor.toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  }
-
-  private obtenerMensajeError(error: unknown): string {
-    if (error && typeof error === 'object') {
-      const respuesta = error as { error?: { message?: string; error?: string } };
-      return respuesta.error?.message
-        ?? respuesta.error?.error
-        ?? 'No fue posible cargar los usuarios. Verifica la conexión con el backend e inténtalo de nuevo.';
-    }
-    return 'No fue posible cargar los usuarios. Verifica la conexión con el backend e inténtalo de nuevo.';
+  private mostrarError(error: HttpErrorResponse, mensaje: string): void {
+    this.cargando = false;
+    this.guardando = false;
+    void Swal.fire({ icon: 'error', title: 'Error', text: error?.error?.message || mensaje });
   }
 }

@@ -1,0 +1,76 @@
+<main class="container-fluid billing-page">
+  <header class="mb-4 no-print d-flex flex-wrap justify-content-between align-items-end gap-3"><div><p class="eyebrow">Administración financiera</p><h1 class="h2 mb-1">Facturación</h1><p class="text-muted mb-0">La consulta se calcula con la especialidad del médico. Los medicamentos se cobran según las unidades realmente despachadas.</p></div>@if (puedeAdministrarTarifas) { <button class="btn btn-outline-primary" type="button" (click)="abrirModalTarifas()">Administrar tarifas</button> }</header>
+  @if (error) { <div class="alert alert-danger no-print" role="alert">{{ error }}</div> }
+
+  <div class="row g-4 no-print">
+    <div class="col-xl-7">
+      <section class="card h-100"><div class="card-header"><h2 class="h5 mb-0">Preparar factura</h2></div>
+        <div class="card-body row g-3 align-content-start">
+          <div class="col-12"><label for="billing-appointment" class="form-label">Cita atendida</label><select id="billing-appointment" class="form-select" [(ngModel)]="citaId" (ngModelChange)="invalidarVistaPrevia()"><option [ngValue]="0" disabled>Selecciona una cita</option>@for (cita of citas; track cita.id) { <option [ngValue]="cita.id">#{{ cita.id }} · {{ cita.fechaHora | date:'short' }} · {{ cita.mascota?.nombreMascota }} · {{ cita.cliente?.nombres }} {{ cita.cliente?.apellidos }} · {{ medicoLabel(cita) }}</option> }</select>
+            @if (!citas.length) { <small class="text-muted">No hay citas atendidas pendientes de facturación.</small> }
+          </div>
+          <div class="col-md-8"><label for="billing-discount" class="form-label">Descuento autorizado (COP)</label><input id="billing-discount" class="form-control" type="number" min="0" step="100" [(ngModel)]="descuento" (ngModelChange)="invalidarVistaPrevia()"></div>
+          <div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="button" (click)="previsualizarFactura()" [disabled]="cargando || !citaId">{{ cargando ? 'Calculando…' : 'Vista previa' }}</button></div>
+          <p class="text-muted small mb-0">El sistema toma los medicamentos despachados para esta cita y evita cobrarlos dos veces.</p>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  @if (puedeAdministrarTarifas && mostrarModalTarifas) {
+    <div class="invoice-modal-backdrop">
+      <section class="card invoice-modal tariff-modal" role="dialog" aria-modal="true" aria-labelledby="tariff-modal-title">
+        <div class="card-header invoice-modal-header d-flex justify-content-between align-items-center gap-2"><h2 id="tariff-modal-title" class="h5 mb-0">Administrar tarifas</h2><button class="btn-close" type="button" aria-label="Cerrar tarifas" (click)="cerrarModalTarifas()"></button></div>
+        <div class="invoice-modal-body p-3"><div class="row g-3">
+          <div class="col-lg-4"><section class="card h-100"><div class="card-header"><h3 class="h6 mb-0">{{ tarifaEditandoId ? 'Editar tarifa' : 'Nueva tarifa' }}</h3></div><form class="card-body row g-3" (ngSubmit)="guardarTarifa()">
+            <div class="col-12"><label for="tariff-specialty" class="form-label">Especialización</label><select id="tariff-specialty" class="form-select" required [(ngModel)]="nuevaTarifa.especializacionId" name="especializacionId"><option [ngValue]="0" disabled>Selecciona una especialización</option>@for (especialidad of especializaciones; track especialidad.id) { <option [ngValue]="especialidad.id">{{ especialidad.nombre }}</option> }</select></div>
+            <div class="col-12"><label for="tariff-doctor" class="form-label">Médico (opcional)</label><select id="tariff-doctor" class="form-select" [(ngModel)]="nuevaTarifa.medicoId" (ngModelChange)="sincronizarEspecialidadMedico()" name="medicoId"><option [ngValue]="null">Tarifa general de la especialización</option>@for (medico of medicos; track medico.id) { <option [ngValue]="medico.id">{{ medico.nombres }} {{ medico.apellidos }} · {{ medico.especializacion?.nombre }}</option> }</select></div>
+            <div class="col-12"><label for="tariff-name" class="form-label">Nombre del servicio</label><input id="tariff-name" class="form-control" maxlength="120" placeholder="Consulta de especialidad" [(ngModel)]="nuevaTarifa.nombre" name="nombre"></div>
+            <div class="col-md-6"><label for="tariff-value" class="form-label">Valor (COP)</label><input id="tariff-value" class="form-control" required min="0" type="number" step="100" [(ngModel)]="nuevaTarifa.valor" name="valor"></div>
+            <div class="col-md-6"><label for="tariff-tax" class="form-label">Impuesto (%)</label><input id="tariff-tax" class="form-control" required min="0" max="100" type="number" step="0.01" [(ngModel)]="nuevaTarifa.impuestoPorcentaje" name="impuesto"></div>
+            <div class="col-md-6"><label for="tariff-start" class="form-label">Vigente desde</label><input id="tariff-start" class="form-control" required type="date" [(ngModel)]="nuevaTarifa.vigenciaDesde" name="vigenciaDesde"></div>
+            <div class="col-md-6"><label for="tariff-end" class="form-label">Vigente hasta</label><input id="tariff-end" class="form-control" type="date" [(ngModel)]="nuevaTarifa.vigenciaHasta" name="vigenciaHasta"></div>
+            <div class="col-12 d-flex gap-2"><button class="btn btn-outline-primary" type="submit" [disabled]="!nuevaTarifa.especializacionId">{{ tarifaEditandoId ? 'Guardar cambios' : 'Crear tarifa' }}</button>@if (tarifaEditandoId) { <button class="btn btn-outline-secondary" type="button" (click)="cancelarEdicionTarifa()">Cancelar edición</button> }</div>
+          </form></section></div>
+          <div class="col-lg-8"><section class="card"><div class="card-header d-flex justify-content-between align-items-center"><h3 class="h6 mb-0">Tarifas registradas</h3><button class="btn btn-sm btn-outline-secondary" type="button" (click)="cargarTarifasAdministracion()">Actualizar</button></div>
+            <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Especialización</th><th>Médico</th><th>Servicio</th><th>Valor</th><th>Vigencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+              @for (tarifa of tarifasAdministracion; track tarifa.id) { <tr><td>{{ tarifa.especializacionNombre || '—' }}</td><td>{{ tarifa.medicoNombre || 'Tarifa general' }}</td><td>{{ tarifa.nombre }}</td><td>{{ tarifa.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td>{{ tarifa.vigenciaDesde }} – {{ tarifa.vigenciaHasta || 'Sin fecha final' }}</td><td>{{ tarifa.activo ? 'Activa' : 'Inactiva' }}</td><td class="text-nowrap"><button class="btn btn-sm btn-outline-primary me-2" type="button" (click)="editarTarifa(tarifa)">Editar</button><button class="btn btn-sm btn-outline-secondary" type="button" (click)="cambiarEstadoTarifa(tarifa)">{{ tarifa.activo ? 'Desactivar' : 'Activar' }}</button></td></tr> }
+              @empty { <tr><td colspan="7" class="text-center py-4">No hay tarifas registradas.</td></tr> }
+            </tbody></table></div>
+          </section></div>
+        </div></div>
+        <div class="card-footer invoice-modal-footer d-flex justify-content-end"><button class="btn btn-outline-secondary" type="button" (click)="cerrarModalTarifas()">Cerrar</button></div>
+      </section>
+    </div>
+  }
+
+  @if (vistaPrevia) {
+    <div class="invoice-modal-backdrop">
+    <section class="card invoice-modal" role="dialog" aria-modal="true" aria-labelledby="invoice-preview-title">
+      <div class="card-header invoice-modal-header d-flex flex-wrap justify-content-between align-items-center gap-2"><h2 id="invoice-preview-title" class="h5 mb-0">Vista previa · Cita #{{ vistaPrevia.citaId }}</h2><button class="btn-close" type="button" aria-label="Cerrar vista previa" (click)="cancelarVistaPrevia()"></button></div>
+      <div class="invoice-modal-body">
+      <div class="card-body invoice-paper invoice-print-area">
+        <div class="d-flex justify-content-between flex-wrap gap-3 border-bottom pb-3 mb-3"><div><h2 class="h4 mb-1">{{ vistaPrevia.clinica.nombre }}</h2><div>NIT: {{ vistaPrevia.clinica.nit }}</div><div>{{ vistaPrevia.clinica.direccion }}</div><div>{{ vistaPrevia.clinica.telefono }} · {{ vistaPrevia.clinica.correo }}</div></div><div class="text-end"><strong>FACTURA · PREVISUALIZACIÓN</strong><div>Fecha: {{ vistaPrevia.fechaCreacion | date:'medium' }}</div><div>Cita #{{ vistaPrevia.citaId }}</div></div></div>
+        @if (vistaPrevia.clinica.datosDemostracion) { <div class="alert alert-warning py-2">Datos ficticios de demostración; reemplázalos por los datos oficiales antes de usar la facturación real.</div> }
+        <div class="row g-3 mb-3"><div class="col-md-6"><strong>Cliente</strong><div>{{ vistaPrevia.clienteNombre }}</div><div>{{ vistaPrevia.clienteDocumento }}</div><div>{{ vistaPrevia.clienteTelefono }}</div></div><div class="col-md-6"><strong>Mascota</strong><div>{{ vistaPrevia.mascotaNombre }} · {{ vistaPrevia.mascotaEspecie }} · {{ vistaPrevia.mascotaRaza }}</div><div>Médico: {{ vistaPrevia.medicoNombre }}</div><div>Especialización: {{ vistaPrevia.especializacion }}</div><div>Cita: {{ vistaPrevia.citaFecha | date:'medium' }} · {{ vistaPrevia.motivoConsulta }}</div></div></div>
+        <div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Concepto</th><th class="text-end">Cant.</th><th class="text-end">Valor unitario</th><th class="text-end">Impuesto</th><th class="text-end">Descuento</th><th class="text-end">Total</th></tr></thead><tbody>@for (linea of vistaPrevia.detalles; track $index) { <tr><td>{{ linea.descripcion }}</td><td class="text-end">{{ linea.cantidad }}</td><td class="text-end">{{ linea.valorUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end">{{ linea.impuestoPorcentaje }}%</td><td class="text-end">{{ linea.descuento | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end">{{ linea.totalLinea | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr> }</tbody></table></div>
+        <div class="row justify-content-end"><div class="col-md-5 col-lg-4"><div class="d-flex justify-content-between"><span>Subtotal</span><span>{{ vistaPrevia.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div><div class="d-flex justify-content-between"><span>Descuento</span><span>{{ vistaPrevia.descuento | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div><div class="d-flex justify-content-between"><span>Impuestos</span><span>{{ vistaPrevia.impuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div><div class="d-flex justify-content-between border-top mt-2 pt-2 fs-5 fw-bold"><span>Total a pagar</span><span>{{ vistaPrevia.total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div></div></div>
+        <p class="small text-muted border-top mt-3 pt-3 mb-0">Vista previa sujeta a confirmación. Los medicamentos incluidos corresponden a despachos confirmados para esta cita.</p>
+      </div>
+      </div>
+      <div class="card-footer invoice-modal-footer d-flex justify-content-end gap-2"><button class="btn btn-outline-secondary" type="button" (click)="cancelarVistaPrevia()">Cancelar</button><button class="btn btn-outline-primary" type="button" (click)="imprimirVistaPrevia()">Imprimir</button><button class="btn btn-primary" type="button" (click)="emitirFactura()" [disabled]="cargando">{{ cargando ? 'Emitiendo…' : 'Confirmar y emitir' }}</button></div>
+    </section>
+    </div>
+  }
+
+  @if (factura) {
+    <section class="card mt-4"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2"><h2 class="h5 mb-0">Factura #{{ factura.id }} · {{ factura.estado }}</h2><div class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" type="button" (click)="consultarFactura()">Actualizar</button><button class="btn btn-sm btn-outline-primary" type="button" (click)="descargarPdf()">Descargar PDF</button></div></div>
+      <div class="card-body"><div class="row g-3 mb-3"><div class="col-md-6"><strong>{{ factura.clienteNombre }}</strong><div>{{ factura.clienteDocumento }} · {{ factura.clienteTelefono }}</div><div>{{ factura.mascotaNombre }} · {{ factura.mascotaEspecie }} · {{ factura.mascotaRaza }}</div></div><div class="col-md-6"><div>Médico: {{ factura.medicoNombre }} · {{ factura.especializacion }}</div><div>Cita #{{ factura.citaId }} · {{ factura.citaFecha | date:'medium' }}</div><div>{{ factura.motivoConsulta }}</div></div></div>
+        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Concepto</th><th>Cantidad</th><th>Valor unitario</th><th>Total</th></tr></thead><tbody>@for (linea of factura.detalles; track $index) { <tr><td>{{ linea.descripcion }}</td><td>{{ linea.cantidad }}</td><td>{{ linea.valorUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td>{{ linea.totalLinea | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr> }</tbody></table></div>
+        <div class="row g-3 mb-4"><div class="col-sm-6 col-lg-3"><span class="text-muted d-block">Subtotal</span><strong>{{ factura.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></div><div class="col-sm-6 col-lg-3"><span class="text-muted d-block">Descuento</span><strong>{{ factura.descuento | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></div><div class="col-sm-6 col-lg-3"><span class="text-muted d-block">Total</span><strong>{{ factura.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></div><div class="col-sm-6 col-lg-3"><span class="text-muted d-block">Saldo</span><strong>{{ factura.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></div></div>
+        @if (factura.saldo > 0 && factura.estado !== 'ANULADA') { <form class="row g-3 align-items-end no-print" (ngSubmit)="registrarPago()"><div class="col-md-3"><label for="payment-amount" class="form-label">Pago</label><input id="payment-amount" class="form-control" type="number" min="1" step="100" required [(ngModel)]="montoPago" name="monto"></div><div class="col-md-3"><label for="payment-method" class="form-label">Método</label><select id="payment-method" class="form-select" [(ngModel)]="metodoPago" name="metodo"><option>EFECTIVO</option><option>TARJETA</option><option>TRANSFERENCIA</option><option>OTRO</option></select></div><div class="col-md-4"><label for="payment-reference" class="form-label">Referencia</label><input id="payment-reference" class="form-control" [(ngModel)]="referenciaPago" name="referencia"></div><div class="col-md-2"><button type="submit" class="btn btn-success w-100">Registrar pago</button></div></form> }
+      </div>
+    </section>
+  }
+</main>

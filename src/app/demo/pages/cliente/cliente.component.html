@@ -1,1 +1,33 @@
-<p>cliente works!</p>
+<div class="container-fluid">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h2 class="mb-1">Gestión de clientes</h2><p class="text-muted mb-0">Consulta y administra los datos de los tutores de pacientes.</p></div>
+    @if (puedeAdministrar) { <button class="btn btn-primary" type="button" (click)="nuevo()">Registrar cliente</button> }
+  </div>
+  @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+  @if (exito) { <div class="alert alert-success" role="status">{{ exito }}</div> }
+  @if (formularioAbierto) {
+    <section class="card mb-4"><div class="card-header"><h3 class="h5 mb-0">{{ seleccionado ? 'Editar cliente' : 'Nuevo cliente' }}</h3></div>
+      <form class="card-body" (ngSubmit)="guardar()" #form="ngForm">
+        <div class="row g-3">
+          <div class="col-md-3"><label class="form-label" for="tipoDoc">Tipo de documento</label><select id="tipoDoc" class="form-select" name="tipoDocumento" [(ngModel)]="cliente.tipoDocumento" required><option value="CC">Cédula</option><option value="CE">Cédula extranjería</option><option value="TI">Tarjeta identidad</option><option value="PAS">Pasaporte</option><option value="NIT">NIT</option></select></div>
+          <div class="col-md-3"><label class="form-label" for="numeroDoc">Número de documento</label><input id="numeroDoc" class="form-control" name="numeroDocumento" [(ngModel)]="cliente.numeroDocumento" maxlength="20" required></div>
+          <div class="col-md-3"><label class="form-label" for="nombres">Nombres</label><input id="nombres" class="form-control" name="nombres" [(ngModel)]="cliente.nombres" maxlength="100" required></div>
+          <div class="col-md-3"><label class="form-label" for="apellidos">Apellidos</label><input id="apellidos" class="form-control" name="apellidos" [(ngModel)]="cliente.apellidos" maxlength="100" required></div>
+          <div class="col-md-3"><label class="form-label" for="fechaNac">Fecha de nacimiento</label><input id="fechaNac" class="form-control" type="date" name="fechaNacimiento" [(ngModel)]="cliente.fechaNacimiento" [max]="hoy" required></div>
+          <div class="col-md-3"><label class="form-label" for="genero">Género</label><select id="genero" class="form-select" name="genero" [(ngModel)]="cliente.genero"><option value="">Sin especificar</option><option value="F">Femenino</option><option value="M">Masculino</option><option value="O">Otro</option></select></div>
+          <div class="col-md-3"><label class="form-label" for="telefono">Teléfono</label><input id="telefono" class="form-control" name="telefono" [(ngModel)]="cliente.telefono" maxlength="20"></div>
+          <div class="col-md-3"><label class="form-label" for="direccion">Dirección</label><input id="direccion" class="form-control" name="direccion" [(ngModel)]="cliente.direccion"></div>
+          @if (seleccionado) { <div class="col-12 form-check form-switch ms-2"><input id="clienteActivo" class="form-check-input" type="checkbox" name="activo" [(ngModel)]="cliente.activo"><label class="form-check-label" for="clienteActivo">Cliente activo</label></div> }
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4"><button class="btn btn-outline-secondary" type="button" (click)="formularioAbierto=false">Cancelar</button><button class="btn btn-primary" type="submit" [disabled]="form.invalid || guardando">{{ guardando ? 'Guardando…' : 'Guardar cliente' }}</button></div>
+      </form>
+    </section>
+  }
+  <section class="card"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2"><h3 class="h5 mb-0">Clientes</h3><input class="form-control search" aria-label="Buscar cliente" placeholder="Buscar por nombre o documento" [(ngModel)]="filtro"></div>
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Documento</th><th>Nombre</th><th>Teléfono</th><th>Estado</th>@if (puedeAdministrar) { <th>Acciones</th> }</tr></thead><tbody>
+      @if (cargando) { <tr><td colspan="5" class="text-center py-4">Cargando clientes…</td></tr> }
+      @else if (!listaFiltrada.length) { <tr><td colspan="5" class="text-center text-muted py-4">No hay clientes para mostrar.</td></tr> }
+      @else { @for (c of listaFiltrada; track c.id) { <tr><td>{{ c.tipoDocumento }} {{ c.numeroDocumento }}</td><td>{{ c.nombres }} {{ c.apellidos }}</td><td>{{ c.telefono || '—' }}</td><td><span class="badge" [class.text-bg-success]="c.activo" [class.text-bg-secondary]="!c.activo">{{ c.activo ? 'Activo' : 'Inactivo' }}</span></td>@if (puedeAdministrar) { <td><button class="btn btn-sm btn-outline-primary" type="button" (click)="editar(c)">Editar</button></td> }</tr> } }
+    </tbody></table></div>
+  </section>
+</div>
