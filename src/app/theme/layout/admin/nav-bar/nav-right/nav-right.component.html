@@ -52,13 +52,13 @@
               <img class="img-radius" src="assets/images/user/avatar-3.jpg" alt="Generic placeholder image" />
               <div class="flex-grow-1">
                 <p>
-                  <strong>Sara Soudein</strong>
+                  <strong>{{ username }}</strong>
                   <span class="n-time text-muted">
                     <i class="icon feather icon-clock m-r-10"></i>
                     30 min
                   </span>
                 </p>
-                <p>currently login</p>
+                <p>{{ role }}</p>
               </div>
             </div>
           </li>
@@ -77,8 +77,8 @@
       <div class="dropdown-menu dropdown-menu-end profile-notification" ngbDropdownMenu>
         <div class="pro-head">
           <img src="assets/images/user/avatar-1.jpg" class="img-radius" alt="User-Profile-Image" />
-          <span>John Doe</span>
-          <a href="javascript:" class="dud-logout" title="Logout">
+          <span>{{ username }}</span>
+          <a href="javascript:" class="dud-logout" title="Cerrar sesión" aria-label="Cerrar sesión" (click)="cerrarSesion()">
             <i class="feather icon-log-out"></i>
           </a>
         </div>

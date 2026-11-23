@@ -1,0 +1,135 @@
+// Colores por estado de la cita (Req. 2.1: identificar visualmente las citas según su estado).
+$programada: #3f6ad8;
+$confirmada: #0d9488;
+$atendida: #16a34a;
+$cancelada: #9ca3af;
+
+.estado-programada { background: rgba($programada, .14); border-left: 3px solid $programada; color: #1e3f91; }
+.estado-confirmada { background: rgba($confirmada, .14); border-left: 3px solid $confirmada; color: #075e56; }
+.estado-atendida   { background: rgba($atendida, .14);   border-left: 3px solid $atendida;   color: #0d6630; }
+.estado-cancelada  { background: rgba($cancelada, .18);  border-left: 3px solid $cancelada;  color: #4b5563; text-decoration: line-through; }
+
+.badge.estado-programada, .badge.estado-confirmada, .badge.estado-atendida, .badge.estado-cancelada {
+  border-left: 0;
+  text-decoration: none;
+}
+
+.leyenda {
+  border: 1px solid #dee2e6;
+  background: #fff;
+  &.activa { border-color: #212529; font-weight: 600; }
+  .punto {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    border-left: 0;
+    &.estado-programada { background: $programada; }
+    &.estado-confirmada { background: $confirmada; }
+    &.estado-atendida { background: $atendida; }
+    &.estado-cancelada { background: $cancelada; }
+  }
+}
+
+// ---------- Vista mes ----------
+.mes {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+}
+.mes-cabecera {
+  padding: 6px;
+  font-weight: 600;
+  text-align: center;
+  background: #f8f9fa;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.mes-dia {
+  min-height: 108px;
+  padding: 4px;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  &.fuera { background: #fafafa; color: #adb5bd; }
+  &.hoy .numero { background: $programada; color: #fff; border-radius: 50%; }
+  .numero { width: 26px; height: 26px; line-height: 26px; text-align: center; text-decoration: none; color: inherit; font-weight: 600; }
+}
+.evento-mes {
+  border: 0;
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 1px 4px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ---------- Vista semana / día ----------
+.grilla-scroll {
+  overflow: auto;
+  max-height: 70vh;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+.grilla {
+  display: grid;
+  grid-template-columns: 56px repeat(var(--columnas), minmax(120px, 1fr));
+  min-width: calc(56px + var(--columnas) * 120px);
+}
+.esquina, .cabecera-dia {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 6px;
+  text-align: center;
+  font-weight: 600;
+}
+.cabecera-dia.hoy { color: $programada; }
+.columna-horas .hora {
+  font-size: 11px;
+  color: #6c757d;
+  text-align: right;
+  padding-right: 6px;
+  border-bottom: 1px solid #f1f3f5;
+  transform: translateY(-7px);
+}
+.columna-dia {
+  position: relative;
+  border-left: 1px solid #e5e7eb;
+  .franja {
+    border-bottom: 1px solid #f1f3f5;
+    cursor: pointer;
+    &:hover { background: rgba($programada, .06); }
+  }
+}
+.evento {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  border: 0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 12px;
+  text-align: left;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+  &:hover { filter: brightness(.95); }
+}
+
+.antecedentes { max-height: 55vh; overflow: auto; }
+.pre { white-space: pre-line; }
+
+@media (max-width: 576px) {
+  .mes-dia { min-height: 72px; }
+  .evento-mes { font-size: 10px; }
+}

@@ -1,0 +1,32 @@
+.billing-page { padding-block: 1rem 2rem; }
+.eyebrow { margin: 0 0 .35rem; color: #6574cd; font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+
+.invoice-modal-backdrop { position: fixed; inset: 0; z-index: 1080; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(15, 23, 42, .62); }
+.invoice-modal { display: flex; width: min(100%, 1120px); max-height: calc(100vh - 2rem); border: 0; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .28); }
+.tariff-modal { width: min(100%, 1320px); }
+.invoice-modal-header, .invoice-modal-footer { flex: 0 0 auto; }
+.invoice-modal-body { overflow: auto; }
+.invoice-paper { background: #fff; }
+
+@media (max-width: 576px) {
+  .invoice-modal-backdrop { padding: .4rem; }
+  .invoice-modal { max-height: calc(100vh - .8rem); }
+  .invoice-modal-footer { flex-wrap: wrap; }
+  .invoice-modal-footer .btn { flex: 1 1 auto; }
+}
+
+@media print {
+  @page { size: A4; margin: 15mm; }
+  body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .invoice-print-area, .invoice-print-area * { visibility: visible !important; }
+  .invoice-modal-backdrop { position: static !important; display: block !important; padding: 0 !important; background: none !important; }
+  .invoice-modal { position: static !important; display: block !important; width: 100% !important; max-height: none !important; overflow: visible !important; border: 0 !important; box-shadow: none !important; }
+  .invoice-modal-header, .invoice-modal-footer { display: none !important; }
+  .invoice-modal-body { overflow: visible !important; }
+  .invoice-print-area { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; border: 0 !important; box-shadow: none !important; }
+  .table-responsive { overflow: visible !important; }
+  .invoice-print-area .no-print { display: none !important; }
+  .invoice-paper { padding: 0 !important; }
+  .invoice-paper .table { font-size: 10pt; }
+}

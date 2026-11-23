@@ -1,66 +1,95 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
+import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { MascotaRequest, MascotaServiceService } from './service/mascota-service.service';
+import { MascotaService } from './service/mascota.service';
 import { Mascota } from 'src/app/models/mascota';
-import { Cliente } from 'src/app/models/cliente';
-import { Raza } from 'src/app/models/raza';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import Swal from 'sweetalert2';
-import { Modal } from 'bootstrap';
-import { forkJoin } from 'rxjs';
+import { Raza } from 'src/app/models/raza';
+import { RazaService } from './service/raza.service';
+import { ClienteService } from '../cliente/service/cliente.service';
+import { Cliente } from 'src/app/models/cliente';
+
+type ColumnaOrden = 'nombre' | 'especie' | 'raza' | 'edad' | 'cliente' | 'fechaRegistro' | 'estado';
+type ModalBootstrap = { show(): void; hide(): void };
+type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => ModalBootstrap } };
 
 @Component({
   selector: 'app-mascota',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgbTooltipModule],
   templateUrl: './mascota.component.html',
   styleUrl: './mascota.component.scss'
 })
-export class MascotaComponent implements OnInit {
+export class MascotaComponent {
   // Variables para el modal.
-  modalInstance: Modal | null = null;
+  modalInstance: ModalBootstrap | null = null;
   titleModal: string = "";
   modoFormulario: string = "";
   titleBoton: string = "";
 
-  // Variables para la paginación y búsqueda en la datatable.
+  // Variables para la paginación, ordenamiento y búsqueda en la datatable.
   listMascotas: Mascota[] = [];
-  listRazas: Raza[] = [];
-  listClientes: Cliente[] = [];
   terminoBusqueda = '';
   paginaActual = 1;
-  readonly registrosPorPagina = 10;
-  columnaOrden = 'nombre';
+  readonly registrosPorPagina = 5;
+  columnaOrden: ColumnaOrden = 'nombre';
   direccionOrden: 'asc' | 'desc' = 'asc';
-  cargandoMascotas = false;
-  modalAbierto = false;
+
+  listRazas: Raza[] = [];
+  listClientes: Cliente[] = [];
 
   // Formulario para crear o editar mascota.
   form!: FormGroup;
   mascotaSelected: Mascota | null = null;
-  cargandoCatalogos = false;
-  guardando = false;
-  mensajeError = '';
-  mensajeErrorListado = '';
-  mensajeErrorCatalogos = '';
+  enviando = false;
+  respuestaError = '';
 
-  constructor(private readonly mascotaService: MascotaServiceService,
-    private readonly formBuilder: FormBuilder) {}
-
-  ngOnInit(): void {
-    this.inicializarFormulario();
+  constructor(private readonly mascotaService: MascotaService,
+    private readonly razaService: RazaService,
+    private readonly clienteService: ClienteService,
+    private readonly formBuilder: FormBuilder) {
     this.listar();
-    this.cargarCatalogos();
+    this.listarRazas();
+    this.inicializarFormulario();
+    this.listarClientes();
+  }
+
+  listarClientes() {
+    this.clienteService.listarClientes()
+      .subscribe({
+        next: (data) => {
+          this.listClientes = data;
+        },
+        error: (error) => {
+          console.error('Error al obtener los clientes:', error);
+        }
+      });
+  }
+
+  /**
+   * Metodo que lista las razas para el combo.
+   */
+  listarRazas() {
+    this.razaService.listarRazas()
+      .subscribe({
+        next: (data) => {
+          this.listRazas = data;
+        },
+        error: (error) => {
+          console.error('Error al obtener las razas:', error);
+        }
+      });
   }
 
   // Metodo ue permite inicializar el formulario con sus controles y validaciones.
   inicializarFormulario() {
     this.form = this.formBuilder.group({
-      nombreMascota: ['', [Validators.required, Validators.pattern(/\S/)]],
-      razaId: ['', Validators.required],
-      edad: ['', [Validators.required, Validators.min(0)]],
-      clienteId: ['', Validators.required]
+      nombreMascota: ['', Validators.required],
+      raza: [null, Validators.required],
+      edad: ['', [Validators.required, Validators.min(1)]],
+      cliente: ['', Validators.required]      
     });
   }
 
@@ -75,12 +104,19 @@ export class MascotaComponent implements OnInit {
    */
   get mascotasFiltradas(): Mascota[] {
     const termino = this.normalizarTexto(this.terminoBusqueda.trim());
-    if (!termino) {
-      return this.listMascotas;
-    }
+    const filtradas = this.listMascotas.filter((mascota) => {
+      if (!termino) {
+        return true;
+      }
+      if (termino === 'activo' || termino === 'true') {
+        return mascota.activo === true;
+      }
+      if (termino === 'inactivo' || termino === 'false') {
+        return mascota.activo === false;
+      }
 
-    return this.listMascotas.filter((mascota) => {
       const valores = [
+        this.obtenerEstado(mascota),
         mascota.nombreMascota,
         mascota.raza?.especie,
         mascota.raza?.nombre,
@@ -95,6 +131,49 @@ export class MascotaComponent implements OnInit {
         this.normalizarTexto(String(valor ?? '')).includes(termino)
       );
     });
+
+    return [...filtradas].sort((mascotaA, mascotaB) => {
+      const valorA = this.obtenerValorOrden(mascotaA, this.columnaOrden);
+      const valorB = this.obtenerValorOrden(mascotaB, this.columnaOrden);
+      const comparacion = typeof valorA === 'number' && typeof valorB === 'number'
+        ? valorA - valorB
+        : String(valorA).localeCompare(String(valorB), 'es', { numeric: true, sensitivity: 'base' });
+
+      return this.direccionOrden === 'asc' ? comparacion : -comparacion;
+    });
+  }
+
+  private obtenerValorOrden(mascota: Mascota, columna: ColumnaOrden): string | number {
+    switch (columna) {
+      case 'nombre':
+        return mascota.nombreMascota ?? '';
+      case 'especie':
+        return mascota.raza?.especie ?? '';
+      case 'raza':
+        return mascota.raza?.nombre ?? '';
+      case 'edad':
+        return mascota.edad ?? 0;
+      case 'cliente':
+        return `${mascota.cliente?.nombres ?? ''} ${mascota.cliente?.apellidos ?? ''}`;
+      case 'fechaRegistro':
+        return mascota.fechaRegistro ? new Date(mascota.fechaRegistro).getTime() : 0;
+      case 'estado':
+        return this.obtenerEstado(mascota);
+    }
+  }
+
+  obtenerEstado(mascota: Mascota): string {
+    return mascota.activo == null ? 'No informado' : mascota.activo ? 'Activo' : 'Inactivo';
+  }
+
+  ordenarPor(columna: ColumnaOrden): void {
+    if (this.columnaOrden === columna) {
+      this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.columnaOrden = columna;
+      this.direccionOrden = 'asc';
+    }
+    this.paginaActual = 1;
   }
 
   get mascotasPaginadas(): Mascota[] {
@@ -110,90 +189,23 @@ export class MascotaComponent implements OnInit {
     return Array.from({ length: this.totalPaginas }, (_, indice) => indice + 1);
   }
 
-  get razasDisponibles(): Raza[] {
-    return this.listRazas.filter((raza) => this.obtenerIdRaza(raza) !== undefined);
-  }
-
-  get clientesDisponibles(): Cliente[] {
-    return this.listClientes.filter((cliente) => this.obtenerIdCliente(cliente) !== undefined);
-  }
-
-  ordenarPor(columna: string): void {
-    if (this.columnaOrden === columna) {
-      this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.columnaOrden = columna;
-      this.direccionOrden = 'asc';
-    }
-
-    this.listMascotas = [...this.listMascotas].sort((a, b) => {
-      const valorA = this.obtenerValorOrden(a, columna);
-      const valorB = this.obtenerValorOrden(b, columna);
-      const comparacion = valorA.localeCompare(valorB, undefined, {
-        sensitivity: 'base',
-        numeric: true
-      });
-
-      return this.direccionOrden === 'asc' ? comparacion : -comparacion;
-    });
-  }
-
-  private obtenerValorOrden(mascota: Mascota, columna: string): string {
-    switch (columna) {
-      case 'nombre':
-        return mascota.nombreMascota ?? '';
-      case 'especie':
-        return mascota.raza?.especie ?? '';
-      case 'raza':
-        return mascota.raza?.nombre ?? '';
-      case 'edad':
-        return String(mascota.edad ?? 0);
-      case 'cliente':
-        return `${mascota.cliente?.nombres ?? ''} ${mascota.cliente?.apellidos ?? ''}`.trim();
-      case 'fechaRegistro':
-        return mascota.fechaRegistro ? new Date(mascota.fechaRegistro).toISOString() : '';
-      default:
-        return '';
-    }
-  }
-
   /**
    * Metodo que permite listar las mascotas registradas en la base de datos y mostrarlas en la tabla.
    */
   listar() {
-    this.cargandoMascotas = true;
-    this.mensajeErrorListado = '';
-    this.mascotaService.getMascotas()
-      .subscribe({
-        next: (data) => {
-          this.listMascotas = data;
-          this.paginaActual = 1;
-          this.cargandoMascotas = false;
-        },
-        error: (error: unknown) => {
-          this.cargandoMascotas = false;
-          this.mensajeErrorListado = this.obtenerMensajeError(error, 'No fue posible cargar las mascotas.');
+    this.mascotaService.listarMascotas()
+      .subscribe(
+        {
+          next: (data) => {
+            console.log(data);
+            this.listMascotas = data;
+            this.paginaActual = 1;
+          },
+          error: (error) => {
+            console.error('Error al obtener las mascotas:', error);
+          }
         }
-      });
-  }
-
-  cargarCatalogos(): void {
-    this.cargandoCatalogos = true;
-    this.mensajeErrorCatalogos = '';
-    forkJoin({
-      razas: this.mascotaService.getRazas(),
-      clientes: this.mascotaService.getClientes()
-    }).subscribe({
-      next: ({ razas, clientes }) => {
-        this.listRazas = razas;
-        this.listClientes = clientes;
-        this.cargandoCatalogos = false;
-      },
-      error: (error: unknown) => {
-        this.cargandoCatalogos = false;
-        this.mensajeErrorCatalogos = this.obtenerMensajeError(error, 'No fue posible cargar las razas y los clientes.');
-      }
-    });
+      );
   }
 
   // Metodo que actualiza el termino de busqueda y reinicia la pagina actual a 1.
@@ -217,12 +229,27 @@ export class MascotaComponent implements OnInit {
       .replace(/[\u0300-\u036f]/g, '');
   }
 
+  compararRazas(razaA: Raza | null, razaB: Raza | null): boolean {
+    return razaA === razaB || (
+      razaA?.nombre === razaB?.nombre && razaA?.especie === razaB?.especie
+    );
+  }
+
+  compararClientes(clienteA: Cliente | null, clienteB: Cliente | null): boolean {
+    return clienteA === clienteB || (
+      clienteA?.tipoDocumento === clienteB?.tipoDocumento && clienteA?.numeroDocumento === clienteB?.numeroDocumento
+    );
+  }
+
+  /**
+   * Metodos para la gestion de mascotas (crear, editar, guardar).
+   */
+
   // Evento para abrir el modal de crear o editar mascota, dependiendo del modo recibido.
   nuevaMascota(modo: string) {
     this.titleModal = modo === 'C' ? 'Crear Mascota' : 'Editar Mascota';
     this.modoFormulario = modo;
     this.mascotaSelected = null;
-    this.mensajeError = '';
     this.resetFormulario();
     this.openModal(modo);
   }
@@ -231,62 +258,74 @@ export class MascotaComponent implements OnInit {
     this.form.reset();
     this.form.markAsPristine();
     this.form.markAsUntouched();
+    this.respuestaError = '';
   }
 
   abrirEdicion(mascota: Mascota) {
     this.mascotaSelected = mascota;
     this.modoFormulario = 'E';
-    this.mensajeError = '';
     this.form.patchValue({
       nombreMascota: mascota.nombreMascota,
-      razaId: mascota.razaId ?? this.obtenerIdRaza(mascota.raza),
+      raza: mascota.raza ?? null,
       edad: mascota.edad,
-      clienteId: mascota.clienteId ?? this.obtenerIdCliente(mascota.cliente)
+      cliente: mascota.cliente ?? null
     });
     this.openModal(this.modoFormulario);
   }
 
-  guardar(): void {
-    if (this.form.invalid || this.cargandoCatalogos || this.guardando) {
+  /**
+   * 
+   * @returns Acción realizada sobre la mascota (crear o actualizar).
+   */
+  guardarMascota() {
+    if (this.form.invalid || this.enviando) {
       this.form.markAllAsTouched();
       return;
     }
 
-    if (this.modoFormulario === 'E' && this.mascotaSelected?.mascotaId === undefined) {
-      this.mensajeError = 'No se encontró el identificador de la mascota que se desea actualizar.';
-      return;
-    }
-
-    const values = this.form.getRawValue();
-    const request: MascotaRequest = {
-      nombreMascota: String(values.nombreMascota).trim(),
-      edad: Number(values.edad),
-      razaId: Number(values.razaId),
-      clienteId: Number(values.clienteId)
+    const valores = this.form.getRawValue();    
+    const mascota: Mascota = {
+      mascotaId: this.mascotaSelected?.mascotaId,
+      nombre: valores.nombreMascota,
+      edad: Number(valores.edad),
+      razaId: valores.raza.razaId,
+      clienteId: valores.cliente.id 
     };
 
-    if (this.mascotaSelected?.mascotaId !== undefined) {
-      request.mascotaId = this.mascotaSelected.mascotaId;
-    }
+    this.enviando = true;
+    this.respuestaError = ''; 
+    const solicitud = this.modoFormulario === 'C'
+      ? this.mascotaService.crearMascota(mascota)
+      : this.mascotaService.actualizarMascota(mascota);
 
-    this.guardando = true;
-    this.mensajeError = '';
-    const request$ = this.modoFormulario === 'C'
-      ? this.mascotaService.guardarMascota(request)
-      : this.mascotaService.actualizarMascota(request);
-
-    request$.subscribe({
-      next: (response) => {
-        this.guardando = false;
+    solicitud.subscribe({
+      next: (respuesta) => {
+        this.enviando = false;
+        const mensaje = this.obtenerMensajeRespuesta(
+          respuesta,
+          this.modoFormulario === 'C' ? 'La mascota fue creada correctamente.' : 'La mascota fue actualizada correctamente.'
+        );
         this.closeModal();
         this.listar();
-        void Swal.fire('¡Listo!', response.message ?? 'La mascota se guardó correctamente.', 'success');
+        Swal.fire('Operación exitosa', mensaje, 'success');
       },
-      error: (error: unknown) => {
-        this.guardando = false;
-        this.mensajeError = this.obtenerMensajeError(error, 'No fue posible guardar la mascota.');
+      error: (error) => {
+        this.enviando = false;
+        console.error('Error al guardar la mascota:', error);
+        Swal.fire('Error', error.message, 'error');
       }
     });
+  }
+
+  private obtenerMensajeRespuesta(respuesta: unknown, mensajePredeterminado: string): string {
+    if (respuesta && typeof respuesta === 'object') {
+      const cuerpo = respuesta as { mensaje?: unknown; message?: unknown };
+      const mensaje = cuerpo.mensaje ?? cuerpo.message;
+      if (typeof mensaje === 'string') {
+        return mensaje;
+      }
+    }
+    return mensajePredeterminado;
   }
 
   closeModal() {
@@ -294,25 +333,6 @@ export class MascotaComponent implements OnInit {
       this.modalInstance.hide();
     }
     this.resetFormulario();
-    this.mascotaSelected = null;
-  }
-
-  private obtenerIdRaza(raza?: Raza): number | undefined {
-    const id = raza?.razaId ?? raza?.id;
-    if (id === undefined || id === null || id === '') {
-      return undefined;
-    }
-    const numericId = Number(id);
-    return Number.isFinite(numericId) ? numericId : undefined;
-  }
-
-  private obtenerIdCliente(cliente?: Cliente): number | undefined {
-    const id = cliente?.clienteId ?? cliente?.id;
-    if (id === undefined || id === null || id === '') {
-      return undefined;
-    }
-    const numericId = Number(id);
-    return Number.isFinite(numericId) ? numericId : undefined;
   }
 
   openModal(modo: string) {
@@ -322,25 +342,10 @@ export class MascotaComponent implements OnInit {
     const modalElement = document.getElementById('modalCrearMascota');
     if (modalElement) {
       // Verificar si ya existe una instancia del modal
-      if (!this.modalInstance) {
-        this.modalInstance = new Modal(modalElement);
-        modalElement.addEventListener('hidden.bs.modal', () => {
-          this.modalAbierto = false;
-          this.resetFormulario();
-          this.mascotaSelected = null;
-        });
-      }
-      this.modalAbierto = true;
-      this.modalInstance.show();
+      this.modalInstance ??= new (window as unknown as WindowBootstrap).bootstrap.Modal(modalElement);
+        this.modalInstance.show();
     }
   }
 
-  private obtenerMensajeError(error: unknown, mensajePorDefecto: string): string {
-    if (error && typeof error === 'object') {
-      const respuesta = error as { error?: { message?: string; error?: string } };
-      return respuesta.error?.message ?? respuesta.error?.error ?? mensajePorDefecto;
-    }
-    return mensajePorDefecto;
-  }
 
 }

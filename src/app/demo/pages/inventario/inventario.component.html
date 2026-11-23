@@ -1,0 +1,101 @@
+<main class="container-fluid inventory-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Operación clínica</p>
+      <h1>Inventario</h1>
+      <p class="text-muted mb-0">Existencias, lotes, vencimientos y movimientos.</p>
+    </div>
+    <button type="button" class="btn btn-outline-primary" (click)="cargar()" [disabled]="cargando">Actualizar</button>
+  </header>
+
+  @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+
+  <section class="card mb-4" aria-labelledby="inventory-list-title">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <h2 id="inventory-list-title" class="h5 mb-0">Productos y existencias</h2>
+      <label class="d-flex align-items-center gap-2">Estado
+        <select class="form-select form-select-sm" [(ngModel)]="estado" (ngModelChange)="cargar()">
+          <option value="TODOS">Todos</option><option value="DISPONIBLE">Disponibles</option>
+          <option value="BAJO">Stock bajo</option><option value="AGOTADO">Agotados</option>
+          <option value="POR_VENCER">Por vencer</option><option value="INACTIVO">Inactivos</option>
+        </select>
+      </label>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>Código</th><th>Producto</th><th>Tipo</th><th>Invima</th><th>Existencia</th><th>Dispensable</th><th>Mínimo</th><th>Vence próximo</th><th>Estado</th></tr></thead>
+        <tbody>
+          @for (item of items; track item.medicamentoId) {
+            <tr (click)="seleccionar(item)" [class.table-primary]="seleccionado?.medicamentoId === item.medicamentoId" tabindex="0">
+              <td>{{ item.codigo }}</td><td>{{ item.nombre }}<small class="d-block text-muted">{{ item.presentacion }}</small></td>
+              <td>{{ item.tipoProducto }}</td><td>{{ item.registroInvima || 'No aplica' }}</td>
+              <td>{{ item.existenciaTotal }}</td><td>{{ item.existenciaDispensable }}</td><td>{{ item.stockMinimo }}</td>
+              <td>{{ item.vencimientoMasCercano || '—' }} @if (item.proximoAVencer) { <span class="badge text-bg-warning">Próximo</span> }</td>
+              <td><span class="badge" [class.text-bg-success]="item.estadoStock === 'DISPONIBLE'" [class.text-bg-warning]="item.estadoStock === 'BAJO'" [class.text-bg-danger]="item.estadoStock === 'AGOTADO'">{{ item.estadoStock }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="text-center text-muted py-4">{{ cargando ? 'Cargando inventario…' : 'No hay productos para mostrar.' }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="row g-4 mb-4">
+    <div class="col-xl-5">
+      <section class="card h-100">
+        <div class="card-header"><h2 class="h5 mb-0">Registrar ingreso por lote</h2></div>
+        <form class="card-body row g-3" (ngSubmit)="registrarIngreso()">
+          <div class="col-12"><label class="form-label" for="lot-product">Producto</label>
+            <select id="lot-product" class="form-select" required [(ngModel)]="lote.medicamentoId" name="medicamentoId">
+              <option [ngValue]="0" disabled>Selecciona un producto</option>
+              @for (medicamento of medicamentos; track medicamento.id) { <option [ngValue]="medicamento.id">{{ medicamento.nombre }}</option> }
+            </select>
+          </div>
+          <div class="col-md-6"><label class="form-label" for="lot-code">Código de lote</label><input id="lot-code" class="form-control" required maxlength="80" [(ngModel)]="lote.codigoLote" name="codigoLote"></div>
+          <div class="col-md-6"><label class="form-label" for="lot-expiry">Fecha de vencimiento</label><input id="lot-expiry" type="date" class="form-control" required [(ngModel)]="lote.fechaVencimiento" name="fechaVencimiento"></div>
+          <div class="col-md-6"><label class="form-label" for="lot-quantity">Cantidad recibida</label><input id="lot-quantity" type="number" min="1" class="form-control" required [(ngModel)]="lote.cantidad" name="cantidad"></div>
+          <div class="col-md-6"><label class="form-label" for="lot-cost">Costo por unidad</label><input id="lot-cost" type="number" min="0" step="0.01" class="form-control" required [(ngModel)]="lote.costoUnitario" name="costoUnitario"></div>
+          <div class="col-12"><label class="form-label" for="lot-note">Detalle</label><input id="lot-note" class="form-control" maxlength="255" [(ngModel)]="lote.detalle" name="detalle"></div>
+          <div class="col-12"><button class="btn btn-primary" type="submit" [disabled]="enviando">Registrar ingreso</button></div>
+        </form>
+      </section>
+    </div>
+    <div class="col-xl-7">
+      <section class="card h-100">
+        <div class="card-header"><h2 class="h5 mb-0">Importación masiva CSV o Excel</h2></div>
+        <div class="card-body">
+          <p class="text-muted">Carga más de 50 filas; valida el archivo y revisa los errores antes de confirmar.</p>
+          <div class="d-flex flex-wrap gap-2 align-items-end">
+            <label class="form-label flex-grow-1">Archivo CSV o XLSX<input type="file" class="form-control" accept=".csv,.xlsx" (change)="seleccionarArchivo($event)"></label>
+            <button type="button" class="btn btn-outline-primary" (click)="previsualizar()" [disabled]="!archivo || enviando">Vista previa</button>
+          </div>
+          @if (resultado) {
+            <div class="alert alert-info mt-3 mb-2">Filas: {{ resultado.totalFilas }} · Válidas: {{ resultado.filasValidas }} · Rechazadas: {{ resultado.filasRechazadas }}</div>
+            <div class="table-responsive result-list"><table class="table table-sm"><thead><tr><th>Fila</th><th>Producto</th><th>Lote</th><th>Estado</th><th>Detalle</th></tr></thead>
+              <tbody>@for (fila of resultado.filas; track fila.fila) { <tr><td>{{ fila.fila }}</td><td>{{ fila.codigoProducto }}</td><td>{{ fila.codigoLote }}</td><td>{{ fila.estado }}</td><td>{{ fila.mensaje }}</td></tr> }</tbody>
+            </table></div>
+            @if (!resultado.importacionId && resultado.filasValidas > 0) { <button type="button" class="btn btn-success" (click)="confirmarImportacion()" [disabled]="enviando">Confirmar filas válidas</button> }
+            @if (resultado.importacionId) { <p class="mb-0 text-success">Importación registrada: {{ resultado.importacionId }}.</p> }
+          }
+        </div>
+      </section>
+    </div>
+  </div>
+
+  @if (seleccionado) {
+    <section class="card mb-4">
+      <div class="card-header"><h2 class="h5 mb-0">Lotes y movimientos · {{ seleccionado.nombre }}</h2></div>
+      <div class="card-body row g-4">
+        <div class="col-xl-6"><h3 class="h6">Lotes</h3><div class="table-responsive"><table class="table table-sm"><thead><tr><th>Lote</th><th>Vencimiento</th><th>Disponible</th><th>Costo</th><th>Estado</th></tr></thead><tbody>
+          @for (lote of lotes; track lote.id) { <tr><td>{{ lote.codigoLote }}</td><td>{{ lote.fechaVencimiento }}</td><td>{{ lote.cantidadDisponible }}</td><td>{{ lote.costoUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td>{{ lote.estado }}</td> }
+          @empty { <tr><td colspan="5">Sin lotes registrados.</td></tr> }
+        </tbody></table></div></div>
+        <div class="col-xl-6"><h3 class="h6">Movimientos</h3><div class="table-responsive"><table class="table table-sm"><thead><tr><th>Fecha</th><th>Tipo</th><th>Lote</th><th>Cantidad</th><th>Responsable</th><th>Fórmula</th></tr></thead><tbody>
+          @for (movimiento of movimientos; track movimiento.id) { <tr><td>{{ movimiento.fecha | date:'short' }}</td><td>{{ movimiento.tipo }}</td><td>{{ movimiento.codigoLote }}</td><td>{{ movimiento.cantidad }}</td><td>{{ movimiento.usuario }}</td><td>{{ movimiento.formulaId || '—' }}</td> }
+          @empty { <tr><td colspan="6">Sin movimientos registrados.</td></tr> }
+        </tbody></table></div></div>
+      </div>
+    </section>
+  }
+</main>
