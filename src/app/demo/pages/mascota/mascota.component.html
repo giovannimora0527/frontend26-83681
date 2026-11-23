@@ -9,8 +9,7 @@
                 <div class="col col-md-3 text-end">
                     <button
                         class="btn btn-md btn-outline-primary d-inline-flex align-items-center justify-content-center"
-                        (click)="nuevaMascota('C')" 
-                        ngbTooltip="Agregar nueva mascota" tooltipClass="tooltip-info" triggers="hover focus" placement="top" container="body">
+                        (click)="nuevaMascota('C')" title="Agregar mascota">
                         <i class="fa fa-plus" aria-hidden="true"></i>
                         &nbsp; Nuevo
                     </button>
@@ -18,11 +17,20 @@
             </div>
         </div>
         <div class="card-body">
+<<<<<<< HEAD
+=======
+            <div *ngIf="mensajeLista" class="alert mb-3"
+                [class.alert-success]="mensajeLista.tipo === 'success'"
+                [class.alert-danger]="mensajeLista.tipo === 'danger'" role="alert">
+                {{ mensajeLista.texto }}
+            </div>
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
             <div class="row">
                 <div class="table table-responsive table-condensed col col-md-12">
                     <table class="table table-stripped table-condensed table-responsive">
                         <thead>
                             <tr>
+<<<<<<< HEAD
                                 <th class="text-center"
                                     [attr.aria-sort]="columnaOrden === 'nombre' ? (direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none'">
                                     <button type="button" class="btn btn-link p-0 text-dark text-decoration-none"
@@ -86,19 +94,38 @@
                                             aria-hidden="true"></i>
                                     </button>
                                 </th>
+=======
+                                <th class="text-center">Nombre</th>
+                                <th class="text-center">Especie</th>
+                                <th class="text-center">Raza</th>
+                                <th class="text-center">Edad</th>
+                                <th class="text-center">Cliente</th>
+                                <th class="text-center">Fecha de Registro</th>
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody *ngIf="listMascotas.length === 0">
+<<<<<<< HEAD
                             <tr>
                                 <td colspan="8" class="text-center">No hay mascotas registradas</td>
                             </tr>
                         </tbody>
                         <tbody *ngIf="listMascotas.length > 0 && mascotasFiltradas.length === 0">
+=======
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
                             <tr>
                                 <td colspan="8" class="text-center">No se encontraron mascotas</td>
                             </tr>
                         </tbody>
+<<<<<<< HEAD
+=======
+                        <tbody *ngIf="listMascotas.length > 0 && mascotasFiltradas.length === 0">
+                            <tr>
+                                <td colspan="7" class="text-center">No se encontraron mascotas</td>
+                            </tr>
+                        </tbody>
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
                         <tbody *ngIf="mascotasFiltradas.length > 0">
                             <tr *ngFor="let mascota of mascotasPaginadas">
                                 <td class="text-center">{{ mascota.nombreMascota }}</td>
@@ -109,6 +136,7 @@
                                 </td>
                                 <td class="text-center">{{ mascota.fechaRegistro | date:'yyyy-MM-dd HH:mm' }}</td>
                                 <td class="text-center">
+<<<<<<< HEAD
                                     <span class="badge" [class.bg-success]="mascota.activo === true"
                                         [class.bg-secondary]="mascota.activo !== true">{{ obtenerEstado(mascota) }}</span>
                                 </td>
@@ -116,6 +144,10 @@
                                     <button class="btn btn-outline-info d-inline-flex 
                                     align-items-center justify-content-center" (click)="abrirEdicion(mascota)"
                                     ngbTooltip="Editar" tooltipClass="tooltip-info" triggers="hover focus" placement="top" container="body">
+=======
+                                    <button class="btn btn-outline-info d-inline-flex
+                                    align-items-center justify-content-center" (click)="abrirEdicion(mascota)">
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
                                         <i class="fa fa-edit"></i>&nbsp;Editar</button>
                                 </td>
                             </tr>
@@ -152,8 +184,9 @@
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="modalCrearMascotaLabel">{{ titleModal }}</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                    (click)="closeModal()"></button>
+                (click)="closeModal()"></button>
             </div>
+<<<<<<< HEAD
             <form [formGroup]="form" (ngSubmit)="guardarMascota()">
                 <div class="modal-body">
                     <div class="row g-3">
@@ -202,6 +235,53 @@
                         (click)="closeModal()">Cerrar</button>
                     <button type="submit" class="btn btn-primary" [disabled]="enviando">
                         {{ enviando ? 'Enviando...' : titleBoton }}
+=======
+            <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+                <div class="modal-body">
+                    <div *ngIf="avisoFormulario" class="alert alert-danger" role="alert">{{ avisoFormulario }}</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="mas-nombre">Nombre de la mascota *</label>
+                            <input id="mas-nombre" type="text" class="form-control" formControlName="nombreMascota"
+                                maxlength="100"
+                                [class.is-invalid]="f['nombreMascota'].touched && f['nombreMascota'].invalid" />
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="mas-edad">Edad (años) *</label>
+                            <input id="mas-edad" type="number" class="form-control" formControlName="edad" min="0" max="60"
+                                [class.is-invalid]="f['edad'].touched && f['edad'].invalid" />
+                            <div class="invalid-feedback">Entre 0 y 60 años.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="mas-raza">Raza *</label>
+                            <select id="mas-raza" class="form-select" formControlName="razaId"
+                                [class.is-invalid]="f['razaId'].touched && f['razaId'].invalid">
+                                <option value="" disabled>Seleccione una raza</option>
+                                <option *ngFor="let raza of razas" [value]="raza.razaId">
+                                    {{ raza.nombre }} ({{ raza.especie }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="mas-cliente">Cliente (dueño) *</label>
+                            <select id="mas-cliente" class="form-select" formControlName="clienteId"
+                                [class.is-invalid]="f['clienteId'].touched && f['clienteId'].invalid">
+                                <option value="" disabled>Seleccione un cliente</option>
+                                <option *ngFor="let cliente of clientes" [value]="cliente.clienteId ?? cliente.id">
+                                    {{ cliente.nombres }} {{ cliente.apellidos }} ({{ cliente.numeroDocumento }})
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    (click)="closeModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="guardando">
+                        {{ guardando ? 'Guardando...' : titleBoton }}
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
                     </button>
                 </div>
             </form>

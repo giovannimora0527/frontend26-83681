@@ -1,9 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+<<<<<<< HEAD
 import { of } from 'rxjs';
 import { MascotaService } from './service/mascota.service';
 import { RazaService } from './service/raza.service';
 import { ClienteService } from '../cliente/service/cliente.service';
 import { Mascota } from 'src/app/models/mascota';
+=======
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
 
 import { MascotaComponent } from './mascota.component';
 
@@ -13,12 +16,16 @@ describe('MascotaComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+<<<<<<< HEAD
       imports: [MascotaComponent],
       providers: [
         { provide: MascotaService, useValue: { listarMascotas: () => of([]) } },
         { provide: RazaService, useValue: { listarRazas: () => of([]) } },
         { provide: ClienteService, useValue: { listarClientes: () => of([]) } }
       ]
+=======
+      imports: [MascotaComponent]
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
     })
     .compileComponents();
 

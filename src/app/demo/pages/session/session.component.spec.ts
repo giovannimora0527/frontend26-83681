@@ -5,8 +5,9 @@ import { MedicoService } from './service/medico.service';
 import { EspecializacionService } from '../especializacion/service/especializacion.service';
 import { Medico } from 'src/app/models/medico';
 
-import { MedicoComponent } from './medico.component';
+import { SessionComponent } from './session.component';
 
+<<<<<<< HEAD:src/app/demo/pages/medico/medico.component.spec.ts
 describe('MedicoComponent', () => {
   let component: MedicoComponent;
   let fixture: ComponentFixture<MedicoComponent>;
@@ -16,6 +17,11 @@ describe('MedicoComponent', () => {
     numeroDocumento: '12345', telefono: '3001112233', registroProfesional: 'RP-1003',
     especializacion: { id: 3, nombre: 'Cirugia' }
   };
+=======
+describe('SessionComponent', () => {
+  let component: SessionComponent;
+  let fixture: ComponentFixture<SessionComponent>;
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3:src/app/demo/pages/session/session.component.spec.ts
 
   beforeEach(async () => {
     medicoService = jasmine.createSpyObj<MedicoService>('MedicoService', ['listar', 'crearMedico', 'actualizarMedico']);
@@ -24,15 +30,19 @@ describe('MedicoComponent', () => {
     medicoService.actualizarMedico.and.returnValue(of({}));
     spyOn(Swal, 'fire');
     await TestBed.configureTestingModule({
+<<<<<<< HEAD:src/app/demo/pages/medico/medico.component.spec.ts
       imports: [MedicoComponent],
       providers: [
         { provide: MedicoService, useValue: medicoService },
         { provide: EspecializacionService, useValue: { listar: () => of([{ id: 3, nombre: 'Cirugia' }]) } }
       ]
+=======
+      imports: [SessionComponent]
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3:src/app/demo/pages/session/session.component.spec.ts
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(MedicoComponent);
+    fixture = TestBed.createComponent(SessionComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

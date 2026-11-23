@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -44,11 +46,15 @@ describe('CitaComponent', () => {
     medicoService.listarMedicosDisponiblesPorFecha.and.returnValue(of([medico]));
     await TestBed.configureTestingModule({
       imports: [CitaComponent],
+<<<<<<< HEAD
       providers: [
         { provide: CitaService, useValue: citaService },
         { provide: MascotaService, useValue: mascotaService },
         { provide: MedicoService, useValue: medicoService }
       ]
+=======
+      providers: [provideHttpClient(), provideHttpClientTesting()]
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
     })
     .compileComponents();
 

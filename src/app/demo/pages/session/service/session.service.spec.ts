@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
+<<<<<<< HEAD:src/app/demo/pages/medico/service/medico.service.spec.ts
 import { MedicoService } from './medico.service';
 import { environment } from 'src/environments/environment';
 
@@ -15,6 +16,16 @@ describe('MedicoService', () => {
     });
     service = TestBed.inject(MedicoService);
     http = TestBed.inject(HttpTestingController);
+=======
+import { SessionService } from './session.service';
+
+describe('SessionService', () => {
+  let service: SessionService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(SessionService);
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3:src/app/demo/pages/session/service/session.service.spec.ts
   });
 
   afterEach(() => http.verify());

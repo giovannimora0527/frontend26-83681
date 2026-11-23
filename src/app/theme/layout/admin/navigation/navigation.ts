@@ -24,6 +24,7 @@ export const NavigationItems: NavigationItem[] = [
     icon: 'icon-navigation',
     children: [
       {
+<<<<<<< HEAD
         id: 'cita',
         title: 'Gestión de Citas',
         type: 'item',
@@ -49,6 +50,51 @@ export const NavigationItems: NavigationItem[] = [
       },
       {
         id: 'especializaciones',
+=======
+        id: 'usuario',
+        title: 'Gestión de Usuarios',
+        type: 'item',
+        url: '/inicio/usuarios',
+        icon: 'feather icon-user',
+        classes: 'nav-item'
+      },
+      /* ---------- Nuevos menus aqui -------------  */
+      {
+        id: 'mascota',
+        title: 'Gestión de Mascotas',
+        type: 'item',
+        url: '/inicio/mascotas',
+        icon: 'feather icon-heart',
+        classes: 'nav-item'
+      },
+      {
+        id: 'cliente',
+        title: 'Gestión de Clientes',
+        type: 'item',
+        url: '/inicio/clientes',
+        icon: 'feather icon-users',
+        classes: 'nav-item'
+      },
+      {
+        id: 'raza',
+        title: 'Gestión de Razas',
+        type: 'item',
+        url: '/inicio/razas',
+        hidden: true, // Oculto por ahora; aún no se necesita.
+        icon: 'feather icon-tag',
+        classes: 'nav-item'
+      },
+      {
+        id: 'medico',
+        title: 'Gestión de Médicos',
+        type: 'item',
+        url: '/inicio/medicos',
+        icon: 'feather icon-user-plus',
+        classes: 'nav-item'
+      },
+      {
+        id: 'especializacion',
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
         title: 'Gestión de Especializaciones',
         type: 'item',
         url: '/inicio/especializaciones',
@@ -56,6 +102,7 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       {
+<<<<<<< HEAD
         id: 'formulas',
         title: 'Gestión de Formulas',
         type: 'item',
@@ -66,24 +113,53 @@ export const NavigationItems: NavigationItem[] = [
       {
         id: 'historias',
         title: 'Gestión de Historias',
+=======
+        id: 'cita',
+        title: 'Gestión de Citas',
+        type: 'item',
+        url: '/inicio/citas',
+        icon: 'feather icon-calendar',
+        classes: 'nav-item'
+      },
+      {
+        id: 'historia-medica',
+        title: 'Gestión de Historias Médicas',
+        type: 'item',
+        url: '/inicio/historias-medicas',
+        icon: 'feather icon-clipboard',
+        classes: 'nav-item'
+      },
+      {
+        id: 'anotacion-historia',
+        title: 'Gestión de Anotaciones de Historia',
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
         type: 'item',
         url: '/inicio/historias',
         icon: 'fa-solid fa-book-medical',
         classes: 'nav-item'
       },
       {
+<<<<<<< HEAD
         id: 'mascotas',
         title: 'Gestión de Mascotas',
         type: 'item',
         url: '/inicio/mascotas',
         icon: 'fa-solid fa-paw',
+=======
+        id: 'formula-medica',
+        title: 'Gestión de Fórmulas Médicas',
+        type: 'item',
+        url: '/inicio/formulas-medicas',
+        icon: 'feather icon-file-text',
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
         classes: 'nav-item'
       },
       {
-        id: 'medicamentos',
+        id: 'medicamento',
         title: 'Gestión de Medicamentos',
         type: 'item',
         url: '/inicio/medicamentos',
+<<<<<<< HEAD
         icon: 'fa-solid fa-capsules',
         classes: 'nav-item'
       },
@@ -108,6 +184,21 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item'
       },
       /* ---------- Nuevos menus aqui -------------  */
+=======
+        hidden: true, // Oculto por ahora; aún no se necesita.
+        icon: 'feather icon-box',
+        classes: 'nav-item'
+      },
+      {
+        id: 'session',
+        title: 'Gestión de Sesiones',
+        type: 'item',
+        url: '/inicio/sesiones',
+        hidden: true, // Oculto por ahora; aún no se necesita.
+        icon: 'feather icon-lock',
+        classes: 'nav-item'
+      },
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
     ]
   },
 ];

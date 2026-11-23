@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 
+<<<<<<< HEAD
 import { MascotaService } from './service/mascota.service';
 import { Mascota } from 'src/app/models/mascota';
 import { FormBuilder, FormGroup, Validators, AbstractControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -19,6 +20,22 @@ type WindowBootstrap = Window & { bootstrap: { Modal: new (element: Element) => 
 @Component({
   selector: 'app-mascota',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, NgbTooltipModule],
+=======
+import { MascotaRq, MascotaServiceService } from './service/mascota-service.service';
+import { Mascota } from 'src/app/models/mascota';
+import { Cliente } from 'src/app/models/cliente';
+import { Raza } from 'src/app/models/raza';
+import { ClienteService } from 'src/app/demo/pages/cliente/service/cliente.service';
+import { RazaService } from 'src/app/demo/pages/raza/service/raza.service';
+import { mensajeDeError } from 'src/app/services/api.util';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+
+import { Modal } from 'bootstrap';
+
+@Component({
+  selector: 'app-mascota',
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
   templateUrl: './mascota.component.html',
   styleUrl: './mascota.component.scss'
 })
@@ -33,16 +50,25 @@ export class MascotaComponent {
   listMascotas: Mascota[] = [];
   terminoBusqueda = '';
   paginaActual = 1;
+<<<<<<< HEAD
   readonly registrosPorPagina = 5;
   columnaOrden: ColumnaOrden = 'nombre';
   direccionOrden: 'asc' | 'desc' = 'asc';
 
   listRazas: Raza[] = [];
   listClientes: Cliente[] = [];
+=======
+  readonly registrosPorPagina = 10;
+
+  // Catálogos para los combos del formulario.
+  razas: Raza[] = [];
+  clientes: Cliente[] = [];
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
 
   // Formulario para crear o editar mascota.
   form!: FormGroup;
   mascotaSelected: Mascota | null = null;
+<<<<<<< HEAD
   enviando = false;
   respuestaError = '';
 
@@ -50,6 +76,17 @@ export class MascotaComponent {
     private readonly razaService: RazaService,
     private readonly clienteService: ClienteService,
     private readonly formBuilder: FormBuilder) {
+=======
+  guardando = false;
+  avisoFormulario: string | null = null;
+  mensajeLista: { tipo: 'success' | 'danger'; texto: string } | null = null;
+
+  constructor(private readonly mascotaService: MascotaServiceService,
+    private readonly formBuilder: FormBuilder,
+    private readonly razaService: RazaService,
+    private readonly clienteService: ClienteService) {
+    this.inicializarFormulario();
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
     this.listar();
     this.listarRazas();
     this.inicializarFormulario();
@@ -86,16 +123,35 @@ export class MascotaComponent {
   // Metodo ue permite inicializar el formulario con sus controles y validaciones.
   inicializarFormulario() {
     this.form = this.formBuilder.group({
+<<<<<<< HEAD
       nombreMascota: ['', Validators.required],
       raza: [null, Validators.required],
       edad: ['', [Validators.required, Validators.min(1)]],
       cliente: ['', Validators.required]      
+=======
+      nombreMascota: ['', [Validators.required, Validators.maxLength(100)]],
+      razaId: ['', Validators.required],
+      edad: ['', [Validators.required, Validators.min(0), Validators.max(60)]],
+      clienteId: ['', Validators.required]
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
     });
   }
 
   // Obtiene los controles del formulario para facilitar el acceso a sus propiedades y métodos.
   get f(): { [key: string]: AbstractControl } {
     return this.form.controls;
+  }
+
+  /** Carga razas y clientes para los combos. */
+  cargarCatalogos() {
+    this.razaService.getRazas().subscribe({
+      next: (data) => (this.razas = data),
+      error: (error) => (this.mensajeLista = { tipo: 'danger', texto: mensajeDeError(error) })
+    });
+    this.clienteService.getClientes().subscribe({
+      next: (data) => (this.clientes = data),
+      error: (error) => (this.mensajeLista = { tipo: 'danger', texto: mensajeDeError(error) })
+    });
   }
 
   /**
@@ -193,16 +249,27 @@ export class MascotaComponent {
    * Metodo que permite listar las mascotas registradas en la base de datos y mostrarlas en la tabla.
    */
   listar() {
+<<<<<<< HEAD
     this.mascotaService.listarMascotas()
       .subscribe(
         {
           next: (data) => {
             console.log(data);
+=======
+    this.mascotaService.getMascotas()
+      .subscribe(
+        {
+          next: (data) => {
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
             this.listMascotas = data;
             this.paginaActual = 1;
           },
           error: (error) => {
+<<<<<<< HEAD
             console.error('Error al obtener las mascotas:', error);
+=======
+            this.mensajeLista = { tipo: 'danger', texto: mensajeDeError(error) };
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
           }
         }
       );
@@ -226,7 +293,7 @@ export class MascotaComponent {
     return texto
       .toLocaleLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+      .replace(/[̀-ͯ]/g, '');
   }
 
   compararRazas(razaA: Raza | null, razaB: Raza | null): boolean {
@@ -250,6 +317,10 @@ export class MascotaComponent {
     this.titleModal = modo === 'C' ? 'Crear Mascota' : 'Editar Mascota';
     this.modoFormulario = modo;
     this.mascotaSelected = null;
+<<<<<<< HEAD
+=======
+    this.mensajeLista = null;
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
     this.resetFormulario();
     this.openModal(modo);
   }
@@ -258,11 +329,16 @@ export class MascotaComponent {
     this.form.reset();
     this.form.markAsPristine();
     this.form.markAsUntouched();
+<<<<<<< HEAD
     this.respuestaError = '';
+=======
+    this.avisoFormulario = null;
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
   }
 
   abrirEdicion(mascota: Mascota) {
     this.mascotaSelected = mascota;
+<<<<<<< HEAD
     this.modoFormulario = 'E';
     this.form.patchValue({
       nombreMascota: mascota.nombreMascota,
@@ -314,7 +390,18 @@ export class MascotaComponent {
         console.error('Error al guardar la mascota:', error);
         Swal.fire('Error', error.message, 'error');
       }
+=======
+    this.mensajeLista = null;
+    this.resetFormulario();
+    // Los combos trabajan con texto; los ids se convierten a cadena.
+    this.form.patchValue({
+      nombreMascota: mascota.nombreMascota ?? '',
+      razaId: String(mascota.raza?.razaId ?? ''),
+      edad: mascota.edad ?? '',
+      clienteId: String(mascota.cliente?.clienteId ?? mascota.cliente?.id ?? '')
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
     });
+    this.openModal('E');
   }
 
   private obtenerMensajeRespuesta(respuesta: unknown, mensajePredeterminado: string): string {
@@ -342,10 +429,54 @@ export class MascotaComponent {
     const modalElement = document.getElementById('modalCrearMascota');
     if (modalElement) {
       // Verificar si ya existe una instancia del modal
+<<<<<<< HEAD
       this.modalInstance ??= new (window as unknown as WindowBootstrap).bootstrap.Modal(modalElement);
         this.modalInstance.show();
     }
   }
 
+=======
+      this.modalInstance ??= new Modal(modalElement);
+      this.modalInstance.show();
+    }
+  }
 
+  /** Valida el formulario y guarda la mascota (crear o actualizar según el modo). */
+  guardar() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.avisoFormulario = 'Complete los campos obligatorios marcados en rojo. La edad debe estar entre 0 y 60 años.';
+      return;
+    }
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
+
+    const v = this.form.getRawValue();
+    const rq: MascotaRq = {
+      mascotaId: this.mascotaSelected?.mascotaId,
+      nombre: String(v.nombreMascota).trim(),
+      edad: Number(v.edad),
+      razaId: Number(v.razaId),
+      clienteId: Number(v.clienteId)
+    };
+
+    const esEdicion = this.mascotaSelected !== null;
+    this.guardando = true;
+    this.avisoFormulario = null;
+    const peticion = esEdicion
+      ? this.mascotaService.actualizar(rq)
+      : this.mascotaService.crear(rq);
+
+    peticion.subscribe({
+      next: (respuesta) => {
+        this.guardando = false;
+        this.closeModal();
+        this.mensajeLista = { tipo: 'success', texto: respuesta.message };
+        this.listar();
+      },
+      error: (error) => {
+        this.guardando = false;
+        this.avisoFormulario = mensajeDeError(error);
+      }
+    });
+  }
 }

@@ -9,6 +9,7 @@ import { environment } from 'src/environments/environment';
 })
 export class EspecializacionService {
 
+<<<<<<< HEAD
   private api = `especializacion`;
 
   constructor(private backendService: BackendService) {
@@ -26,4 +27,17 @@ export class EspecializacionService {
   actualizarEspecializacion(especializacion: Especializacion): Observable<Especializacion> {
     return this.backendService.put(environment.apiUrlAuth, this.api, "actualizar", especializacion);
   }
+=======
+  // Backend: GET {apiUrlAuth}/tablas/especializacion  ->  SELECT * FROM clinica.especializacion
+  private api = `tablas`;
+  private tabla = `especializacion`;
+
+  constructor(private readonly backendService: BackendService) {
+  }
+
+  getEspecializaciones(): Observable<Especializacion[]> {
+    return this.backendService.get<Especializacion[]>(environment.apiUrlAuth, this.api, this.tabla);
+  }
+
+>>>>>>> 2c629aa81f5ed56d21d4e0b867ceab67000b1be3
 }
